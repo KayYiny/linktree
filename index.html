@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noarchive, nofollow">
-    <title>火林 · 这是我的名片</title>
+    <title data-i18n="page.title.main">火林 · 这是我的名片</title>
     <!-- Favicon -->
     <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
     <!-- Font Awesome icons -->
@@ -21,9 +21,11 @@
     <!-- 资源提示 -->
     <link rel="preconnect" href="https://pan.puppyis.cool">
     <!-- 非关键脚本（defer，并行下载不阻塞渲染） -->
+    <script defer src="assets/scripts/i18n.js"></script>
     <script defer src="assets/scripts/gallery.js"></script>
     <script defer src="assets/scripts/pet.js"></script>
     <script defer src="assets/scripts/easter-egg.js"></script>
+    <script defer src="assets/scripts/qrcode-popup.js"></script>
   </head>
 
   <body>
@@ -52,31 +54,39 @@
         <span>///</span>
       </div>
 
+      <!-- 语言切换 -->
+      <button id="langSwitch" class="lang-switch-btn" onclick="setLanguage(getLang() === 'zh-CN' ? 'en' : 'zh-CN')">EN</button>
+
       <div id="links">
         <!-- 相册（固定在第一位） -->
         <a class="link gallery-trigger" href="javascript:void(0)">
           <span class="link-icon"><i class="fas fa-images"></i></span>
-          <span class="link-label">Album</span>
+          <span class="link-label" data-i18n="album.label">Album</span>
         </a>
         <!-- QQ — 点击显示二维码，底部可跳转链接 -->
-        <a class="link img-popup-trigger" data-img="assets/qrcodes/qq.jpg" data-url="https://qm.qq.com/q/KbsdxQ17W0" data-note="点击上方按钮直接访问">
-          <span class="link-icon"><i class="fab fa-qq"></i></span>
-          <span class="link-label">QQ</span>
+        <a class="link img-popup-trigger" data-img="assets/qrcodes/qq.jpg" data-url="https://qm.qq.com/q/KbsdxQ17W0" data-i18n-note="popup.note.visit" data-note="点击上方按钮直接访问">
+          <span class="link-icon"><img src="assets/icons/qq.svg" class="brand-icon" alt="QQ"></span>
+          <span class="link-label" data-i18n="brand.qq">QQ</span>
         </a>
         <!-- 微信 — 点击显示二维码，无跳转链接 -->
-        <a class="link img-popup-trigger" data-img="assets/qrcodes/wechat.jpg" data-note="使用微信长按识别">
-          <span class="link-icon"><i class="fab fa-weixin"></i></span>
-          <span class="link-label">WeChat</span>
+        <a class="link img-popup-trigger" data-img="assets/qrcodes/wechat.jpg" data-i18n-note="popup.note.wechat" data-note="使用微信长按识别">
+          <span class="link-icon"><img src="assets/icons/wechat.svg" class="brand-icon" alt="WeChat"></span>
+          <span class="link-label" data-i18n="brand.wechat">WeChat</span>
         </a>
         <!-- B站 — 点击显示二维码 -->
-        <a class="link img-popup-trigger" data-img="assets/qrcodes/bilibili.jpg" data-url="http://space.bilibili.com/430552995" data-note="点击上方按钮直接访问">
-          <span class="link-icon"><i class="fab fa-bilibili"></i></span>
-          <span class="link-label">Bilibili</span>
+        <a class="link img-popup-trigger" data-img="assets/qrcodes/bilibili.jpg" data-url="http://space.bilibili.com/430552995" data-i18n-note="popup.note.visit" data-note="点击上方按钮直接访问">
+          <span class="link-icon"><img src="assets/icons/bilibili.svg" class="brand-icon" alt="Bilibili"></span>
+          <span class="link-label" data-i18n="brand.bilibili">Bilibili</span>
         </a>
         <!-- 抖音 — 点击显示二维码 -->
-        <a class="link img-popup-trigger" data-img="assets/qrcodes/douyin.jpg" data-url="https://www.douyin.com/user/MS4wLjABAAAAYuXxtdsArkxgZpoGgQHE1Z2e5mvPeP4UCSezKlzUiALP4vyL0yqLi0vjneoLi5wz" data-note="点击上方按钮直接访问">
-          <span class="link-icon"><i class="fab fa-tiktok"></i></span>
-          <span class="link-label">TikTok</span>
+        <a class="link img-popup-trigger" data-img="assets/qrcodes/douyin.jpg" data-url="https://www.douyin.com/user/MS4wLjABAAAAYuXxtdsArkxgZpoGgQHE1Z2e5mvPeP4UCSezKlzUiALP4vyL0yqLi0vjneoLi5wz" data-i18n-note="popup.note.visit" data-note="点击上方按钮直接访问">
+          <span class="link-icon"><img src="assets/icons/tiktok.svg" class="brand-icon" alt="TikTok"></span>
+          <span class="link-label" data-i18n="brand.tiktok">TikTok</span>
+        </a>
+        <!-- 小红书 — 点击显示二维码 -->
+        <a class="link img-popup-trigger" data-img="assets/qrcodes/xiaohongshu.jpg" data-url="http://xhslink.com/m/3qScrydPm6Z" data-i18n-note="popup.note.visit" data-note="点击上方按钮直接访问">
+          <span class="link-icon"><img src="assets/icons/xiaohongshu.svg" class="brand-icon" alt="Xiaohongshu"></span>
+          <span class="link-label" data-i18n="brand.xiaohongshu">RED</span>
         </a>
       </div>
 
@@ -111,32 +121,14 @@
       // ---- Easter Egg 配置 ----
       window.__eggConfig = {
         clicks: 5,
-        timeout: 2000,
+        timeout: 200,
         action: function () {
           window.location.href = 'whisper';
         }
       };
 
-      // ---- 宠物语录 ----
-      window.__petMessages = [
-        '嗷呜～ 你吵醒本王午睡了…',
-        '看什么看，没见过帅老虎吗？🐯',
-        '别戳了！再戳我咬你哦… 呜…',
-        '摸我脑袋？好吧，允许你摸三下，不能再多！',
-        '我的条纹是不是特别好看？嘻嘻~',
-        '今天阳光不错，趴在这儿不想动… zzz',
-        '想吃鱼… 最好是烤的那种 🐟',
-        '吼——（其实是打哈欠）',
-        '你手机里是不是藏了小鱼干？',
-        '尾巴给你玩一下，但别扯疼我！',
-        '我是大猫猫，不是大狗狗！哼～',
-        '蹭蹭你～ 嗯… 你身上有我的味道了～',
-        '这座小站是我的领地！你也是我的！',
-        '发现一只野生大佬！嗷~',
-        '本王飞一个～ 🦋（其实根本飞不起来）',
-        '饿了… 快投喂本王！不然我生气了！',
-        '你喜欢我吗？喜欢的话… 允许你当我的铲屎官…',
-      ];
+      // ---- 宠物语录（由 i18n 按语言提供） ----
+      window.__petMessagesKey = 'pet.cat';
 
       // ---- 相册图片 ----
       window.__galleryImages = [
@@ -150,66 +142,6 @@
         { src: 'https://pan.puppyis.cool/f/exsN/11.jpeg' },
         { src: 'https://pan.puppyis.cool/f/ljHn/14.jpeg' },
       ];
-
-      // ---- 二维码弹窗 ----
-      var popupDom = document.createElement('div');
-      popupDom.className = 'img-popup-overlay';
-      popupDom.id = 'imgPopup';
-      popupDom.innerHTML = '<div class="img-popup-card">'
-        + '<img class="img-popup-image" id="imgPopupImage" src="" alt="">'
-        + '<div class="img-popup-label" id="imgPopupLabel"></div>'
-        + '<a class="img-popup-btn" id="imgPopupBtn" href="#" target="_blank" style="display:none"><i class="fas fa-external-link-alt"></i> 访问</a>'
-        + '<div class="img-popup-note" id="imgPopupNote"></div>'
-        + '<span class="img-popup-close" id="imgPopupCloseBtn">&times;</span>'
-        + '</div>';
-      document.body.appendChild(popupDom);
-
-      var imgPopup = document.getElementById('imgPopup');
-      var imgPopupImage = document.getElementById('imgPopupImage');
-      var imgPopupLabel = document.getElementById('imgPopupLabel');
-      var imgPopupBtn = document.getElementById('imgPopupBtn');
-      var imgPopupClose = document.getElementById('imgPopupCloseBtn');
-
-      document.querySelectorAll('.img-popup-trigger').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-          e.preventDefault();
-          const imgSrc = this.dataset.img;
-          const url = this.dataset.url;
-          const note = this.dataset.note || '';
-          const label = this.querySelector('.link-label')?.textContent || '';
-          if (imgSrc) {
-            imgPopupImage.src = imgSrc;
-            imgPopupImage.alt = label;
-            imgPopupLabel.textContent = label;
-            imgPopupNote.textContent = note;
-            if (url) {
-              imgPopupBtn.href = url;
-              imgPopupBtn.style.display = 'inline-flex';
-            } else {
-              imgPopupBtn.style.display = 'none';
-            }
-            imgPopup.classList.add('active');
-            document.body.style.overflow = 'hidden';
-          }
-        });
-      });
-
-      function closeImgPopup() {
-        imgPopup.classList.remove('active');
-        document.body.style.overflow = '';
-      }
-
-      imgPopupClose.addEventListener('click', closeImgPopup);
-
-      imgPopup.addEventListener('click', function(e) {
-        if (e.target === imgPopup) closeImgPopup();
-      });
-
-      document.addEventListener('keydown', function(e) {
-        if (imgPopup.classList.contains('active') && e.key === 'Escape') {
-          closeImgPopup();
-        }
-      });
 
     })();
     </script>

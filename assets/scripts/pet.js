@@ -14,27 +14,13 @@
 
     var timer = null;
 
-    // 气泡语录（页面自定义 → 默认）
-    var messages = window.__petMessages || [
-      '揪一下~ 🐾',
-      '今天心情不错！',
-      '咕噜咕噜~',
-      '戳我干嘛呀？',
-      '好想吃小鱼干 🐟',
-      '看我跳一跳！',
-      '晚安世界 🌙',
-      '要抱抱！🤗',
-      '嘿嘿，又被你抓到了',
-      '喜欢你的主页 ✨',
-      '我是小跟屁虫~',
-      '好闲呀… zzz',
-      '你今天真好看 💕',
-      '再戳就生气了！哼！',
-      '飞一个~ 🦋',
-      '发现野生大佬！',
-      '摇尾巴 ing 🌀',
-      '待机中，请稍候 ⏳',
-    ];
+    // 气泡语录（页面自定义 → i18n 翻译 → 默认英文/中文兜底）
+    var messages = window.__petMessages || __('pet.default');
+
+    // 语言切换时刷新消息列表
+    document.addEventListener('languagechange', function () {
+      messages = window.__petMessages || __('pet.default');
+    });
 
     pet.addEventListener('click', function (e) {
       if (timer) {

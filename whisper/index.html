@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noarchive, nofollow">
-    <title>火林 · 这是我的秘密 ✦</title>
+    <title data-i18n="page.title.whisper">火林 · 这是我的秘密 ✦</title>
     <link rel="icon" href="../assets/images/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
+    <!-- i18n 多语言（须在其他脚本之前加载） -->
+    <script defer src="../assets/scripts/i18n.js"></script>
     <!-- 页面背景 -->
     <style>
       body {
@@ -46,26 +48,29 @@
         <span>///</span>
       </div>
 
+      <!-- 语言切换 -->
+      <button id="langSwitch" class="lang-switch-btn" onclick="setLanguage(getLang() === 'zh-CN' ? 'en' : 'zh-CN')">EN</button>
+
       <div id="links">
         <!-- 相册（固定在第一位） -->
         <a class="link gallery-trigger" href="javascript:void(0)">
           <span class="link-icon"><i class="fas fa-images"></i></span>
-          <span class="link-label">Album</span>
+          <span class="link-label" data-i18n="album.label">Album</span>
         </a>
         <!-- X（Twitter） -->
         <a class="link" href="https://x.com/PuppyHuoLin" target="_blank">
-          <span class="link-icon"><i class="fab fa-x-twitter"></i></span>
-          <span class="link-label">X (Twitter)</span>
+          <span class="link-icon"><img src="../assets/icons/x.svg" class="brand-icon" alt="X"></span>
+          <span class="link-label" data-i18n="brand.x">X (Twitter)</span>
         </a>
         <!-- Instagram -->
         <a class="link" href="https://www.instagram.com/puppyhuolin" target="_blank">
-          <span class="link-icon"><i class="fab fa-instagram"></i></span>
-          <span class="link-label">Instagram</span>
+          <span class="link-icon"><img src="../assets/icons/instagram.svg" class="brand-icon" alt="Instagram"></span>
+          <span class="link-label" data-i18n="brand.instagram">Instagram</span>
         </a>
         <!-- Bluesky -->
         <a class="link" href="https://bsky.app/profile/slave.puppyhuolin.com" target="_blank">
-          <span class="link-icon"><i class="fab fa-bluesky"></i></span>
-          <span class="link-label">Bluesky</span>
+          <span class="link-icon"><img src="../assets/icons/bluesky.svg" class="brand-icon" alt="Bluesky"></span>
+          <span class="link-label" data-i18n="brand.bluesky">Bluesky</span>
         </a>
       </div>
 
@@ -103,25 +108,8 @@
         }
       };
 
-      // ---- 宠物语录 ----
-      window.__petMessages = [
-        '主人… 你终于来啦🥺 ',
-        '汪！今天主人有没有想我？',
-        '摸摸头～ 再多摸摸嘛～ 我会乖乖的…',
-        '主人累了吗？我可以给你暖脚哦 🐾',
-        '请尽情使唤吧… 我是可爱小狗…',
-        '嘿嘿，又被你抓到啦～ 好幸福…',
-        '你的手指好温暖… 再摸摸我好不好…',
-        '想一直被主人拴着，哪里都不去…',
-        '主人～ 看看我嘛，我比电视好看一万倍！✨',
-        '呜… 请多戳戳我… 你的触碰让我开心到尾巴都摇断了…',
-        '只属于你的乖狗狗，每天都会摇尾巴等你回来…',
-        '请让我钻进你怀里… 那里是最安全的小窝…',
-        '主人身上有我的味道，你是不是同意永远不离开我？',
-        '我愿意被主人揉乱毛毛，然后说"好乖"… 呜…',
-        '想变成主人口袋里的小狗，24小时都能被你偷摸…',
-        '主人，今夜请好好抱着我睡觉… 我会用肚子贴着你…',
-      ];
+      // ---- 宠物语录（由 i18n 按语言提供） ----
+      window.__petMessagesKey = 'pet.dog';
 
       // ---- 相册图片 ----
       window.__galleryImages = [

@@ -41,6 +41,29 @@
   src: url('assets/fonts/DMSans-Bold.ttf') format('truetype');
 }
 
+/* Noto Sans SC — 中文字体（自托管） */
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('assets/fonts/NotoSansSC-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('assets/fonts/NotoSansSC-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('assets/fonts/NotoSansSC-Black.ttf') format('truetype');
+}
+
 :root {
   /* ── Colors ── */
   --bg: #0a0a0a;
@@ -55,8 +78,8 @@
   --accent-yellow: #ffea00;
 
   /* ── Typography ── */
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Bebas Neue', 'Noto Sans SC', sans-serif;
+  --font-body: 'DM Sans', 'Noto Sans SC', sans-serif;
 
   /* ── Brutalist tokens ── */
   --border-w: 4px;
@@ -276,6 +299,41 @@ body::after {
   line-height: 1;
 }
 
+/* ========== Language Switch ========== */
+.lang-switch-btn {
+  display: block;
+  margin: 6px auto 20px;
+  padding: 8px 22px;
+  font-family: 'DM Sans', 'Noto Sans SC', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-dark);
+  background: var(--surface);
+  border: var(--border-w) solid var(--border);
+  box-shadow: 4px 4px 0 var(--shadow);
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  line-height: 1.4;
+}
+
+@media (hover: hover) {
+  .lang-switch-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--accent-cyan);
+    border-color: var(--accent-cyan);
+    background: #f8f8f8;
+  }
+}
+
+.lang-switch-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--shadow);
+  transition-duration: 0.05s;
+}
+
 /* ========== Links Section ========== */
 #links {
   width: 100%;
@@ -301,7 +359,7 @@ body::after {
   color: var(--text-dark);
   font-family: var(--font-body);
   font-size: 1.05rem;
-  font-weight: 500;
+  font-weight: 700;
   text-align: center;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
@@ -312,11 +370,15 @@ body::after {
 
 /* No border-radius — brutalist sharp rectangles */
 
-.link i {
+.link i,
+.link .brand-icon {
   font-size: 1.3rem;
   width: 24px;
+  height: 24px;
   text-align: center;
   flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .link .link-label {
@@ -348,15 +410,7 @@ body::after {
 }
 
 /* ========== Link Icon Brand Colors ========== */
-.link .fa-qq { color: #1eb9fc; }
-.link .fa-weixin { color: #07c160; }
-.link .fa-bilibili { color: #00A1D6; }
-.link .fa-tiktok {
-  background: linear-gradient(135deg, #25f4ee 0%, #fe2c55 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+/* 品牌颜色已由 Simple Icons SVG 内置，无需额外 CSS */
 .link .fa-images {
   background: linear-gradient(135deg, #ff0066 0%, #00f0ff 100%);
   -webkit-background-clip: text;
@@ -439,7 +493,7 @@ body::after {
   max-width: 300px;
   width: max-content;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--text-dark);
   text-align: center;
   line-height: 1.5;
@@ -579,6 +633,7 @@ body::after {
   color: var(--text-dark);
   font-family: var(--font-display);
   font-size: 1.2rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 16px 0 4px;
@@ -620,7 +675,7 @@ body::after {
   padding: 10px 22px;
   font-family: var(--font-body);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-dark);
   text-decoration: none;
   background: var(--surface);
@@ -643,7 +698,7 @@ body::after {
 .img-popup-note {
   color: var(--text-dark);
   font-size: 0.75rem;
-  font-weight: 400;
+  font-weight: 700;
   padding: 8px 0 0;
   text-align: center;
   letter-spacing: 0.3px;
@@ -724,9 +779,11 @@ body::after {
     gap: 12px;
   }
 
-  .link i {
+  .link i,
+  .link .brand-icon {
     font-size: 1.15rem;
     width: 22px;
+    height: 22px;
   }
 
   #petImage {
@@ -810,9 +867,11 @@ body::after {
     gap: 10px;
   }
 
-  .link i {
+  .link i,
+  .link .brand-icon {
     font-size: 1.05rem;
     width: 20px;
+    height: 20px;
   }
 
   .brutal-divider {
@@ -951,7 +1010,7 @@ body::after {
 }
 .gallery-title {
   font-family: var(--font-display);
-  font-size: 1.6rem; color: var(--text-dark); letter-spacing: .05em;
+  font-size: 1.6rem; font-weight: 700; color: var(--text-dark); letter-spacing: .05em;
 }
 
 /* Brutalist close button */
@@ -1013,7 +1072,7 @@ body::after {
   position: absolute; bottom: 0; left: 0; right: 0; padding: 7px 10px;
   background: rgba(0,0,0,.7); color: #fff;
   font-family: var(--font-body); font-size: .75rem;
-  font-weight: 500; text-align: center;
+  font-weight: 700; text-align: center;
   letter-spacing: .3px; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
 }
@@ -1139,7 +1198,7 @@ body::after {
 }
 .gallery-lb-label {
   font-family: var(--font-body);
-  font-size: .85rem; font-weight: 500; color: var(--text-dark);
+  font-size: .85rem; font-weight: 700; color: var(--text-dark);
 }
 .gallery-lb-counter {
   font-family: var(--font-display);
@@ -1214,12 +1273,6 @@ body::after {
   .gallery-modal { max-width: 780px; }
   .gallery-grid { gap: 18px; padding: 12px 28px 28px; }
   .gallery-lb-image { max-height: 60vh; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .gallery-grid-item,
-  .gallery-lb-image { animation: none !important; }
-  .gallery-modal { transform: none !important; transition: none !important; }
 }
 
 /* Reduced motion (accessibility) */

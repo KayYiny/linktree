@@ -50,7 +50,7 @@
   var headerEl, gridEl, paginationEl, lightboxEl;
   var lightboxImg, lightboxLabel, lightboxCounter;
   var pageIndicatorEl, pagePrevBtn, pageNextBtn;
-  var perPageGlobal;
+  var perPageGlobal, galleryTitle, backBtn;
 
   // 样式已移至 style.css（GALLERY 节）
 
@@ -67,13 +67,13 @@
     // ---- Header（仅网格模式可见） ----
     headerEl = document.createElement('div');
     headerEl.className = 'gallery-header';
-    var title = document.createElement('span');
-    title.className = 'gallery-title';
-    title.textContent = '📷 相册';
+    galleryTitle = document.createElement('span');
+    galleryTitle.className = 'gallery-title';
+    galleryTitle.textContent = __('gallery.title');
     var closeBtn = document.createElement('span');
     closeBtn.className = 'gallery-close-btn';
     closeBtn.innerHTML = '×';
-    headerEl.appendChild(title);
+    headerEl.appendChild(galleryTitle);
     headerEl.appendChild(closeBtn);
 
     // ---- 网格视图 ----
@@ -139,13 +139,13 @@
     paginationEl.className = 'gallery-pagination';
     pagePrevBtn = document.createElement('span');
     pagePrevBtn.className = 'gallery-page-btn';
-    pagePrevBtn.innerHTML = '<i class="fas fa-chevron-left"></i> 上一页';
+    pagePrevBtn.innerHTML = '<i class="fas fa-chevron-left"></i> ' + __('gallery.prev');
     pageIndicatorEl = document.createElement('span');
     pageIndicatorEl.className = 'gallery-page-indicator';
     pageIndicatorEl.textContent = '1 / ' + totalPages;
     pageNextBtn = document.createElement('span');
     pageNextBtn.className = 'gallery-page-btn';
-    pageNextBtn.innerHTML = '下一页 <i class="fas fa-chevron-right"></i>';
+    pageNextBtn.innerHTML = __('gallery.next') + ' <i class="fas fa-chevron-right"></i>';
     paginationEl.appendChild(pagePrevBtn);
     paginationEl.appendChild(pageIndicatorEl);
     paginationEl.appendChild(pageNextBtn);
@@ -169,9 +169,9 @@
     // 灯箱头：返回按钮 + 关闭按钮
     var lbHeader = document.createElement('div');
     lbHeader.className = 'gallery-lb-header';
-    var backBtn = document.createElement('span');
+    backBtn = document.createElement('span');
     backBtn.className = 'gallery-lb-back';
-    backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> 返回';
+    backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> ' + __('gallery.back');
     var lbCloseBtn = document.createElement('span');
     lbCloseBtn.className = 'gallery-close-btn';
     lbCloseBtn.innerHTML = '×';
@@ -356,5 +356,14 @@
   } else {
     init();
   }
+
+  // 语言切换时刷新 gallery 文字
+  document.addEventListener('languagechange', function () {
+    if (!headerEl) return;
+    galleryTitle.textContent = __('gallery.title');
+    pagePrevBtn.innerHTML = '<i class="fas fa-chevron-left"></i> ' + __('gallery.prev');
+    pageNextBtn.innerHTML = __('gallery.next') + ' <i class="fas fa-chevron-right"></i>';
+    backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> ' + __('gallery.back');
+  });
 
 })();
