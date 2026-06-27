@@ -10,11 +10,7 @@
   function initPet() {
     var pet = document.getElementById('pet');
     var petBubble = document.getElementById('petBubble');
-    if (!pet || !petBubble) {
-      // DOM 还没渲染好，稍后重试
-      setTimeout(initPet, 200);
-      return;
-    }
+    if (!pet || !petBubble) return; // 安全兜底，不会重试
 
     var timer = null;
 

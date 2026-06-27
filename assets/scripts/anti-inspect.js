@@ -22,7 +22,7 @@
   // ============================================================
   document.addEventListener('keydown', function (e) {
     // F12
-    if (e.key === 'F12' || e.keyCode === 123) {
+    if (e.key === 'F12') {
       e.preventDefault();
       return false;
     }

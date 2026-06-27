@@ -5,28 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noarchive, nofollow">
     <title>火林 · 这是我的秘密 ✦</title>
-    <link rel="icon" href="../assets/images/favicon.png" type="image/png" />
+    <link rel="icon" href="../assets/images/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
     <!-- 页面背景 -->
     <style>
       body {
         --bg-image: url('../assets/images/Puppy_Play_Pride_Flag.svg');
-        background: var(--bg-image) center/cover fixed no-repeat;
+        background: var(--bg) var(--bg-image) center/cover fixed no-repeat;
       }
     </style>
+    <!-- 资源提示 -->
+    <link rel="preconnect" href="https://pan.puppyis.cool">
+    <!-- 非关键脚本（defer，并行下载不阻塞渲染） -->
+    <script defer src="../assets/scripts/gallery.js"></script>
+    <script defer src="../assets/scripts/pet.js"></script>
+    <script defer src="../assets/scripts/easter-egg.js"></script>
   </head>
 
   <body>
-    <div class="ambient-glow"></div>
-    <div class="vignette-overlay"></div>
+    <!-- 新粗野主义装饰角标 -->
+    <div class="brutal-corner-tl"></div>
+    <div class="brutal-corner-tr"></div>
+    <div class="brutal-corner-bl"></div>
+    <div class="brutal-corner-br"></div>
 
     <main class="container">
+
+      <!-- 顶部装饰条 -->
+      <div class="brutal-bar"></div>
+
       <div id="profilePicture">
-        <img src="../assets/images/avatar.png" alt="头像">
+        <img src="../assets/images/avatar.webp" alt="头像">
       </div>
-      <div id="userName">𝓗𝓾𝓸𝓛𝓲𝓷</div>
+
+      <div id="userName">HUOLIN</div>
+
+      <!-- 粗野主义分隔符 -->
+      <div class="brutal-divider">
+        <span>///</span>
+      </div>
+
       <div id="links">
+        <!-- 相册（固定在第一位） -->
+        <a class="link gallery-trigger" href="javascript:void(0)">
+          <span class="link-icon"><i class="fas fa-images"></i></span>
+          <span class="link-label">Album</span>
+        </a>
         <!-- X（Twitter） -->
         <a class="link" href="https://x.com/PuppyHuoLin" target="_blank">
           <span class="link-icon"><i class="fab fa-x-twitter"></i></span>
@@ -43,48 +68,103 @@
           <span class="link-label">Bluesky</span>
         </a>
       </div>
+
       <!-- ========== 虚拟宠物 ========== -->
       <div id="pet">
         <div class="pet-bubble" id="petBubble"></div>
-        <img src="../assets/pets/pet1.gif" alt="宠物" id="petImage">
+        <img src="../assets/pets/pet1.webp" alt="宠物" id="petImage">
       </div>
 
       <div id="hashtag">© 2026 HuoLin</div>
+
     </main>
 
-    <!-- Anti-Inspect 防护 -->
+    <!-- Anti-Inspect 防护（需尽早生效） -->
     <script src="../assets/scripts/anti-inspect.js"></script>
-    <!-- Easter Egg（点击 © 5 次返回首页） -->
+
+    <!-- 合并配置与交互逻辑 -->
     <script>
-    window.__eggConfig = {
-      clicks: 5,
-      action: function () {
-        window.location.href = '../';
-      }
-    };
+    (function() {
+      'use strict';
+
+      // ---- 入场动画延迟 ----
+      (function() {
+        var els = document.querySelectorAll('#links .link');
+        for (var i = 0; i < els.length; i++) {
+          els[i].style.animationDelay = (0.10 + i * 0.08) + 's';
+        }
+      })();
+
+      // ---- Easter Egg 配置 ----
+      window.__eggConfig = {
+        clicks: 5,
+        action: function () {
+          window.location.href = '../';
+        }
+      };
+
+      // ---- 宠物语录 ----
+      window.__petMessages = [
+        '主人… 你终于来啦🥺 ',
+        '汪！今天主人有没有想我？',
+        '摸摸头～ 再多摸摸嘛～ 我会乖乖的…',
+        '主人累了吗？我可以给你暖脚哦 🐾',
+        '请尽情使唤吧… 我是可爱小狗…',
+        '嘿嘿，又被你抓到啦～ 好幸福…',
+        '你的手指好温暖… 再摸摸我好不好…',
+        '想一直被主人拴着，哪里都不去…',
+        '主人～ 看看我嘛，我比电视好看一万倍！✨',
+        '呜… 请多戳戳我… 你的触碰让我开心到尾巴都摇断了…',
+        '只属于你的乖狗狗，每天都会摇尾巴等你回来…',
+        '请让我钻进你怀里… 那里是最安全的小窝…',
+        '主人身上有我的味道，你是不是同意永远不离开我？',
+        '我愿意被主人揉乱毛毛，然后说"好乖"… 呜…',
+        '想变成主人口袋里的小狗，24小时都能被你偷摸…',
+        '主人，今夜请好好抱着我睡觉… 我会用肚子贴着你…',
+      ];
+
+      // ---- 相册图片 ----
+      window.__galleryImages = [
+        { src: 'https://pan.puppyis.cool/f/zBFY/IMG_0402.JPG' },
+        { src: 'https://pan.puppyis.cool/f/g3S0/51CAC53A-9471-47A7-844E-B1C0B8813425.JPG' },
+        { src: 'https://pan.puppyis.cool/f/7ec9/IMG_1732.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/qkfp/IMG_0158.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/Nvip/IMG_1889.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/n5C2/IMG_2023.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/JAIr/IMG_2203.JPG' },
+        { src: 'https://pan.puppyis.cool/f/3Nu5/IMG_2281.JPG' },
+        { src: 'https://pan.puppyis.cool/f/Dwh4/IMG_2290.JPEG' },
+        { src: 'https://pan.puppyis.cool/f/pat1/IMG_2300.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/R3To/IMG_2314.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/b0U4/IMG_2334.JPG' },
+        { src: 'https://pan.puppyis.cool/f/BYsY/IMG_2526.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/M8Hk/IMG_2634.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/kOFd/IMG_3325.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/YrSO/IMG_3761.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/xqcd/IMG_3791.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/4WfW/IMG_3801.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/6oia/IMG_4292.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/AraCB/IMG_4295.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/rMMIp/IMG_4638%20Copy.JPG' },
+        { src: 'https://pan.puppyis.cool/f/arMu3/IMG_5618.JPG' },
+        { src: 'https://pan.puppyis.cool/f/Wqwh1/IMG_6254.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/EQvt6/IMG_6256.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/d7qTv/IMG_6690.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/8baUp/IMG_7394.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/9Ywsp/IMG_7396.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/56bH2/IMG_7888.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/m8QF0/IMG_7900.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/jJvSd/IMG_7912.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/V70fJ/IMG_7936.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/wd5fd/IMG_7938.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/2zViG/IMG_9330.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/QNlCp/IMG_9402.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/1aGIg/IMG_9407.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/oYLud/IMG_9472.jpeg' },
+        { src: 'https://pan.puppyis.cool/f/O0LcR/IMG_9483.jpeg' },
+      ];
+
+    })();
     </script>
-    <script src="../assets/scripts/easter-egg.js"></script>
-    <!-- 虚拟宠物 -->
-    <script>
-    window.__petMessages = [
-      '主人… 你终于来啦🥺 ',
-      '汪！今天主人有没有想我？',
-      '摸摸头～ 再多摸摸嘛～ 我会乖乖的…',
-      '主人累了吗？我可以给你暖脚哦 🐾',
-      '请尽情使唤吧… 我是可爱小狗…',
-      '嘿嘿，又被你抓到啦～ 好幸福…',
-      '你的手指好温暖… 再摸摸我好不好…',
-      '想一直被主人拴着，哪里都不去…',
-      '主人～ 看看我嘛，我比电视好看一万倍！✨',
-      '呜… 请多戳戳我… 你的触碰让我开心到尾巴都摇断了…',
-      '只属于你的乖狗狗，每天都会摇尾巴等你回来…',
-      '请让我钻进你怀里… 那里是最安全的小窝…',
-      '主人身上有我的味道，你是不是同意永远不离开我？',
-      '我愿意被主人揉乱毛毛，然后说“好乖”… 呜…',
-      '想变成主人口袋里的小狗，24小时都能被你偷摸…',
-      '主人，今夜请好好抱着我睡觉… 我会用肚子贴着你…',
-    ];
-    </script>
-    <script src="../assets/scripts/pet.js"></script>
   </body>
 </html>
