@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noarchive, nofollow">
+    <title>火林 · 这是我的秘密 ✦</title>
+    <link rel="icon" href="../assets/images/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../style.css">
+    <!-- 页面背景 -->
+    <style>
+      body {
+        --bg-image: url('../assets/images/Puppy_Play_Pride_Flag.svg');
+        background: var(--bg-image) center/cover fixed no-repeat;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="ambient-glow"></div>
+    <div class="vignette-overlay"></div>
+
+    <main class="container">
+      <div id="profilePicture">
+        <img src="../assets/images/avatar.png" alt="头像">
+      </div>
+      <div id="userName">𝓗𝓾𝓸𝓛𝓲𝓷</div>
+      <div id="links">
+        <!-- X（Twitter） -->
+        <a class="link" href="https://x.com/PuppyHuoLin" target="_blank">
+          <span class="link-icon"><i class="fab fa-x-twitter"></i></span>
+          <span class="link-label">X (Twitter)</span>
+        </a>
+        <!-- Instagram -->
+        <a class="link" href="https://www.instagram.com/puppyhuolin" target="_blank">
+          <span class="link-icon"><i class="fab fa-instagram"></i></span>
+          <span class="link-label">Instagram</span>
+        </a>
+        <!-- Bluesky -->
+        <a class="link" href="https://bsky.app/profile/slave.puppyhuolin.com" target="_blank">
+          <span class="link-icon"><i class="fab fa-bluesky"></i></span>
+          <span class="link-label">Bluesky</span>
+        </a>
+      </div>
+      <!-- ========== 虚拟宠物 ========== -->
+      <div id="pet">
+        <div class="pet-bubble" id="petBubble"></div>
+        <img src="../assets/pets/pet1.gif" alt="宠物" id="petImage">
+      </div>
+
+      <div id="hashtag">© 2026 HuoLin</div>
+    </main>
+
+    <!-- Anti-Inspect 防护 -->
+    <script src="../assets/scripts/anti-inspect.js"></script>
+    <!-- Easter Egg（点击 © 5 次返回首页） -->
+    <script>
+    window.__eggConfig = {
+      clicks: 5,
+      action: function () {
+        window.location.href = '../';
+      }
+    };
+    </script>
+    <script src="../assets/scripts/easter-egg.js"></script>
+    <!-- 虚拟宠物 -->
+    <script>
+    window.__petMessages = [
+      '主人… 你终于来啦🥺 ',
+      '汪！今天主人有没有想我？',
+      '摸摸头～ 再多摸摸嘛～ 我会乖乖的…',
+      '主人累了吗？我可以给你暖脚哦 🐾',
+      '请尽情使唤吧… 我是可爱小狗…',
+      '嘿嘿，又被你抓到啦～ 好幸福…',
+      '你的手指好温暖… 再摸摸我好不好…',
+      '想一直被主人拴着，哪里都不去…',
+      '主人～ 看看我嘛，我比电视好看一万倍！✨',
+      '呜… 请多戳戳我… 你的触碰让我开心到尾巴都摇断了…',
+      '只属于你的乖狗狗，每天都会摇尾巴等你回来…',
+      '请让我钻进你怀里… 那里是最安全的小窝…',
+      '主人身上有我的味道，你是不是同意永远不离开我？',
+      '我愿意被主人揉乱毛毛，然后说“好乖”… 呜…',
+      '想变成主人口袋里的小狗，24小时都能被你偷摸…',
+      '主人，今夜请好好抱着我睡觉… 我会用肚子贴着你…',
+    ];
+    </script>
+    <script src="../assets/scripts/pet.js"></script>
+  </body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noarchive, nofollow">
+    <title>火林 · 这是我的名片 ✦</title>
+    <!-- Favicon -->
+    <link rel="icon" href="assets/images/favicon.png" type="image/png" />
+    <!-- Font Awesome icons -->
+    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+    <!-- Core theme CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- 页面背景 -->
+    <style>
+      body {
+        --bg-image: url('assets/images/bg.jpg');
+        background: var(--bg-image) center/cover fixed no-repeat;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- visionOS 环境光晕 -->
+    <div class="ambient-glow"></div>
+    <!-- 暗角效果 -->
+    <div class="vignette-overlay"></div>
+
+    <!-- 主容器 -->
+    <main class="container">
+
+      <div id="profilePicture">
+        <img src="assets/images/avatar.png" alt="头像">
+      </div>
+
+      <div id="userName">
+        𝓗𝓾𝓸𝓛𝓲𝓷
+      </div>
+
+      <div id="links">
+        <!-- QQ — 点击显示二维码，底部可跳转链接 -->
+        <a class="link img-popup-trigger" data-img="assets/qrcodes/qq.jpg" data-url="https://qm.qq.com/q/KbsdxQ17W0" data-note="点击上方按钮直接访问">
+          <span class="link-icon"><i class="fab fa-qq"></i></span>
+          <span class="link-label">QQ</span>
+        </a>
+        <!-- 微信 — 点击显示二维码，无跳转链接 -->
+        <a class="link img-popup-trigger" data-img="assets/qrcodes/wechat.jpg" data-note="使用微信长按识别">
+          <span class="link-icon"><i class="fab fa-weixin"></i></span>
+          <span class="link-label">微信</span>
+        </a>
+        <!-- B站 — 点击显示二维码 -->
+        <a class="link img-popup-trigger" data-img="assets/qrcodes/bilibili.jpg" data-url="http://space.bilibili.com/430552995" data-note="点击上方按钮直接访问">
+          <span class="link-icon"><i class="fab fa-bilibili"></i></span>
+          <span class="link-label">Bilibili</span>
+        </a>
+        <!-- 抖音 — 点击显示二维码 -->
+        <a class="link img-popup-trigger" data-img="assets/qrcodes/douyin.jpg" data-url="https://www.douyin.com/user/MS4wLjABAAAAYuXxtdsArkxgZpoGgQHE1Z2e5mvPeP4UCSezKlzUiALP4vyL0yqLi0vjneoLi5wz" data-note="点击上方按钮直接访问">
+          <span class="link-icon"><i class="fab fa-tiktok"></i></span>
+          <span class="link-label">抖音</span>
+        </a>
+      </div>
+
+      <!-- ========== 虚拟宠物 ========== -->
+      <div id="pet">
+        <div class="pet-bubble" id="petBubble"></div>
+        <img src="assets/pets/pet.gif" alt="宠物" id="petImage">
+      </div>
+
+      <div id="hashtag">
+        © 2026 HuoLin
+      </div>
+
+    </main>
+
+    <!-- ========== 图片弹窗（二维码等单图展示） ========== -->
+    <div class="img-popup-overlay" id="imgPopup">
+      <div class="img-popup-card">
+        <img class="img-popup-image" id="imgPopupImage" src="" alt="">
+        <div class="img-popup-label" id="imgPopupLabel"></div>
+        <a class="img-popup-btn" id="imgPopupBtn" href="#" target="_blank" style="display:none;">
+          <i class="fas fa-external-link-alt"></i> 访问
+        </a>
+        <div class="img-popup-note" id="imgPopupNote"></div>
+        <span class="img-popup-close" id="imgPopupCloseBtn">&times;</span>
+      </div>
+    </div>
+
+    <!-- Anti-Inspect 防护 -->
+    <script src="assets/scripts/anti-inspect.js"></script>
+    <!-- Easter Egg（点击 © 5 次跳转到 /whisper） -->
+    <script>
+    window.__eggConfig = {
+      clicks: 5,
+      timeout: 2000,
+      action: function () {
+        window.location.href = 'whisper';
+      }
+    };
+    </script>
+    <script src="assets/scripts/easter-egg.js"></script>
+    <!-- 虚拟宠物 -->
+    <script>
+    window.__petMessages = [
+      '嗷呜～ 你吵醒本王午睡了…',
+      '看什么看，没见过帅老虎吗？🐯',
+      '别戳了！再戳我咬你哦… 呜…',
+      '摸我脑袋？好吧，允许你摸三下，不能再多！',
+      '我的条纹是不是特别好看？嘻嘻~',
+      '今天阳光不错，趴在这儿不想动… zzz',
+      '想吃鱼… 最好是烤的那种 🐟',
+      '吼——（其实是打哈欠）',
+      '你手机里是不是藏了小鱼干？',
+      '尾巴给你玩一下，但别扯疼我！',
+      '我是大猫猫，不是大狗狗！哼～',
+      '蹭蹭你～ 嗯… 你身上有我的味道了～',
+      '这座小站是我的领地！你也是我的！',
+      '发现一只野生大佬！嗷~',
+      '本王飞一个～ 🦋（其实根本飞不起来）',
+      '饿了… 快投喂本王！不然我生气了！',
+      '你喜欢我吗？喜欢的话… 允许你当我的铲屎官…',
+    ];
+    </script>
+    <script src="assets/scripts/pet.js"></script>
+
+    <script>
+    (function() {
+      'use strict';
+
+      // ---- 图片弹窗（二维码等单图展示） ----
+      const imgPopup = document.getElementById('imgPopup');
+      const imgPopupImage = document.getElementById('imgPopupImage');
+      const imgPopupLabel = document.getElementById('imgPopupLabel');
+      const imgPopupBtn = document.getElementById('imgPopupBtn');
+      const imgPopupClose = document.getElementById('imgPopupCloseBtn');
+
+      document.querySelectorAll('.img-popup-trigger').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const imgSrc = this.dataset.img;
+          const url = this.dataset.url;
+          const note = this.dataset.note || '';
+          const label = this.querySelector('.link-label')?.textContent || '';
+          if (imgSrc) {
+            imgPopupImage.src = imgSrc;
+            imgPopupImage.alt = label;
+            imgPopupLabel.textContent = label;
+            // 备注
+            imgPopupNote.textContent = note;
+            // 有链接则显示访问按钮
+            if (url) {
+              imgPopupBtn.href = url;
+              imgPopupBtn.style.display = 'inline-flex';
+            } else {
+              imgPopupBtn.style.display = 'none';
+            }
+            imgPopup.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          }
+        });
+      });
+
+      function closeImgPopup() {
+        imgPopup.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      imgPopupClose.addEventListener('click', closeImgPopup);
+
+      imgPopup.addEventListener('click', function(e) {
+        if (e.target === imgPopup) closeImgPopup();
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (imgPopup.classList.contains('active') && e.key === 'Escape') {
+          closeImgPopup();
+        }
+      });
+
+      // ---- 虚拟宠物逻辑移至 assets/pet.js ----
+
+    })();
+    </script>
+  </body>
+</html>
