@@ -50,7 +50,7 @@
         'en':     'RED' },
 
     'brand.x':
-      { 'zh-CN': 'X',
+      { 'zh-CN': 'X（推特）',
         'en':     'X (Twitter)' },
 
     'brand.instagram':

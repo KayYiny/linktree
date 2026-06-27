@@ -299,13 +299,26 @@ body::after {
   line-height: 1;
 }
 
+/* ========== Toolbar Row（语言切换 + 相册按钮并排） ========== */
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 6px auto 20px;
+}
+
 /* ========== Language Switch ========== */
 .lang-switch-btn {
-  display: block;
-  margin: 6px auto 20px;
-  padding: 8px 22px;
-  font-family: 'DM Sans', 'Noto Sans SC', sans-serif;
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  width: 130px;
+  height: 44px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text-dark);
@@ -329,6 +342,50 @@ body::after {
 }
 
 .lang-switch-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--shadow);
+  transition-duration: 0.05s;
+}
+
+/* ========== Album Button（工具栏内小按钮） ========== */
+.album-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0;
+  width: 130px;
+  height: 44px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-dark);
+  background: var(--surface);
+  border: var(--border-w) solid var(--border);
+  box-shadow: 4px 4px 0 var(--shadow);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  line-height: 1.4;
+}
+
+.album-btn i {
+  font-size: 0.9rem;
+}
+
+@media (hover: hover) {
+  .album-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--accent-cyan);
+    border-color: var(--accent-cyan);
+    background: #f8f8f8;
+  }
+}
+
+.album-btn:active {
   transform: translate(2px, 2px);
   box-shadow: 2px 2px 0 var(--shadow);
   transition-duration: 0.05s;
@@ -768,6 +825,22 @@ body::after {
     inset: -8px;
   }
 
+  .toolbar-row {
+    gap: 10px;
+  }
+
+  .lang-switch-btn,
+  .album-btn {
+    padding: 0;
+    width: 110px;
+    height: 40px;
+    font-size: 0.85rem;
+  }
+
+  .album-btn i {
+    font-size: 0.85rem;
+  }
+
   #links {
     gap: 14px;
     padding: 0 4px;
@@ -854,6 +927,22 @@ body::after {
 
   #profilePicture::before {
     inset: -6px;
+  }
+
+  .toolbar-row {
+    gap: 8px;
+  }
+
+  .lang-switch-btn,
+  .album-btn {
+    padding: 0;
+    width: 96px;
+    height: 36px;
+    font-size: 0.82rem;
+  }
+
+  .album-btn i {
+    font-size: 0.8rem;
   }
 
   #links {

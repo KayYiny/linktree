@@ -49,14 +49,15 @@
       </div>
 
       <!-- 语言切换 -->
-      <button id="langSwitch" class="lang-switch-btn" onclick="setLanguage(getLang() === 'zh-CN' ? 'en' : 'zh-CN')">EN</button>
+      <div class="toolbar-row">
+        <button id="langSwitch" class="lang-switch-btn" onclick="setLanguage(getLang() === 'zh-CN' ? 'en' : 'zh-CN')">EN</button>
+        <a class="album-btn gallery-trigger" href="javascript:void(0)">
+          <i class="fas fa-images"></i>
+          <span data-i18n="album.label">Album</span>
+        </a>
+      </div>
 
       <div id="links">
-        <!-- 相册（固定在第一位） -->
-        <a class="link gallery-trigger" href="javascript:void(0)">
-          <span class="link-icon"><i class="fas fa-images"></i></span>
-          <span class="link-label" data-i18n="album.label">Album</span>
-        </a>
         <!-- X（Twitter） -->
         <a class="link" href="https://x.com/PuppyHuoLin" target="_blank">
           <span class="link-icon"><img src="../assets/icons/x.svg" class="brand-icon" alt="X"></span>
@@ -113,43 +114,38 @@
 
       // ---- 相册图片 ----
       window.__galleryImages = [
-        { src: 'https://pan.puppyis.cool/f/zBFY/IMG_0402.JPG' },
-        { src: 'https://pan.puppyis.cool/f/g3S0/51CAC53A-9471-47A7-844E-B1C0B8813425.JPG' },
-        { src: 'https://pan.puppyis.cool/f/7ec9/IMG_1732.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/qkfp/IMG_0158.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/Nvip/IMG_1889.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/n5C2/IMG_2023.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/JAIr/IMG_2203.JPG' },
-        { src: 'https://pan.puppyis.cool/f/3Nu5/IMG_2281.JPG' },
-        { src: 'https://pan.puppyis.cool/f/Dwh4/IMG_2290.JPEG' },
-        { src: 'https://pan.puppyis.cool/f/pat1/IMG_2300.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/R3To/IMG_2314.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/b0U4/IMG_2334.JPG' },
-        { src: 'https://pan.puppyis.cool/f/BYsY/IMG_2526.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/M8Hk/IMG_2634.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/kOFd/IMG_3325.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/YrSO/IMG_3761.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/xqcd/IMG_3791.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/4WfW/IMG_3801.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/6oia/IMG_4292.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/AraCB/IMG_4295.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/rMMIp/IMG_4638%20Copy.JPG' },
-        { src: 'https://pan.puppyis.cool/f/arMu3/IMG_5618.JPG' },
-        { src: 'https://pan.puppyis.cool/f/Wqwh1/IMG_6254.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/EQvt6/IMG_6256.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/d7qTv/IMG_6690.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/8baUp/IMG_7394.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/9Ywsp/IMG_7396.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/56bH2/IMG_7888.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/m8QF0/IMG_7900.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/jJvSd/IMG_7912.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/V70fJ/IMG_7936.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/wd5fd/IMG_7938.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/2zViG/IMG_9330.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/QNlCp/IMG_9402.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/1aGIg/IMG_9407.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/oYLud/IMG_9472.jpeg' },
-        { src: 'https://pan.puppyis.cool/f/O0LcR/IMG_9483.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaea0b40a.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaea1e097.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaea14236.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeb27737.jpg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeb4363d.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeb48f88.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaec29530.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaec4d018.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaecaa10f.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaed3901a.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaed6d08b.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeda74ca.jpg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaee552e8.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeea84d8.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaee9e885.jpg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaef528ed.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaef981e7.jpg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaefd8b6e.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaf05a9dc.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaf09c8c7.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3a12cc4.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb39f272d.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3b01490.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3b40ee0.jpg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3b447c9.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3c408dc.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3c84e71.jpg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3d143f6.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3d42142.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3daee7b.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3c2382b.jpeg' },
+        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb39eb878.jpeg' },
       ];
 
     })();
