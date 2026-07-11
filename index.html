@@ -62,6 +62,10 @@
           <i class="fas fa-images"></i>
           <span data-i18n="album.label">Album</span>
         </a>
+        <button class="album-btn" id="shareMainBtn">
+          <i class="fas fa-link"></i>
+          <span data-i18n="share.button">分享入口</span>
+        </button>
       </div>
 
       <div id="links">
@@ -145,6 +149,20 @@
         { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe95454f88.jpeg' },
       ];
 
+    })();
+
+    // ---- 分享主页链接 ----
+    (function() {
+      var btn = document.getElementById('shareMainBtn');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        var url = window.location.origin + '/';
+        if (navigator.clipboard) navigator.clipboard.writeText(url);
+        var check = (window.getLang && window.getLang() === 'en') ? 'Copied!' : '已复制';
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> <span>' + check + '</span>';
+        setTimeout(function () { btn.innerHTML = orig; }, 2000);
+      });
     })();
     </script>
   </body>

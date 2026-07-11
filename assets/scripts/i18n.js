@@ -196,6 +196,11 @@
       { 'zh-CN': '我试试！',
         'en':     'Let me try!' },
 
+    /* ── 分享入口按钮（whisper 页面） ── */
+    'share.button':
+      { 'zh-CN': '分享入口',
+        'en':     'Share' },
+
     /* ── 宠物：狗狗页面（whisper/index.html） ── */
     'pet.dog': {
       'zh-CN': [

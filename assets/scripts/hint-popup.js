@@ -1,19 +1,53 @@
 /**
  * Hint Popup — 隐藏入口提示弹窗
  *
- * 在 URL 后添加 ?hint 参数访问主页面时，
- * 自动弹出提示窗口，告知用户如何通过彩蛋
- * 进入隐藏页面（whisper/）。
+ * URL 参数机制：
+ *   ?ref_id      — 永久参数（你自己用。页面自动将地址栏换成当日密钥，不刷页面）
+ *   ?<6位密钥>    — 每日轮询参数（分享给朋友，次日过期）
  *
- * 用法：
- *   https://example.com/?hint
+ * 两者均弹出彩蛋触发方法的提示窗口。
  */
 (function () {
   'use strict';
 
+  // ponytail: 简单哈希 + 固定盐值。读了 JS 的人能算出任意一天密钥，
+  // 目的是挡住静态爬取，不是防逆向。
+  var SALT = 'hul_ref_2024';
+
+  function _hash(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) {
+      h = ((h << 5) - h) + s.charCodeAt(i);
+      h |= 0;
+    }
+    return Math.abs(h).toString(36);
+  }
+
+  function getDailySecret() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return _hash(y + '-' + m + '-' + day + SALT).slice(0, 6);
+  }
+
   // ---- 检测 URL 参数 ----
+  var secret = getDailySecret();
   var params = new URLSearchParams(window.location.search);
-  if (!params.has('hint')) return;
+  var shouldShow = false;
+
+  if (params.has('ref_id')) {
+    // 永久参数 → 地址栏换成当日密钥，不留历史记录
+    window.history.replaceState(
+      null, '',
+      window.location.pathname + '?' + secret + window.location.hash
+    );
+    shouldShow = true;
+  } else if (params.has(secret)) {
+    shouldShow = true;
+  }
+
+  if (!shouldShow) return;
 
   // 确保 i18n 已加载
   if (typeof window.__ !== 'function') {
@@ -43,7 +77,7 @@
   document.body.appendChild(overlay);
 
   // ---- 显示弹窗（延迟一小段让页面先渲染） ----
-  var showTimer = setTimeout(function () {
+  setTimeout(function () {
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
   }, 600);

@@ -55,6 +55,10 @@
           <i class="fas fa-images"></i>
           <span data-i18n="album.label">Album</span>
         </a>
+        <button class="album-btn" id="shareLinkBtn">
+          <i class="fas fa-link"></i>
+          <span data-i18n="share.button">分享入口</span>
+        </button>
       </div>
 
       <div id="links">
@@ -149,6 +153,43 @@
       ];
 
     })();
+
+    // ---- 分享入口：复制当日密钥链接 ----
+    (function() {
+      var btn = document.getElementById('shareLinkBtn');
+      if (!btn) return;
+
+      var SALT = 'hul_ref_2024';
+
+      function _hash(s) {
+        var h = 0;
+        for (var i = 0; i < s.length; i++) {
+          h = ((h << 5) - h) + s.charCodeAt(i);
+          h |= 0;
+        }
+        return Math.abs(h).toString(36);
+      }
+
+      function getSecret() {
+        var d = new Date();
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        return _hash(y + '-' + m + '-' + day + SALT).slice(0, 6);
+      }
+
+      btn.addEventListener('click', function () {
+        var url = window.location.origin + '/?' + getSecret();
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(url);
+        }
+        var check = (window.getLang && window.getLang() === 'en') ? 'Copied!' : '已复制';
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> <span>' + check + '</span>';
+        setTimeout(function () { btn.innerHTML = orig; }, 2000);
+      });
+    })();
+
     </script>
   </body>
 </html>
