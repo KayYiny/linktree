@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noarchive, nofollow">
     <title data-i18n="page.title.whisper">火林 · 这是我的秘密 ✦</title>
+    <!-- 密钥校验：无有效密钥则跳回首页（阻塞脚本，防止页面闪烁） -->
+    <script>
+    (function() {
+      var SALT = 'hul_ref_2024';
+      function _hash(s) { var h = 0; for (var i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return Math.abs(h).toString(36); }
+      var d = new Date(), y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+      var secret = _hash(y+'-'+m+'-'+day+SALT).slice(0,6);
+      var k = new URLSearchParams(location.search).get('k');
+      if (k !== secret) { location.replace('../'); }
+    })();
+    </script>
     <link rel="icon" href="../assets/images/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="../style.css">

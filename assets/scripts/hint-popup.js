@@ -31,6 +31,9 @@
     return _hash(y + '-' + m + '-' + day + SALT).slice(0, 6);
   }
 
+  // 暴露给其他脚本（easter egg / whisper 页面校验）
+  window.__getDailySecret = getDailySecret;
+
   // ---- 检测 URL 参数 ----
   var secret = getDailySecret();
   var params = new URLSearchParams(window.location.search);

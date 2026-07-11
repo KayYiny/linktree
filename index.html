@@ -124,12 +124,13 @@
         }
       })();
 
-      // ---- Easter Egg 配置 ----
+      // ---- Easter Egg 配置（跳转至隐藏页，带上当日密钥） ----
       window.__eggConfig = {
         clicks: 5,
         timeout: 200,
         action: function () {
-          window.location.href = 'whisper';
+          var secret = window.__getDailySecret ? window.__getDailySecret() : '';
+          window.location.href = 'whisper/?k=' + secret;
         }
       };
 
