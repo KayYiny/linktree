@@ -14,7 +14,6 @@
   // ============================================================
   document.addEventListener('contextmenu', function (e) {
     e.preventDefault();
-    return false;
   });
 
   // ============================================================
@@ -24,7 +23,6 @@
     // F12
     if (e.key === 'F12') {
       e.preventDefault();
-      return false;
     }
 
     // Ctrl+Shift+I (DevTools)
@@ -32,19 +30,16 @@
     // Ctrl+Shift+C (Inspect Element)
     if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
       e.preventDefault();
-      return false;
     }
 
     // Ctrl+U (View Source)
     if (e.ctrlKey && e.key.toUpperCase() === 'U') {
       e.preventDefault();
-      return false;
     }
 
     // Ctrl+S (Save Page)
     if (e.ctrlKey && e.key.toUpperCase() === 'S') {
       e.preventDefault();
-      return false;
     }
   });
 

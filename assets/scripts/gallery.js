@@ -260,13 +260,7 @@
   }
 
   function showGrid() {
-    mode = 'grid';
-    headerEl.style.display = '';
-    gridEl.style.display = '';
-    paginationEl.style.display = totalPages > 1 ? '' : 'none';
-    lightboxEl.style.display = 'none';
-    // 回到第一页
-    if (currentPage !== 0) showPage(0);
+    resetMode();
   }
 
   // ---- 翻页 ----
