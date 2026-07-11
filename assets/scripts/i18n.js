@@ -179,6 +179,23 @@
       ],
     },
 
+    /* ── 隐藏入口提示弹窗 ── */
+    'hint.title':
+      { 'zh-CN': '🔍 发现秘密通道',
+        'en':     '🔍 Secret Passage Found' },
+
+    'hint.body':
+      { 'zh-CN': '猛戳底部「© 2026 HuoLin」五次！',
+        'en':     'Rapidly tap 「© 2026 HuoLin」at the bottom 5 times!' },
+
+    'hint.detail':
+      { 'zh-CN': '以非常快的速度在版权文字上连续点击 5 次（比双击还要快），就能瞬间解锁隐藏空间 ✦',
+        'en':     'Click the copyright text 5 times extremely fast — even faster than a double-click. Do it right and the hidden space will unlock instantly ✦' },
+
+    'hint.close':
+      { 'zh-CN': '我试试！',
+        'en':     'Let me try!' },
+
     /* ── 宠物：狗狗页面（whisper/index.html） ── */
     'pet.dog': {
       'zh-CN': [

@@ -765,6 +765,96 @@ body::after {
   opacity: 0.6;
 }
 
+/* ========== Hint Popup（隐藏入口提示弹窗） ========== */
+.hint-card {
+  max-width: 400px;
+  padding: 36px 28px 28px;
+  text-align: center;
+}
+
+.hint-emoji {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.hint-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.hint-body {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.6;
+  padding: 0 8px;
+  margin-bottom: 24px;
+  opacity: 0.85;
+}
+
+.hint-detail {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  line-height: 1.7;
+  padding: 0 8px;
+  margin-bottom: 24px;
+  opacity: 0.75;
+  text-align: left;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hint-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.hint-close-btn {
+  position: static !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  padding: 10px 28px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-dark);
+  background: var(--surface);
+  border: var(--border-w) solid var(--border);
+  box-shadow: 4px 4px 0 var(--shadow);
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  line-height: 1;
+}
+
+.hint-close-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+.hint-close-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--shadow);
+  transition-duration: 0.05s;
+}
+
 /* ========== Animations ========== */
 @keyframes fadeUp {
   0% {
