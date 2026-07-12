@@ -89,6 +89,7 @@
   function closeHintPopup() {
     overlay.classList.remove('active');
     document.body.style.overflow = '';
+    window.history.replaceState(null, '', window.location.pathname);
   }
 
   // 关闭按钮
