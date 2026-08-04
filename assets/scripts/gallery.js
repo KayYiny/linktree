@@ -335,12 +335,13 @@
   // ──────────────────────────────────────────────
   //  启动
   // ──────────────────────────────────────────────
+  var built = false;
   function init() {
     var trigger = document.querySelector('.gallery-trigger');
     if (!trigger) return;
-    build();
     trigger.addEventListener('click', function (e) {
       e.preventDefault();
+      if (!built) { build(); built = true; }
       open();
     });
   }
