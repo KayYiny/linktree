@@ -526,7 +526,7 @@
     rows.sort(function (a, b) { return a.key < b.key ? -1 : a.key > b.key ? 1 : 0; });
 
     var wrap = document.getElementById('transList');
-    var html = '<table class="data-table"><thead><tr><th>Key</th><th>中文</th><th>English</th><th></th></tr></thead><tbody>';
+    var html = '<div class="table-scroll"><table class="data-table"><thead><tr><th>Key</th><th>中文</th><th>English</th><th></th></tr></thead><tbody>';
     rows.forEach(function (t) {
       html += '<tr class="' + (t._dirty ? 'dirty' : '') + '" data-key="' + esc(t.key) + '">' +
         '<td><input class="t-key" value="' + esc(t.key) + '"></td>' +
@@ -534,7 +534,7 @@
         '<td><input class="t-en" value="' + esc(t.en) + '"></td>' +
         '<td><button class="btn-icon btn-danger" data-action="delete" title="删除">&times;</button></td></tr>';
     });
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     wrap.innerHTML = html;
 
     var trs = wrap.querySelectorAll('tbody tr');

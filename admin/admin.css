@@ -603,6 +603,10 @@ body {
 }
 
 /* ========== 表格 ========== */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -999,12 +1003,15 @@ body {
     align-items: stretch;
   }
   .side-nav .tab {
-    flex-shrink: 0;
-    justify-content: flex-start;
-    padding: 8px 12px;
+    flex: 1 1 0;
+    justify-content: center;
+    padding: 8px 4px;
   }
   .side-nav .tab span {
-    display: inline;
+    display: none;
+  }
+  .data-table {
+    min-width: 520px;
   }
   .form-row {
     flex-direction: column;
