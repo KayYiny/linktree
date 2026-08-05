@@ -1,14 +1,15 @@
 /**
- * Vercel Serverless Function — 站点配置读写（MySQL 存储）
+ * Vercel Serverless Function — 站点配置读写（PostgreSQL 存储）
  *
  * GET  /api/config  → 返回站点全部配置（不含口令，无 CDN 缓存，改动即时生效）
  * PUT  /api/config  → 校验口令后写入配置
  *
- * 配置存于 MySQL 单行表 site_config（自动建表）。
+ * 配置存于 PostgreSQL 单行表 site_config（自动建表）。
  * 连接参数从环境变量读取（Vercel 项目 → Settings → Environment Variables）：
- *   方式一（推荐）：MYSQL_URL = mysql://用户名:密码@主机:端口/数据库名
- *   方式二：MYSQL_HOST / MYSQL_PORT / MYSQL_USER / MYSQL_PASSWORD / MYSQL_DATABASE
- * ⚠️ Vercel 函数在美国执行，MySQL 必须可从公网访问。
+ *   DATABASE_URL 或 POSTGRES_URL = postgres://用户名:密码@主机:端口/数据库名
+ *     - 用 Vercel Postgres：在 Storage 创建后自动生成，无需手动填
+ *     - 用自建 Postgres：填你的连接串，且需可从公网访问（Vercel 函数在美东）
+ *   若你的库不需要 SSL，设置环境变量 PGSSL=false
  *
  * 配置结构：
  *   site    — 站点基础信息（名字/标题/头像/logo/背景/版权/模块开关）
@@ -18,54 +19,44 @@
  *   links   — 主页链接（含 enabled 开关）
  *   gallery — 主页相册（含 enabled 开关）
  */
-import mysql from 'mysql2/promise';
+import { Pool } from 'pg';
 
 const DEFAULT_PASSWORD = 'admin123'; // 首次默认口令，登录后请在管理页「设置」中修改
 
-const MYSQL_TABLE = 'site_config';
+const PG_TABLE = 'site_config';
 
-function mysqlConfig() {
-  const url = process.env.MYSQL_URL || process.env.DATABASE_URL;
-  if (url) return { uri: url };
-  return {
-    host: process.env.MYSQL_HOST || '127.0.0.1',
-    port: Number(process.env.MYSQL_PORT) || 3306,
-    user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD || '',
-    database: process.env.MYSQL_DATABASE || 'linktree',
-  };
+/** PostgreSQL 连接（Vercel Postgres 或自建，读 DATABASE_URL / POSTGRES_URL） */
+function pgConfig() {
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
+  const cfg = { connectionString: url, max: 5, idleTimeoutMillis: 20000 };
+  // 公网连接默认启用 SSL（Vercel Postgres / Neon / Supabase / RDS 一般要求）；
+  // 你的库不需要 SSL 时，设置环境变量 PGSSL=false
+  cfg.ssl = process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false };
+  return cfg;
 }
 
 let pool;
 function getPool() {
-  if (!pool) {
-    pool = mysql.createPool(
-      Object.assign(mysqlConfig(), {
-        connectionLimit: 5,
-        waitForConnections: true,
-        enableKeepAlive: true,
-      })
-    );
-  }
+  if (!pool) pool = new Pool(pgConfig());
   return pool;
 }
 
 async function initSchema() {
   await getPool().query(
-    'CREATE TABLE IF NOT EXISTS `' + MYSQL_TABLE + '` (' +
-      'id INT PRIMARY KEY, ' +
-      'data JSON NOT NULL, ' +
-      'updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP' +
-    ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+    'CREATE TABLE IF NOT EXISTS "' + PG_TABLE + '" (' +
+      'id INTEGER PRIMARY KEY, ' +
+      'data JSONB NOT NULL, ' +
+      'updated_at TIMESTAMPTZ DEFAULT now()' +
+    ')'
   );
 }
 
-/** 从 MySQL 读取配置；不存在或出错时返回 null */
+/** 从 PostgreSQL 读取配置；不存在或出错时返回 null */
 async function readConfig() {
   try {
     await initSchema();
-    const [rows] = await getPool().query(
-      'SELECT data FROM `' + MYSQL_TABLE + '` WHERE id = 1'
+    const { rows } = await getPool().query(
+      'SELECT data FROM "' + PG_TABLE + '" WHERE id = 1'
     );
     if (!rows || !rows.length) return null;
     const raw = rows[0].data;
@@ -76,14 +67,14 @@ async function readConfig() {
   }
 }
 
-/** 写入配置到 MySQL（单行 UPSERT） */
+/** 写入配置到 PostgreSQL（单行 UPSERT） */
 async function writeConfig(cfg) {
   await initSchema();
   const data = JSON.stringify(cfg);
   await getPool().query(
-    'INSERT INTO `' + MYSQL_TABLE + '` (id, data) VALUES (1, ?) ' +
-    'ON DUPLICATE KEY UPDATE data = ?',
-    [data, data]
+    'INSERT INTO "' + PG_TABLE + '" (id, data) VALUES (1, $1) ' +
+    'ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data',
+    [data]
   );
 }
 

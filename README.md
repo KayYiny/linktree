@@ -74,11 +74,11 @@ linktree/
 ├── index.html                       # 主页面
 ├── style.css                        # 新粗野主义设计系统
 ├── admin.html                       # 管理后台（链接 / 相册在线管理）
-├── package.json                     # Vercel 函数依赖（mysql2）
+├── package.json                     # Vercel 函数依赖（pg）
 ├── README.md                        # 项目文档
 │
 ├── api/
-│   └── config.js                    # Vercel 无服务器函数：读写站点配置（MySQL 存储）
+│   └── config.js                    # Vercel 无服务器函数：读写站点配置（PostgreSQL 存储）
 │
 ├── assets/
 │   ├── fontawesome/                 # Font Awesome 6 图标库
@@ -219,17 +219,19 @@ linktree/
 
 ### 启用步骤
 
-1. **准备 MySQL**：准备一个**可从公网访问**的 MySQL（云数据库，或自建 MySQL 开放公网访问；Vercel 函数在美国执行）。数据库、账号建好后无需手动建表，代码会自动创建 `site_config` 表
-2. **配置连接环境变量**：Vercel 项目 → Settings → Environment Variables，添加（二选一）：
-   - `MYSQL_URL` = `mysql://用户名:密码@主机:端口/数据库名`（推荐）
-   - 或分别添加 `MYSQL_HOST` / `MYSQL_PORT` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DATABASE`
-3. **部署**：`git push`，Vercel 自动部署
+1. **准备 PostgreSQL**（二选一）：
+   - **Vercel Postgres**（推荐）：Vercel 控制台 → 项目 → **Storage** → **Create Database** → 选 **Postgres**，创建后自动生成连接环境变量，无需手动配置
+   - **自建 / 其他云 Postgres**：需可从公网访问（Vercel 函数在美国执行）
+2. **连接环境变量**（Vercel 项目 → Settings → Environment Variables）：
+   - 用 Vercel Postgres：自动生成 `POSTGRES_URL` / `DATABASE_URL`，无需手动加
+   - 自建：添加 `DATABASE_URL` = `postgres://用户名:密码@主机:端口/数据库名`；若库不需要 SSL，再加 `PGSSL=false`
+3. **部署**：`git push`，Vercel 自动部署（代码会自动创建 `site_config` 表）
 4. **访问后台**：`你的域名/admin.html`
 5. **首次登录**：默认口令 `admin123`，登录后请在「设置」中修改
 
 ### 数据说明
 
-- 配置存于 MySQL 的 `site_config` 表（单行 JSON，自动建表）
+- 配置存于 PostgreSQL 的 `site_config` 表（单行 JSONB，自动建表）
 - `/api/config` 接口**不做 CDN 缓存**，保存后改动对所有访客**立即生效**
 - 每次访问主页会调用 1 次无服务器函数拉取配置（Hobby 免费 10 万次/月）
 - 未部署 / 本地直接打开时，主页自动回退到内置默认数据，正常显示
