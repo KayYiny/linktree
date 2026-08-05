@@ -8,193 +8,199 @@
     <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="admin.css">
   </head>
-  <body class="dark-theme">
-    <!-- 顶部栏 -->
-    <header class="admin-header">
-      <div class="header-left">
-        <h1>HUOLIN·ADMIN</h1>
-        <span class="header-sub" id="loginUser"></span>
+  <body>
+    <!-- 顶栏 -->
+    <header class="topbar">
+      <div class="brand">
+        HUOLIN
+        <span class="sub" id="loginUser"></span>
       </div>
-      <div class="header-actions">
-        <a href="/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回主页</a>
-        <button class="btn btn-outline" id="exportBtn"><i class="fas fa-download"></i> 导出</button>
-        <button class="btn btn-outline" id="importBtn"><i class="fas fa-upload"></i> 导入</button>
-        <button class="btn btn-outline" id="revertBtn" title="放弃所有未保存修改"><i class="fas fa-undo"></i> 撤销</button>
+      <div class="topbar-actions">
+        <span class="last-save">上次保存 <strong id="sysLastSave">—</strong></span>
+        <a href="/" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> 返回主页</a>
+        <button class="btn btn-ghost" id="exportBtn"><i class="fas fa-download"></i> 导出</button>
+        <button class="btn btn-ghost" id="importBtn"><i class="fas fa-upload"></i> 导入</button>
+        <button class="btn btn-ghost" id="revertBtn" title="放弃所有未保存修改"><i class="fas fa-undo"></i> 撤销</button>
         <button class="btn btn-primary" id="saveBtn" disabled><i class="fas fa-save"></i> 保存全部</button>
       </div>
     </header>
 
-    <!-- 标签页导航 -->
-    <nav class="admin-tabs">
-      <button class="tab active" data-tab="links"><i class="fas fa-link"></i> 链接管理</button>
-      <button class="tab" data-tab="gallery"><i class="fas fa-images"></i> 相册管理</button>
-      <button class="tab" data-tab="pet"><i class="fas fa-paw"></i> 宠物管理</button>
-      <button class="tab" data-tab="translations"><i class="fas fa-language"></i> 翻译管理</button>
-      <button class="tab" data-tab="pages"><i class="fas fa-file"></i> 页面管理</button>
-      <button class="tab" data-tab="settings"><i class="fas fa-cog"></i> 设置</button>
-    </nav>
+    <div class="layout">
+      <!-- 左侧导航 -->
+      <nav class="side-nav" aria-label="管理面板导航">
+        <button class="tab active" data-tab="links"><i class="fas fa-link"></i><span>链接管理</span></button>
+        <button class="tab" data-tab="gallery"><i class="fas fa-images"></i><span>相册管理</span></button>
+        <button class="tab" data-tab="pet"><i class="fas fa-paw"></i><span>宠物管理</span></button>
+        <button class="tab" data-tab="translations"><i class="fas fa-language"></i><span>翻译管理</span></button>
+        <button class="tab" data-tab="pages"><i class="fas fa-file"></i><span>页面管理</span></button>
+        <button class="tab" data-tab="settings"><i class="fas fa-cog"></i><span>设置</span></button>
+      </nav>
 
-    <!-- 内容区 -->
-    <main class="admin-content">
+      <!-- 内容区 -->
+      <main class="content">
 
-      <!-- ========== 链接管理 ========== -->
-      <div id="panel-links" class="tab-panel active">
-        <div class="panel-header">
-          <h2>链接管理</h2>
-          <select id="linkPageFilter" class="page-filter"><option value="">全部页面</option></select>
-        </div>
-        <div class="panel-toolbar">
-          <button class="btn btn-primary" id="addLinkBtn"><i class="fas fa-plus"></i> 新增链接</button>
-          <span class="filter-hint" id="linkFilterHint"></span>
-        </div>
-        <div id="linksList"></div>
-      </div>
-
-      <!-- ========== 相册管理 ========== -->
-      <div id="panel-gallery" class="tab-panel">
-        <div class="panel-header">
-          <h2>相册管理</h2>
-          <select id="galleryPageFilter" class="page-filter"><option value="">全部页面</option></select>
-        </div>
-        <div class="panel-toolbar">
-          <div class="inline-add">
-            <input type="text" id="galleryNewSrc" placeholder="粘贴图片 URL，回车添加">
-            <button class="btn btn-primary" id="galleryAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+        <!-- ========== 链接管理 ========== -->
+        <div id="panel-links" class="tab-panel active">
+          <div class="panel-header">
+            <h2>链接管理</h2>
+            <select id="linkPageFilter" class="page-filter"><option value="">全部页面</option></select>
           </div>
-          <span class="filter-hint" id="galleryFilterHint"></span>
-        </div>
-        <div id="galleryList" class="gallery-grid"></div>
-      </div>
-
-      <!-- ========== 宠物管理 ========== -->
-      <div id="panel-pet" class="tab-panel">
-        <div class="panel-header">
-          <h2>宠物管理</h2>
-          <select id="petPageFilter" class="page-filter"><option value="">全部页面</option></select>
-        </div>
-        <div class="panel-toolbar">
-          <button class="btn btn-primary" id="addPetBtn"><i class="fas fa-plus"></i> 新增宠物</button>
-          <span class="filter-hint">每页最多一只宠物，先选好「页面过滤」再新增</span>
-        </div>
-        <div id="petList"></div>
-      </div>
-
-      <!-- ========== 翻译管理 ========== -->
-      <div id="panel-translations" class="tab-panel">
-        <div class="panel-header">
-          <h2>翻译管理</h2>
-          <input type="text" id="transSearch" placeholder="搜索 key..." class="page-filter" style="max-width:300px">
-        </div>
-        <div class="panel-toolbar">
-          <div class="inline-add">
-            <input type="text" id="transNewKey" placeholder="翻译 key，回车添加">
-            <button class="btn btn-primary" id="transAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+          <div class="panel-toolbar">
+            <button class="btn btn-primary" id="addLinkBtn"><i class="fas fa-plus"></i> 新增链接</button>
+            <span class="filter-hint" id="linkFilterHint"></span>
           </div>
-          <span class="filter-hint">key 重命名会同时作用于中英两种语言</span>
+          <div id="linksList"></div>
         </div>
-        <div id="transList"></div>
-      </div>
 
-      <!-- ========== 页面管理 ========== -->
-      <div id="panel-pages" class="tab-panel">
-        <div class="panel-header">
-          <h2>页面管理</h2>
-        </div>
-        <div class="panel-toolbar">
-          <div class="inline-add">
-            <input type="text" id="pageNewSlug" placeholder="页面 slug（英文/数字），回车添加">
-            <button class="btn btn-primary" id="pageAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+        <!-- ========== 相册管理 ========== -->
+        <div id="panel-gallery" class="tab-panel">
+          <div class="panel-header">
+            <h2>相册管理</h2>
+            <select id="galleryPageFilter" class="page-filter"><option value="">全部页面</option></select>
           </div>
-          <span class="filter-hint">删除页面会连同其下的链接/相册/宠物一起删除</span>
+          <div class="panel-toolbar">
+            <div class="inline-add">
+              <input type="text" id="galleryNewSrc" placeholder="粘贴图片 URL，回车添加">
+              <button class="btn btn-primary" id="galleryAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+            </div>
+            <span class="filter-hint" id="galleryFilterHint"></span>
+          </div>
+          <div id="galleryList" class="gallery-grid"></div>
         </div>
-        <div id="pagesList"></div>
-      </div>
 
-      <!-- ========== 设置 ========== -->
-      <div id="panel-settings" class="tab-panel">
-        <h2>设置</h2>
+        <!-- ========== 宠物管理 ========== -->
+        <div id="panel-pet" class="tab-panel">
+          <div class="panel-header">
+            <h2>宠物管理</h2>
+            <select id="petPageFilter" class="page-filter"><option value="">全部页面</option></select>
+          </div>
+          <div class="panel-toolbar">
+            <button class="btn btn-primary" id="addPetBtn"><i class="fas fa-plus"></i> 新增宠物</button>
+            <span class="filter-hint">每页最多一只宠物，先选好「页面过滤」再新增</span>
+          </div>
+          <div id="petList"></div>
+        </div>
 
-        <!-- 站点配置 -->
-        <div class="settings-section">
-          <h3><i class="fas fa-globe"></i> 站点配置 <span class="sec-hint">（属于批量保存的一部分）</span></h3>
-          <form id="siteConfigForm">
-            <div class="form-row">
-              <div class="form-group">
-                <label>头像 URL</label>
-                <input type="text" name="avatar" placeholder="assets/images/avatar.webp">
+        <!-- ========== 翻译管理 ========== -->
+        <div id="panel-translations" class="tab-panel">
+          <div class="panel-header">
+            <h2>翻译管理</h2>
+            <input type="text" id="transSearch" placeholder="搜索 key..." class="page-filter" style="max-width:300px">
+          </div>
+          <div class="panel-toolbar">
+            <div class="inline-add">
+              <input type="text" id="transNewKey" placeholder="翻译 key，回车添加">
+              <button class="btn btn-primary" id="transAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+            </div>
+            <span class="filter-hint">key 重命名会同时作用于中英两种语言</span>
+          </div>
+          <div id="transList"></div>
+        </div>
+
+        <!-- ========== 页面管理 ========== -->
+        <div id="panel-pages" class="tab-panel">
+          <div class="panel-header">
+            <h2>页面管理</h2>
+          </div>
+          <div class="panel-toolbar">
+            <div class="inline-add">
+              <input type="text" id="pageNewSlug" placeholder="页面 slug（英文/数字），回车添加">
+              <button class="btn btn-primary" id="pageAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+            </div>
+            <span class="filter-hint">删除页面会连同其下的链接/相册/宠物一起删除</span>
+          </div>
+          <div id="pagesList"></div>
+        </div>
+
+        <!-- ========== 设置 ========== -->
+        <div id="panel-settings" class="tab-panel">
+          <h2>设置</h2>
+
+          <!-- 站点配置 -->
+          <div class="settings-section">
+            <h3><i class="fas fa-globe"></i> 站点配置 <span class="sec-hint">（属于批量保存的一部分）</span></h3>
+            <form id="siteConfigForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>头像 URL</label>
+                  <input type="text" name="avatar" placeholder="assets/images/avatar.webp">
+                </div>
+                <div class="form-group">
+                  <label>用户名</label>
+                  <input type="text" name="username" placeholder="HUOLIN">
+                </div>
               </div>
               <div class="form-group">
-                <label>用户名</label>
-                <input type="text" name="username" placeholder="HUOLIN">
+                <label>Favicon URL</label>
+                <input type="text" name="favicon" placeholder="assets/images/favicon.svg">
               </div>
-            </div>
-            <div class="form-group">
-              <label>Favicon URL</label>
-              <input type="text" name="favicon" placeholder="assets/images/favicon.svg">
-            </div>
-          </form>
+            </form>
 
-          <h4>自定义配置键值 <span class="sec-hint">（供前端引用的扩展字段，如 showAlbum / copyright）</span></h4>
-          <div id="extraKeysList"></div>
-          <div class="inline-add" style="margin-top:0.6rem">
-            <input type="text" id="extraKeyNew" placeholder="配置键名，回车添加">
-            <button class="btn btn-primary" id="extraKeyAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+            <h4>自定义配置键值 <span class="sec-hint">（供前端引用的扩展字段，如 showAlbum / copyright）</span></h4>
+            <div id="extraKeysList"></div>
+            <div class="inline-add" style="margin-top:0.6rem">
+              <input type="text" id="extraKeyNew" placeholder="配置键名，回车添加">
+              <button class="btn btn-primary" id="extraKeyAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+            </div>
+          </div>
+
+          <!-- 账号设置（即时生效） -->
+          <div class="settings-section">
+            <h3><i class="fas fa-user-cog"></i> 账号设置 <span class="sec-hint">（修改即时生效）</span></h3>
+
+            <form id="changeUsernameForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>当前密码</label>
+                  <input type="password" name="oldPassword" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                  <label>新用户名</label>
+                  <input type="text" name="newUsername" required minlength="2" autocomplete="username">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top:0.5rem">修改用户名</button>
+            </form>
+
+            <form id="changePasswordForm" style="margin-top:1.5rem">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>当前密码</label>
+                  <input type="password" name="oldPassword" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                  <label>新密码</label>
+                  <input type="password" name="newPassword" required minlength="4" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                  <label>确认新密码</label>
+                  <input type="password" name="confirmPassword" required minlength="4" autocomplete="new-password">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top:0.5rem">修改密码</button>
+            </form>
           </div>
         </div>
 
-        <!-- 账号设置（即时生效） -->
-        <div class="settings-section">
-          <h3><i class="fas fa-user-cog"></i> 账号设置 <span class="sec-hint">（修改即时生效）</span></h3>
+      </main>
+    </div>
 
-          <form id="changeUsernameForm">
-            <div class="form-row">
-              <div class="form-group">
-                <label>当前密码</label>
-                <input type="password" name="oldPassword" required autocomplete="current-password">
-              </div>
-              <div class="form-group">
-                <label>新用户名</label>
-                <input type="text" name="newUsername" required minlength="2" autocomplete="username">
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary" style="margin-top:0.5rem">修改用户名</button>
-          </form>
-
-          <form id="changePasswordForm" style="margin-top:1.5rem">
-            <div class="form-row">
-              <div class="form-group">
-                <label>当前密码</label>
-                <input type="password" name="oldPassword" required autocomplete="current-password">
-              </div>
-              <div class="form-group">
-                <label>新密码</label>
-                <input type="password" name="newPassword" required minlength="4" autocomplete="new-password">
-              </div>
-              <div class="form-group">
-                <label>确认新密码</label>
-                <input type="password" name="confirmPassword" required minlength="4" autocomplete="new-password">
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary" style="margin-top:0.5rem">修改密码</button>
-          </form>
+    <!-- ⌘K 命令面板 -->
+    <div class="cmd-overlay" id="cmdPalette">
+      <div class="cmd-box">
+        <div class="cmd-input-wrap">
+          <i class="fas fa-search"></i>
+          <input id="cmdInput" placeholder="跳转面板或执行操作…">
         </div>
+        <ul id="cmdList"></ul>
       </div>
-
-    </main>
+    </div>
 
     <!-- 消息提示 -->
     <div id="toast" class="toast" style="display:none"></div>
 
     <!-- 导入文件输入 -->
     <input type="file" id="importFileInput" accept=".json" style="display:none">
-
-    <!-- SYS 状态行：后台实况读数 -->
-    <footer class="sys-bar">
-      <span class="sys-seg sys-dirty" id="sysDirty"><span class="sys-dot"></span><span id="sysDirtyText">0 未保存</span></span>
-      <span class="sys-seg">上次保存 <strong id="sysLastSave">—</strong></span>
-      <span class="sys-seg">过滤 <strong id="sysFilter">全部</strong></span>
-      <span class="sys-seg">i18n <strong id="sysI18n">0 键</strong></span>
-    </footer>
 
     <script src="admin.js"></script>
   </body>
