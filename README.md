@@ -26,6 +26,7 @@
 - [技术栈](#-技术栈)
 - [项目结构](#-项目结构)
 - [数据模型](#-数据模型)
+- [API 接口](#-api-接口)
 - [管理面板](#-管理面板)
 - [密钥与彩蛋](#-密钥与彩蛋)
 - [部署方式](#-部署方式)
@@ -131,7 +132,35 @@ PostgreSQL（自建）—— 8 张表
 
 ---
 
-## 🛠️ 管理面板
+## � API 接口
+
+> 管理接口均需在请求头携带 `Authorization: Bearer <token>`（token 通过 `/api/auth` 登录获取）；增删改类接口用 `?id=` 指定目标记录。
+
+### 公开接口
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/config?page=main\|whisper` | 获取指定页面的公开配置（页面、站点配置、链接、相册、宠物、翻译），无认证 |
+
+### 认证
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/auth` | 管理员登录，Body `{ username, password }`，成功返回 `{ token, username }` |
+
+### 管理接口（需登录）
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET / POST / PUT / DELETE | `/api/admin/pages` | 页面 CRUD |
+| GET / POST / PUT / DELETE | `/api/admin/links` | 链接 CRUD（GET 可 `?page_id=` 过滤） |
+| GET / POST / PUT / DELETE | `/api/admin/gallery` | 相册 CRUD（GET 可 `?page_id=` 过滤） |
+| GET / POST / PUT / DELETE | `/api/admin/pet` | 宠物 CRUD（GET 可 `?page_id=` 过滤） |
+| GET / POST / PUT / DELETE | `/api/admin/translations` | 翻译 CRUD |
+| GET / PUT / DELETE | `/api/admin/site-config` | 站点配置：GET 返回全部键值；PUT 批量 upsert `{ key: value }`；DELETE `?key=` 删除单个键 |
+| POST | `/api/admin/import` | 事务式整库导入（Body 为导出备份 JSON，幂等可重复执行） |
+| POST | `/api/admin/change-password` | 修改密码 / 用户名，Body `{ oldPassword, newPassword?, newUsername? }` |
+
+---
+
+## �🛠️ 管理面板
 
 入口：`/admin/`（默认管理员 `admin`，首次登录后请立即修改密码）。
 
