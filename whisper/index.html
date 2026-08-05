@@ -5,17 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noarchive, nofollow">
     <title>火林 · 这是我的秘密 ✦</title>
-    <!-- 密钥校验：无有效密钥则跳回首页（阻塞脚本，防止页面闪烁） -->
-    <script>
-    (function() {
-      var SALT = 'hul_ref_2024';
-      function _hash(s) { var h = 0; for (var i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return Math.abs(h).toString(36); }
-      var d = new Date(), y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
-      var secret = _hash(y+'-'+m+'-'+day+SALT).slice(0,6);
-      var k = new URLSearchParams(location.search).get('k');
-      if (k !== secret) { location.replace('../'); }
-    })();
-    </script>
     <link rel="icon" href="../assets/images/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
@@ -70,10 +59,6 @@
           <i class="fas fa-images"></i>
           <span data-i18n="album.label">Album</span>
         </a>
-        <button class="album-btn" id="shareLinkBtn">
-          <i class="fas fa-link"></i>
-          <span data-i18n="share.button">分享入口</span>
-        </button>
       </div>
 
       <div id="links">
@@ -98,53 +83,17 @@
     (function() {
       'use strict';
 
-      // ---- Easter Egg 配置 ----
+      // ---- Easter Egg 配置（默认回首页；data-loader 会从管理面板配置覆盖） ----
       window.__eggConfig = {
+        enabled: true,
         clicks: 5,
-        action: function () {
-          window.location.href = '../';
-        }
+        timeout: 2000,
+        target: '../'
       };
 
       // ---- 相册图片（data-loader 会覆盖） ----
       window.__galleryImages = window.__galleryImages || [];
 
-    })();
-
-    // ---- 分享入口：复制当日密钥链接 ----
-    (function() {
-      var btn = document.getElementById('shareLinkBtn');
-      if (!btn) return;
-
-      var SALT = 'hul_ref_2024';
-
-      function _hash(s) {
-        var h = 0;
-        for (var i = 0; i < s.length; i++) {
-          h = ((h << 5) - h) + s.charCodeAt(i);
-          h |= 0;
-        }
-        return Math.abs(h).toString(36);
-      }
-
-      function getSecret() {
-        var d = new Date();
-        var y = d.getFullYear();
-        var m = String(d.getMonth() + 1).padStart(2, '0');
-        var day = String(d.getDate()).padStart(2, '0');
-        return _hash(y + '-' + m + '-' + day + SALT).slice(0, 6);
-      }
-
-      btn.addEventListener('click', function () {
-        var url = window.location.origin + '/?' + getSecret();
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(url);
-        }
-        var check = (window.getLang && window.getLang() === 'en') ? 'Copied!' : '已复制';
-        var orig = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check"></i> <span>' + check + '</span>';
-        setTimeout(function () { btn.innerHTML = orig; }, 2000);
-      });
     })();
 
     </script>

@@ -30,7 +30,9 @@
     pets: [],    // {id, page_id, pet_image, pet_type, messages:{'zh-CN':[],'en':[]}, _new, _deleted, _dirty}
     trans: [],   // {key, zh, en, id_zh, id_en, _new, _deleted, _dirty}
     site: { avatar: '', username: '', favicon: '', extra: [] }, // extra: {key, value, _new, _deleted, _dirty}
-    siteDirty: false
+    siteDirty: false,
+    egg: { enabled: true, clicks: '5', timeout: '2000', target: '' }, // 彩蛋配置
+    eggDirty: false
   };
   var newSeq = 1;
   var lastSaveTime = null; // SYS 状态行：上次保存时间
@@ -85,6 +87,7 @@
     });
     S.site.extra.forEach(function (it) { if (it._dirty) n++; });
     if (S.siteDirty) n++;
+    if (S.eggDirty) n++;
     return n;
   }
 
@@ -215,14 +218,22 @@
 
     // site
     var cfg = site || {};
+    var managedKeys = ['avatar', 'username', 'favicon', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target'];
     S.site = {
       avatar: cfg.avatar || '',
       username: cfg.username || '',
       favicon: cfg.favicon || '',
-      extra: Object.keys(cfg).filter(function (k) { return k !== 'avatar' && k !== 'username' && k !== 'favicon'; })
+      extra: Object.keys(cfg).filter(function (k) { return managedKeys.indexOf(k) === -1; })
         .map(function (k) { return { key: k, value: cfg[k] == null ? '' : String(cfg[k]), _new: false, _deleted: false, _dirty: false }; })
     };
     S.siteDirty = false;
+    S.egg = {
+      enabled: cfg.egg_enabled !== '0',
+      clicks: cfg.egg_clicks != null ? String(cfg.egg_clicks) : '5',
+      timeout: cfg.egg_timeout != null ? String(cfg.egg_timeout) : '2000',
+      target: cfg.egg_target || ''
+    };
+    S.eggDirty = false;
 
     fillPageFilters();
     renderAll();
@@ -230,7 +241,7 @@
   }
 
   function renderAll() {
-    renderLinks(); renderGallery(); renderPet(); renderTrans(); renderPages(); renderSite();
+    renderLinks(); renderGallery(); renderPet(); renderTrans(); renderPages(); renderSite(); renderEgg();
   }
 
   // ==================== 链接管理 ====================
@@ -661,7 +672,7 @@
     var key = input.value.trim();
     if (!key) { showToast('请先输入配置键名', true); return; }
     if (S.site.extra.some(function (e) { return !e._deleted && e.key === key; }) ||
-        ['avatar', 'username', 'favicon'].indexOf(key) !== -1) {
+        ['avatar', 'username', 'favicon', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target'].indexOf(key) !== -1) {
       showToast('该键已存在', true); return;
     }
     S.site.extra.push({ key: key, value: '', _new: true, _deleted: false, _dirty: true });
@@ -670,6 +681,28 @@
   }
   document.getElementById('extraKeyAddConfirm').addEventListener('click', addExtraKey);
   document.getElementById('extraKeyNew').addEventListener('keydown', function (e) { if (e.key === 'Enter') addExtraKey(); });
+
+  // ==================== 设置：彩蛋（Easter Egg） ====================
+  function renderEgg() {
+    var f = document.getElementById('eggConfigForm');
+    if (!f) return;
+    f.eggEnabled.checked = !!S.egg.enabled;
+    f.eggClicks.value = S.egg.clicks;
+    f.eggTimeout.value = S.egg.timeout;
+    f.eggTarget.value = S.egg.target;
+  }
+  (function () {
+    var f = document.getElementById('eggConfigForm');
+    if (!f) return;
+    function mark() {
+      S.eggDirty = true;
+      updateDirtyUI();
+    }
+    f.eggEnabled.addEventListener('change', function () { S.egg.enabled = f.eggEnabled.checked; mark(); });
+    f.eggClicks.addEventListener('input', function () { S.egg.clicks = f.eggClicks.value; mark(); });
+    f.eggTimeout.addEventListener('input', function () { S.egg.timeout = f.eggTimeout.value; mark(); });
+    f.eggTarget.addEventListener('input', function () { S.egg.target = f.eggTarget.value; mark(); });
+  })();
 
   // ==================== 设置：修改用户名 / 密码（即时生效） ====================
   document.getElementById('changeUsernameForm').addEventListener('submit', async function (e) {
@@ -895,6 +928,12 @@
         body.username = S.site.username || '';
         body.favicon = S.site.favicon || '';
       }
+      if (S.eggDirty) {
+        body.egg_enabled = S.egg.enabled ? '1' : '0';
+        body.egg_clicks = String(S.egg.clicks || '5');
+        body.egg_timeout = String(S.egg.timeout || '2000');
+        body.egg_target = S.egg.target || '';
+      }
       S.site.extra.forEach(function (e) {
         if (e._dirty && !e._deleted) body[e.key] = e.value || '';
       });
@@ -940,7 +979,11 @@
       if (t.zh) data.translations.push({ key: t.key, language: 'zh-CN', value: t.zh });
       if (t.en) data.translations.push({ key: t.key, language: 'en', value: t.en });
     });
-    data.siteConfig = { avatar: S.site.avatar, username: S.site.username, favicon: S.site.favicon };
+    data.siteConfig = {
+      avatar: S.site.avatar, username: S.site.username, favicon: S.site.favicon,
+      egg_enabled: S.egg.enabled ? '1' : '0',
+      egg_clicks: S.egg.clicks, egg_timeout: S.egg.timeout, egg_target: S.egg.target
+    };
     S.site.extra.filter(function (e) { return !e._deleted; }).forEach(function (e) { data.siteConfig[e.key] = e.value; });
 
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

@@ -144,6 +144,33 @@
             </div>
           </div>
 
+          <!-- 彩蛋设置 -->
+          <div class="settings-section">
+            <h3><i class="fas fa-egg"></i> 彩蛋设置 <span class="sec-hint">（点击页脚 © 2026 HuoLin 触发，属于批量保存的一部分）</span></h3>
+            <form id="eggConfigForm">
+              <div class="form-row">
+                <div class="form-group" style="display:flex;align-items:center;gap:10px">
+                  <label style="margin:0">启用彩蛋</label>
+                  <label class="switch"><input type="checkbox" id="eggEnabled" checked><span class="switch-slider"></span></label>
+                </div>
+                <div class="form-group">
+                  <label>点击次数</label>
+                  <input type="number" id="eggClicks" min="1" value="5">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>时间窗口（毫秒）</label>
+                  <input type="number" id="eggTimeout" min="50" value="2000">
+                </div>
+                <div class="form-group">
+                  <label>跳转目标</label>
+                  <input type="text" id="eggTarget" placeholder="/whisper/ 或任意 URL">
+                </div>
+              </div>
+            </form>
+          </div>
+
           <!-- 账号设置（即时生效） -->
           <div class="settings-section">
             <h3><i class="fas fa-user-cog"></i> 账号设置 <span class="sec-hint">（修改即时生效）</span></h3>

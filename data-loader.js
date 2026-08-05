@@ -36,6 +36,7 @@
     renderPet(config.pet);
     renderGallery(config.gallery);
     loadTranslations(config.translations);
+    applyEggConfig(config.site);
     document.dispatchEvent(new Event('configloaded'));
   }
 
@@ -49,6 +50,17 @@
     if (nameEl && site.username) {
       nameEl.textContent = site.username;
     }
+  }
+
+  // 彩蛋配置：从 site.egg_* 注入 window.__eggConfig（easter-egg.js 读取）
+  function applyEggConfig(site) {
+    if (!site) return;
+    window.__eggConfig = {
+      enabled: site.egg_enabled === '0' ? false : true,
+      clicks: parseInt(site.egg_clicks, 10) || 5,
+      timeout: parseInt(site.egg_timeout, 10) || 2000,
+      target: site.egg_target || 'whisper/'
+    };
   }
 
   function renderLinks(links, translations) {

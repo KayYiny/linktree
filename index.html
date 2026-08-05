@@ -26,7 +26,6 @@
     <script defer src="assets/scripts/pet.js"></script>
     <script defer src="assets/scripts/easter-egg.js"></script>
     <script defer src="assets/scripts/qrcode-popup.js"></script>
-    <script defer src="assets/scripts/hint-popup.js"></script>
     <!-- 数据加载器：从数据库 API 获取配置并渲染 -->
     <script defer src="data-loader.js"></script>
   </head>
@@ -94,14 +93,12 @@
     (function() {
       'use strict';
 
-      // ---- Easter Egg 配置（跳转至隐藏页，带上当日密钥） ----
+      // ---- Easter Egg 配置（点击 © 2026 HuoLin 触发；data-loader 会从管理面板配置覆盖） ----
       window.__eggConfig = {
+        enabled: true,
         clicks: 5,
-        timeout: 200,
-        action: function () {
-          var secret = window.__getDailySecret ? window.__getDailySecret() : '';
-          window.location.href = 'whisper/?k=' + secret;
-        }
+        timeout: 2000,
+        target: 'whisper/'
       };
 
       // ---- 相册图片（data-loader 会覆盖） ----
