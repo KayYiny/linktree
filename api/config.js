@@ -25,7 +25,15 @@ const DEFAULT_PASSWORD = 'admin123'; // 首次默认口令，登录后请在管�
 
 const PG_TABLE = 'site_config';
 
-/** PostgreSQL 连接（读 DATABASE_URL / POSTGRES_URL） */
+/** PostgreSQL 连接配置：
+ *  1) 优先用完整连接串 DATABASE_URL / POSTGRES_URL（最省事，推荐）
+ *  2) 否则用拆分变量：PGHOST / PGUSER / PGPASSWORD / PGDATABASE / PGPORT
+ *     —— 主机/端口/库名在代码里有默认值，Vercel 里只需填 PGUSER + PGPASSWORD 即可
+ */
+const PG_DEFAULT_HOST = '47.112.180.235'; // 默认主机（可用 PGHOST 覆盖）
+const PG_DEFAULT_PORT = 5432;             // 默认端口（可用 PGPORT 覆盖）
+const PG_DEFAULT_DB = 'linktree';         // 默认数据库名（可用 PGDATABASE 覆盖）
+
 let pool = null;
 let useSsl = process.env.PGSSL !== 'false'; // 默认尝试 SSL，PGSSL=false 强制不用
 let sslResolved = false; // 是否已确定 SSL 模式（避免反复切换）
@@ -33,11 +41,19 @@ let sslResolved = false; // 是否已确定 SSL 模式（避免反复切换）
 function buildPool() {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
   const cfg = {
-    connectionString: url,
     max: 5,
     idleTimeoutMillis: 20000,
     connectionTimeoutMillis: 8000, // 8s 连不上直接报错，避免 Vercel 函数 10s 超时
   };
+  if (url) {
+    cfg.connectionString = url;
+  } else {
+    cfg.host = process.env.PGHOST || PG_DEFAULT_HOST;
+    cfg.port = parseInt(process.env.PGPORT, 10) || PG_DEFAULT_PORT;
+    cfg.database = process.env.PGDATABASE || PG_DEFAULT_DB;
+    cfg.user = process.env.PGUSER || '';
+    cfg.password = process.env.PGPASSWORD || '';
+  }
   if (useSsl) cfg.ssl = { rejectUnauthorized: false };
   return new Pool(cfg);
 }
