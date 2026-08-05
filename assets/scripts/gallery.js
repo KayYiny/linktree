@@ -366,6 +366,9 @@
     totalImages = images.length;
     built = false;
     init();
+    // 无图片时隐藏相册入口按钮
+    var t = document.querySelector('.gallery-trigger');
+    if (t) t.style.display = (totalImages > 0) ? '' : 'none';
   });
 
 })();

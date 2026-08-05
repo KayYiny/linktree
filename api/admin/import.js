@@ -43,9 +43,9 @@ module.exports = async function handler(req, res) {
     const pages = Array.isArray(data.pages) ? data.pages : [];
     for (const p of pages) {
       const { rows } = await client.query(
-        `INSERT INTO pages (slug, title, background_image, is_active, sort_order)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        [p.slug, p.title ?? '', p.background_image ?? null, p.is_active ?? true, p.sort_order ?? 0]
+        `INSERT INTO pages (slug, title, background_image, is_active, sort_order, gallery_enabled)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [p.slug, p.title ?? '', p.background_image ?? null, p.is_active ?? true, p.sort_order ?? 0, p.gallery_enabled ?? true]
       );
       pageIdMap[p.id] = rows[0].id;
       if (firstPageId === null) firstPageId = rows[0].id;

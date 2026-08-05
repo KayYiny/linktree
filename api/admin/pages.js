@@ -19,21 +19,21 @@ module.exports = async function handler(req, res) {
         return res.status(200).json(rows);
       }
       case 'POST': {
-        const { slug, title, background_image, is_active, sort_order } = req.body;
+        const { slug, title, background_image, is_active, sort_order, gallery_enabled } = req.body;
         const { rows } = await query(
-          `INSERT INTO pages (slug, title, background_image, is_active, sort_order)
-           VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-          [slug, title, background_image, is_active ?? true, sort_order ?? 0]
+          `INSERT INTO pages (slug, title, background_image, is_active, sort_order, gallery_enabled)
+           VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+          [slug, title, background_image, is_active ?? true, sort_order ?? 0, gallery_enabled ?? true]
         );
         return res.status(201).json(rows[0]);
       }
       case 'PUT': {
         const { id } = req.query;
-        const { slug, title, background_image, is_active, sort_order } = req.body;
+        const { slug, title, background_image, is_active, sort_order, gallery_enabled } = req.body;
         const { rows } = await query(
-          `UPDATE pages SET slug=$1, title=$2, background_image=$3, is_active=$4, sort_order=$5
-           WHERE id=$6 RETURNING *`,
-          [slug, title, background_image, is_active, sort_order, id]
+          `UPDATE pages SET slug=$1, title=$2, background_image=$3, is_active=$4, sort_order=$5, gallery_enabled=$6
+           WHERE id=$7 RETURNING *`,
+          [slug, title, background_image, is_active, sort_order, gallery_enabled ?? true, id]
         );
         return res.status(200).json(rows[0]);
       }

@@ -57,6 +57,24 @@
             <h2>相册管理</h2>
             <select id="galleryPageFilter" class="page-filter"><option value="">全部页面</option></select>
           </div>
+
+          <!-- 整页相册开关 -->
+          <div class="gallery-page-switch" id="galleryPageSwitchBox" style="display:none">
+            <span class="gallery-switch-label" id="gallerySwitchLabel">整页相册</span>
+            <label class="switch"><input type="checkbox" id="galleryPageEnabled" checked><span class="switch-slider"></span></label>
+            <span class="sec-hint" id="gallerySwitchHint"></span>
+          </div>
+
+          <!-- 批量操作工具栏 -->
+          <div class="gallery-batch-bar">
+            <button class="btn btn-ghost" id="gallerySelectAll"><i class="fas fa-check-double"></i> 全选</button>
+            <button class="btn btn-ghost" id="gallerySelectInvert"><i class="fas fa-random"></i> 反选</button>
+            <button class="btn btn-ghost" id="galleryBatchHide"><i class="fas fa-eye-slash"></i> 隐藏选中</button>
+            <button class="btn btn-ghost" id="galleryBatchShow"><i class="fas fa-eye"></i> 显示选中</button>
+            <button class="btn btn-danger" id="galleryBatchDelete"><i class="fas fa-trash"></i> 删除选中</button>
+            <span class="filter-hint" id="gallerySelHint"></span>
+          </div>
+
           <div class="panel-toolbar">
             <div class="inline-add">
               <input type="text" id="galleryNewSrc" placeholder="粘贴图片 URL，回车添加">

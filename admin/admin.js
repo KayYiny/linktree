@@ -401,13 +401,30 @@
   function renderGallery() {
     var list = visibleGallery();
     document.getElementById('galleryFilterHint').textContent = '共 ' + list.length + ' 张';
+
+    // 整页相册开关（基于当前过滤的页面）
+    var pid = document.getElementById('galleryPageFilter').value;
+    var page = null;
+    if (pid) page = S.pages.find(function (p) { return !p._deleted && String(p.id) === String(pid); });
+    var swBox = document.getElementById('galleryPageSwitchBox');
+    if (page) {
+      swBox.style.display = '';
+      document.getElementById('gallerySwitchLabel').textContent = '/' + page.slug + ' · 整页相册';
+      document.getElementById('galleryPageEnabled').checked = page.gallery_enabled !== false;
+      document.getElementById('gallerySwitchHint').textContent =
+        page.gallery_enabled === false ? '该页相册已整体隐藏（图片数据保留，随时可开）' : '关闭后该页相册整体隐藏（图片数据保留）';
+    } else {
+      swBox.style.display = 'none';
+    }
+
     var wrap = document.getElementById('galleryList');
     wrap.innerHTML = '';
     list.forEach(function (img) {
       var edge = pageEdge(S.gallery, img, function (x) { return x.page_id; });
       var d = document.createElement('div');
-      d.className = 'gallery-item' + (img._dirty ? ' dirty' : '');
+      d.className = 'gallery-item' + (img._selected ? ' selected' : '') + (img._dirty ? ' dirty' : '');
       d.innerHTML =
+        '<button class="gallery-check" type="button" title="选择">' + (img._selected ? '<i class="fas fa-check"></i>' : '') + '</button>' +
         '<div class="gallery-thumb"><img src="' + esc(img.src) + '" onerror="this.style.visibility=\'hidden\'"></div>' +
         '<div class="gallery-body">' +
           '<div class="gallery-head-row">' +
@@ -423,10 +440,72 @@
         '</div>';
       wrap.appendChild(d);
       bindEntityCard(d, img, S.gallery, function (x) { return x.page_id; }, '该图片');
+      // 选择圆点：点击切换选中
+      var check = d.querySelector('.gallery-check');
+      check.addEventListener('click', function (e) { e.stopPropagation(); toggleGallerySelect(img); });
+      // 点击卡片空白处也切换选中
+      d.addEventListener('click', function (e) {
+        if (e.target.closest('input, button, a, label')) return;
+        toggleGallerySelect(img);
+      });
     });
+    updateGallerySelHint();
+  }
+
+  function toggleGallerySelect(img) {
+    img._selected = !img._selected;
+    renderGallery();
+  }
+
+  function updateGallerySelHint() {
+    var sel = S.gallery.filter(function (g) { return !g._deleted && g._selected; }).length;
+    var el = document.getElementById('gallerySelHint');
+    if (el) el.textContent = sel ? '已选 ' + sel + ' 张' : '';
   }
 
   document.getElementById('galleryPageFilter').addEventListener('change', function () { renderGallery(); updateSysBar(); });
+
+  // 整页相册开关：切到选中页面的 gallery_enabled
+  document.getElementById('galleryPageEnabled').addEventListener('change', function () {
+    var pid = document.getElementById('galleryPageFilter').value;
+    var page = S.pages.find(function (p) { return !p._deleted && String(p.id) === String(pid); });
+    if (!page) return;
+    page.gallery_enabled = this.checked;
+    page._dirty = true;
+    renderGallery();
+    updateDirtyUI();
+  });
+
+  // 批量操作（仅作用于当前过滤页面的图片）
+  document.getElementById('gallerySelectAll').addEventListener('click', function () {
+    visibleGallery().forEach(function (g) { g._selected = true; });
+    renderGallery();
+  });
+  document.getElementById('gallerySelectInvert').addEventListener('click', function () {
+    visibleGallery().forEach(function (g) { g._selected = !g._selected; });
+    renderGallery();
+  });
+  document.getElementById('galleryBatchHide').addEventListener('click', function () {
+    var sel = visibleGallery().filter(function (g) { return g._selected; });
+    if (!sel.length) { showToast('请先选择图片', true); return; }
+    sel.forEach(function (g) { g.is_active = false; g._dirty = true; });
+    showToast('已隐藏 ' + sel.length + ' 张（记得保存）');
+    renderGallery(); updateDirtyUI();
+  });
+  document.getElementById('galleryBatchShow').addEventListener('click', function () {
+    var sel = visibleGallery().filter(function (g) { return g._selected; });
+    if (!sel.length) { showToast('请先选择图片', true); return; }
+    sel.forEach(function (g) { g.is_active = true; g._dirty = true; });
+    showToast('已显示 ' + sel.length + ' 张（记得保存）');
+    renderGallery(); updateDirtyUI();
+  });
+  document.getElementById('galleryBatchDelete').addEventListener('click', function () {
+    var sel = visibleGallery().filter(function (g) { return g._selected; });
+    if (!sel.length) { showToast('请先选择图片', true); return; }
+    if (!confirm('确定删除选中的 ' + sel.length + ' 张图片？')) return;
+    sel.forEach(function (g) { g._deleted = true; g._dirty = true; });
+    renderGallery(); updateDirtyUI();
+  });
 
   function addGallery() {
     var pid = document.getElementById('galleryPageFilter').value || firstPageId();
@@ -898,7 +977,7 @@
           }
           var res = await api('/api/admin/pages', 'POST', {
             slug: it.slug, title: it.title || '', background_image: it.background_image || null,
-            is_active: it.is_active, sort_order: it.sort_order
+            is_active: it.is_active, sort_order: it.sort_order, gallery_enabled: it.gallery_enabled !== false
           });
           if (res && res.id != null) {
             var oldId = String(it.id);
@@ -916,7 +995,7 @@
         if (!it2._new && !it2._deleted && it2._dirty) {
           await api('/api/admin/pages?id=' + it2.id, 'PUT', {
             slug: it2.slug, title: it2.title || '', background_image: it2.background_image || null,
-            is_active: it2.is_active, sort_order: it2.sort_order
+            is_active: it2.is_active, sort_order: it2.sort_order, gallery_enabled: it2.gallery_enabled !== false
           });
           it2._dirty = false;
         }
@@ -1101,7 +1180,7 @@
   document.getElementById('exportBtn').addEventListener('click', function () {
     var data = {
       pages: S.pages.filter(function (p) { return !p._deleted; }).map(function (p) {
-        return { id: p.id, slug: p.slug, title: p.title, background_image: p.background_image, is_active: p.is_active, sort_order: p.sort_order };
+        return { id: p.id, slug: p.slug, title: p.title, background_image: p.background_image, is_active: p.is_active, gallery_enabled: p.gallery_enabled !== false, sort_order: p.sort_order };
       }),
       links: S.links.filter(function (l) { return !l._deleted; }).map(function (l) {
         return { page_id: l.page_id, label: l.label, url: l.url, icon: l.icon, qr_code: l.qr_code, popup_note: l.popup_note, i18n_key: l.i18n_key, note_i18n_key: l.note_i18n_key, is_active: l.is_active, sort_order: l.sort_order };

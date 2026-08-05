@@ -29,6 +29,7 @@ async function migrate() {
         title VARCHAR(200),
         background_image TEXT,
         is_active BOOLEAN DEFAULT true,
+        gallery_enabled BOOLEAN DEFAULT true,
         sort_order INT DEFAULT 0,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
@@ -65,6 +66,7 @@ async function migrate() {
     await client.query('ALTER TABLE links ADD COLUMN IF NOT EXISTS note_i18n_key VARCHAR(200);');
     await client.query('ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
     await client.query('ALTER TABLE pet_config ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
+    await client.query('ALTER TABLE pages ADD COLUMN IF NOT EXISTS gallery_enabled BOOLEAN DEFAULT true;');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS gallery_images (

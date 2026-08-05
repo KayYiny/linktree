@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
   try {
     // 1. 页面信息
     const { rows: pageRows } = await query(
-      'SELECT slug, title, background_image FROM pages WHERE slug = $1 AND is_active = true',
+      'SELECT slug, title, background_image, gallery_enabled FROM pages WHERE slug = $1 AND is_active = true',
       [pageSlug]
     );
     if (!pageRows.length) return res.status(404).json({ error: 'Page not found' });
@@ -34,13 +34,17 @@ module.exports = async function handler(req, res) {
       [pageSlug]
     );
 
-    // 4. 相册
-    const { rows: gallery } = await query(
-      `SELECT src FROM gallery_images
-       WHERE page_id = (SELECT id FROM pages WHERE slug = $1)
-       AND is_active = true ORDER BY sort_order`,
-      [pageSlug]
-    );
+    // 4. 相册（整页关闭则不返回任何图片）
+    let gallery = [];
+    if (page.gallery_enabled !== false) {
+      const { rows: g } = await query(
+        `SELECT src FROM gallery_images
+         WHERE page_id = (SELECT id FROM pages WHERE slug = $1)
+         AND is_active = true ORDER BY sort_order`,
+        [pageSlug]
+      );
+      gallery = g;
+    }
 
     // 5. 宠物
     const { rows: petRows } = await query(
