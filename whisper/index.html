@@ -5,15 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noarchive, nofollow">
     <title data-i18n="page.title.whisper">火林 · 这是我的秘密 ✦</title>
-    <!-- 密钥校验：无有效密钥则跳回首页（阻塞脚本，防止页面闪烁） -->
+    <!-- 密钥校验：无有效密钥则跳回首页（校验期间隐藏正文，避免闪烁） -->
+    <style>
+      html.__whisper-check body { visibility: hidden; }
+      html.__whisper-ok body { visibility: visible; }
+    </style>
     <script>
     (function() {
-      var SALT = 'hul_ref_2024';
+      var SALT_DEFAULT = 'hul_ref_2024';
+      var LEN_DEFAULT = 6;
       function _hash(s) { var h = 0; for (var i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return Math.abs(h).toString(36); }
-      var d = new Date(), y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
-      var secret = _hash(y+'-'+m+'-'+day+SALT).slice(0,6);
-      var k = new URLSearchParams(location.search).get('k');
-      if (k !== secret) { location.replace('../'); }
+      function getSecret(salt, len) {
+        var d = new Date(), y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+        return _hash(y+'-'+m+'-'+day+salt).slice(0, len);
+      }
+      function pass(salt, len) {
+        var k = new URLSearchParams(location.search).get('k');
+        return !!k && k === getSecret(salt || SALT_DEFAULT, len || LEN_DEFAULT);
+      }
+      document.documentElement.classList.add('__whisper-check');
+      function ok() {
+        document.documentElement.classList.remove('__whisper-check');
+        document.documentElement.classList.add('__whisper-ok');
+      }
+      // 先用默认盐快速判定（多数情况直接通过，无闪烁）
+      if (pass(SALT_DEFAULT, LEN_DEFAULT)) { ok(); return; }
+      // 默认盐不通过 → 拉取配置用配置盐再校验（盐/长度/开关均可后台改）
+      fetch('/api/config', { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (cfg) {
+          var w = cfg && cfg.whisper;
+          if (!w || w.enabled === false || !pass(w.salt, w.secretLen)) {
+            location.replace('../');
+          } else {
+            ok();
+          }
+        })
+        .catch(function () { location.replace('../'); });
     })();
     </script>
     <link rel="icon" href="../assets/images/favicon.svg" type="image/svg+xml" />
@@ -31,6 +59,8 @@
     <!-- 资源提示 -->
     <link rel="preconnect" href="https://pan.puppyis.cool">
     <!-- 非关键脚本（defer，并行下载不阻塞渲染） -->
+    <script defer src="../assets/scripts/site-data.js"></script>
+    <script defer src="../assets/scripts/secret.js"></script>
     <script defer src="../assets/scripts/gallery.js"></script>
     <script defer src="../assets/scripts/pet.js"></script>
     <script defer src="../assets/scripts/easter-egg.js"></script>
@@ -73,21 +103,7 @@
       </div>
 
       <div id="links">
-        <!-- X（Twitter） -->
-        <a class="link" href="https://x.com/PuppyHuoLin" target="_blank">
-          <span class="link-icon"><img src="../assets/icons/x.svg" class="brand-icon" alt="X"></span>
-          <span class="link-label" data-i18n="brand.x">X (Twitter)</span>
-        </a>
-        <!-- Instagram -->
-        <a class="link" href="https://www.instagram.com/puppyhuolin" target="_blank">
-          <span class="link-icon"><img src="../assets/icons/instagram.svg" class="brand-icon" alt="Instagram"></span>
-          <span class="link-label" data-i18n="brand.instagram">Instagram</span>
-        </a>
-        <!-- Bluesky -->
-        <a class="link" href="https://bsky.app/profile/slave.puppyhuolin.com" target="_blank">
-          <span class="link-icon"><img src="../assets/icons/bluesky.svg" class="brand-icon" alt="Bluesky"></span>
-          <span class="link-label" data-i18n="brand.bluesky">Bluesky</span>
-        </a>
+        <!-- 链接由 assets/scripts/site-data.js 从 /api/config 动态渲染 -->
       </div>
 
       <!-- ========== 虚拟宠物 ========== -->
@@ -108,15 +124,7 @@
     (function() {
       'use strict';
 
-      // ---- 入场动画延迟 ----
-      (function() {
-        var els = document.querySelectorAll('#links .link');
-        for (var i = 0; i < els.length; i++) {
-          els[i].style.animationDelay = (0.10 + i * 0.08) + 's';
-        }
-      })();
-
-      // ---- Easter Egg 配置 ----
+      // ---- Easter Egg 配置（site-data.js 加载配置后会覆盖） ----
       window.__eggConfig = {
         clicks: 5,
         action: function () {
@@ -126,42 +134,7 @@
 
       // ---- 宠物语录（由 i18n 按语言提供） ----
       window.__petMessagesKey = 'pet.dog';
-
-      // ---- 相册图片 ----
-      window.__galleryImages = [
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaea0b40a.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaea1e097.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaea14236.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeb27737.jpg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeb4363d.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeb48f88.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaec29530.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaec4d018.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaecaa10f.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaed3901a.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaed6d08b.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeda74ca.jpg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaee552e8.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaeea84d8.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaee9e885.jpg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaef528ed.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaef981e7.jpg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaefd8b6e.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaf05a9dc.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feaf09c8c7.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3a12cc4.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb39f272d.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3b01490.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3b40ee0.jpg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3b447c9.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3c408dc.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3c84e71.jpg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3d143f6.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3d42142.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3daee7b.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb3c2382b.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3feb39eb878.jpeg' },
-      ];
+      // 注：链接与相册由 site-data.js 从 /api/config 渲染
 
     })();
 
@@ -170,27 +143,9 @@
       var btn = document.getElementById('shareLinkBtn');
       if (!btn) return;
 
-      var SALT = 'hul_ref_2024';
-
-      function _hash(s) {
-        var h = 0;
-        for (var i = 0; i < s.length; i++) {
-          h = ((h << 5) - h) + s.charCodeAt(i);
-          h |= 0;
-        }
-        return Math.abs(h).toString(36);
-      }
-
-      function getSecret() {
-        var d = new Date();
-        var y = d.getFullYear();
-        var m = String(d.getMonth() + 1).padStart(2, '0');
-        var day = String(d.getDate()).padStart(2, '0');
-        return _hash(y + '-' + m + '-' + day + SALT).slice(0, 6);
-      }
-
+      // 当日密钥由 secret.js 提供（盐/长度可在后台配置）
       btn.addEventListener('click', function () {
-        var url = window.location.origin + '/?' + getSecret();
+        var url = window.location.origin + '/?' + window.__getDailySecret();
         if (navigator.clipboard) {
           navigator.clipboard.writeText(url);
         }

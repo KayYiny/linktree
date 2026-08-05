@@ -20,19 +20,8 @@
 (function () {
   'use strict';
 
-  // ---- 读取配置 ----
-  var cfg = window.__eggConfig || {};
-
-  // 触发器元素选择器
-  var selector  = cfg.trigger  || '#hashtag';
-  // 累计点击次数
-  var maxClicks = cfg.clicks   || 5;
-  // 点击间隔超时（毫秒）
-  var resetTime = cfg.timeout  || 2000;
-  // 触发后执行的动作（默认跳转到首页）
-  var action    = cfg.action   || function () {
-    window.location.href = '/';
-  };
+  // 触发器选择器（用默认 #hashtag；配置由 site-data.js 异步注入，读最新值）
+  var selector = '#hashtag';
 
   // ---- 内部状态 ----
   var count = 0;
@@ -46,6 +35,13 @@
   }
 
   el.addEventListener('click', function () {
+    // 每次点击读取最新配置（后台修改无需重新部署立即生效）
+    var cfg = window.__eggConfig || {};
+    if (cfg.enabled === false) { count = 0; return; }
+    var maxClicks = cfg.clicks || 5;
+    var resetTime = cfg.timeout || 2000;
+    var action = cfg.action || function () { window.location.href = '/'; };
+
     count++;
     if (timer) clearTimeout(timer);
 

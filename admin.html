@@ -42,6 +42,7 @@
     <nav class="admin-tabs">
       <button class="admin-tab is-active" data-tab="links" type="button"><i class="fas fa-link"></i> 链接管理</button>
       <button class="admin-tab" data-tab="gallery" type="button"><i class="fas fa-images"></i> 相册管理</button>
+      <button class="admin-tab" data-tab="site" type="button"><i class="fas fa-sliders-h"></i> 站点设置</button>
       <button class="admin-tab" data-tab="settings" type="button"><i class="fas fa-cog"></i> 设置</button>
     </nav>
 
@@ -51,20 +52,118 @@
       <section id="tab-links" class="tab-panel is-active">
         <div class="panel-head">
           <h2>链接管理</h2>
-          <button class="admin-btn admin-btn-accent" id="addLinkBtn" type="button"><i class="fas fa-plus"></i> 新增链接</button>
+          <div class="head-actions">
+            <div class="page-switch">
+              <button class="admin-tab is-active" data-page="main" type="button">主页</button>
+              <button class="admin-tab" data-page="whisper" type="button">耳语页</button>
+            </div>
+            <button class="admin-btn admin-btn-accent" id="addLinkBtn" type="button"><i class="fas fa-plus"></i> 新增链接</button>
+          </div>
         </div>
+        <p class="section-hint">关闭「显示」可隐藏某条链接（不删除，随时可恢复）。</p>
         <div id="linksList" class="cards-list"></div>
       </section>
 
       <!-- 相册管理 -->
       <section id="tab-gallery" class="tab-panel">
-        <div class="panel-head"><h2>相册管理</h2></div>
+        <div class="panel-head">
+          <h2>相册管理</h2>
+          <div class="head-actions">
+            <div class="page-switch">
+              <button class="admin-tab is-active" data-page="main" type="button">主页</button>
+              <button class="admin-tab" data-page="whisper" type="button">耳语页</button>
+            </div>
+          </div>
+        </div>
         <div class="gallery-add">
           <input type="text" id="galSrcInput" class="admin-input" placeholder="图片链接（必填）">
           <input type="text" id="galLabelInput" class="admin-input" placeholder="标签（可选）">
           <button class="admin-btn admin-btn-accent" id="addGalBtn" type="button"><i class="fas fa-plus"></i> 添加图片</button>
         </div>
+        <p class="section-hint">关闭「显示」可隐藏某张图片（不删除）。</p>
         <div id="galleryList" class="gallery-grid"></div>
+      </section>
+
+      <!-- 站点设置 -->
+      <section id="tab-site" class="tab-panel">
+
+        <div class="settings-card settings-wide">
+          <div class="settings-block-title"><i class="fas fa-user"></i> 站点信息</div>
+          <div class="settings-grid">
+            <label class="field"><span class="field-label">名字</span><input type="text" id="site-name" class="admin-input" placeholder="HUOLIN"></label>
+            <label class="field"><span class="field-label">页面标题（中文）</span><input type="text" id="site-titleZh" class="admin-input" placeholder="火林 · 这是我的名片"></label>
+            <label class="field"><span class="field-label">页面标题（英文）</span><input type="text" id="site-titleEn" class="admin-input" placeholder="HuoLin · My Card"></label>
+            <label class="field"><span class="field-label">头像图片</span><input type="text" id="site-avatar" class="admin-input" placeholder="assets/images/avatar.webp"></label>
+            <label class="field"><span class="field-label">网站 logo（favicon）</span><input type="text" id="site-favicon" class="admin-input" placeholder="assets/images/favicon.svg"></label>
+            <label class="field"><span class="field-label">背景图</span><input type="text" id="site-background" class="admin-input" placeholder="assets/images/bg.jpg"></label>
+            <label class="field"><span class="field-label">版权文字</span><input type="text" id="site-copyright" class="admin-input" placeholder="© 2026 HuoLin"></label>
+          </div>
+        </div>
+
+        <div class="settings-card settings-wide">
+          <div class="settings-block-title"><i class="fas fa-toggle-on"></i> 模块开关</div>
+          <div class="switch-row">
+            <label class="switch-label"><input type="checkbox" id="site-showAlbum" class="switch-check"><span>显示「相册」入口</span></label>
+            <label class="switch-label"><input type="checkbox" id="site-showShare" class="switch-check"><span>显示「分享」入口</span></label>
+          </div>
+        </div>
+
+        <div class="settings-card settings-wide">
+          <div class="settings-block-title"><i class="fas fa-paw"></i> 主页宠物</div>
+          <div class="switch-row">
+            <label class="switch-label"><input type="checkbox" id="pet-enabled" class="switch-check"><span>显示宠物</span></label>
+          </div>
+          <div class="settings-grid">
+            <label class="field"><span class="field-label">资源文件</span><input type="text" id="pet-src" class="admin-input" placeholder="assets/pets/pet.webm"></label>
+            <label class="field"><span class="field-label">类型</span>
+              <select id="pet-type" class="admin-input">
+                <option value="video">视频（video）</option>
+                <option value="image">图片（image）</option>
+              </select>
+            </label>
+            <label class="field field-full"><span class="field-label">台词（中文，每行一句，留空则用内置）</span><textarea id="pet-messages-zh" class="admin-textarea" rows="4"></textarea></label>
+            <label class="field field-full"><span class="field-label">台词（English）</span><textarea id="pet-messages-en" class="admin-textarea" rows="4"></textarea></label>
+          </div>
+        </div>
+
+        <div class="settings-card settings-wide">
+          <div class="settings-block-title"><i class="fas fa-egg"></i> 彩蛋（主页底部连点）</div>
+          <div class="switch-row">
+            <label class="switch-label"><input type="checkbox" id="egg-enabled" class="switch-check"><span>启用彩蛋</span></label>
+          </div>
+          <div class="settings-grid">
+            <label class="field"><span class="field-label">点击次数</span><input type="number" id="egg-clicks" class="admin-input" min="2" max="99" value="5"></label>
+            <label class="field"><span class="field-label">点击间隔（毫秒）</span><input type="number" id="egg-timeout" class="admin-input" min="50" value="200"></label>
+            <label class="field field-full"><span class="field-label">跳转目标（相对路径，自动附加当日密钥）</span><input type="text" id="egg-target" class="admin-input" placeholder="whisper/"></label>
+          </div>
+        </div>
+
+        <div class="settings-card settings-wide">
+          <div class="settings-block-title"><i class="fas fa-moon"></i> 耳语页</div>
+          <div class="switch-row">
+            <label class="switch-label"><input type="checkbox" id="whisper-enabled" class="switch-check"><span>开放耳语页</span></label>
+            <label class="switch-label"><input type="checkbox" id="whisper-pet-enabled" class="switch-check"><span>显示宠物</span></label>
+          </div>
+          <div class="settings-grid">
+            <label class="field"><span class="field-label">标题（中文）</span><input type="text" id="whisper-titleZh" class="admin-input" placeholder="火林 · 这是我的秘密 ✦"></label>
+            <label class="field"><span class="field-label">标题（英文）</span><input type="text" id="whisper-titleEn" class="admin-input" placeholder="HuoLin · My Secret ✦"></label>
+            <label class="field"><span class="field-label">背景图</span><input type="text" id="whisper-background" class="admin-input" placeholder="assets/images/Puppy_Play_Pride_Flag.svg"></label>
+            <label class="field"><span class="field-label">密钥盐（salt）</span><input type="text" id="whisper-salt" class="admin-input" placeholder="hul_ref_2024"></label>
+            <label class="field"><span class="field-label">密钥长度</span><input type="number" id="whisper-secretLen" class="admin-input" min="4" max="12" value="6"></label>
+            <label class="field"><span class="field-label">永久入口参数名</span><input type="text" id="whisper-refParam" class="admin-input" placeholder="ref_id"></label>
+            <label class="field"><span class="field-label">宠物资源</span><input type="text" id="whisper-pet-src" class="admin-input" placeholder="assets/pets/pet1.webp"></label>
+            <label class="field"><span class="field-label">宠物类型</span>
+              <select id="whisper-pet-type" class="admin-input">
+                <option value="image">图片（image）</option>
+                <option value="video">视频（video）</option>
+              </select>
+            </label>
+            <label class="field field-full"><span class="field-label">宠物台词（中文，每行一句）</span><textarea id="whisper-pet-zh" class="admin-textarea" rows="3"></textarea></label>
+            <label class="field field-full"><span class="field-label">宠物台词（English）</span><textarea id="whisper-pet-en" class="admin-textarea" rows="3"></textarea></label>
+          </div>
+          <p class="section-hint">修改密钥盐后，旧的分享链接将失效；请重新用「分享入口」生成新链接。</p>
+        </div>
+
       </section>
 
       <!-- 设置 -->

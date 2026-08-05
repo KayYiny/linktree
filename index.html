@@ -22,8 +22,9 @@
     <link rel="preconnect" href="https://pan.puppyis.cool">
     <!-- 非关键脚本（defer，并行下载不阻塞渲染） -->
     <script defer src="assets/scripts/i18n.js"></script>
-    <!-- 站点数据：从 /api/config 加载链接与相册（失败时回退默认值） -->
+    <!-- 站点数据：从 /api/config 加载并应用全部配置（失败时回退默认值） -->
     <script defer src="assets/scripts/site-data.js"></script>
+    <script defer src="assets/scripts/secret.js"></script>
     <script defer src="assets/scripts/gallery.js"></script>
     <script defer src="assets/scripts/pet.js"></script>
     <script defer src="assets/scripts/easter-egg.js"></script>

@@ -326,6 +326,16 @@
 
   /** 更新 window.__petMessages 为当前语言的版本 */
   function updatePetMessages() {
+    // 后台自定义台词优先（site-data.js 注入 window.__petMessagesCustom）
+    if (window.__petMessagesCustom) {
+      var arr = window.__petMessagesCustom[currentLang] ||
+        window.__petMessagesCustom['en'] ||
+        window.__petMessagesCustom['zh-CN'];
+      if (Array.isArray(arr) && arr.length) {
+        window.__petMessages = arr;
+        return;
+      }
+    }
     var key = window.__petMessagesKey || 'pet.default';
     var msgs = __(key);
     if (Array.isArray(msgs)) {
