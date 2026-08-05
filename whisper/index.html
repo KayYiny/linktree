@@ -97,5 +97,35 @@
     })();
 
     </script>
+
+    <!-- 网站加载过渡弹窗（data-loader 连接数据库并渲染完成后自动隐藏） -->
+    <div id="siteLoading" class="site-loading">
+      <div class="site-loading-card">
+        <span class="sl-corner sl-corner-tl"></span>
+        <span class="sl-corner sl-corner-tr"></span>
+        <span class="sl-corner sl-corner-bl"></span>
+        <span class="sl-corner sl-corner-br"></span>
+        <div class="sl-title">LOADING<span class="sl-dot">.</span><span class="sl-dot">.</span><span class="sl-dot">.</span></div>
+        <div class="sl-bars" aria-hidden="true">
+          <span class="sl-bar"></span>
+          <span class="sl-bar"></span>
+          <span class="sl-bar"></span>
+          <span class="sl-bar"></span>
+        </div>
+        <div class="sl-status" id="siteLoadingStatus">正在连接数据库…</div>
+      </div>
+    </div>
+    <script>
+    (function () {
+      var texts = ['正在连接数据库…', '正在加载头像…', '正在铺开链接…', '再等一下下…', '即将完成…'];
+      var i = 0;
+      var el = document.getElementById('siteLoadingStatus');
+      if (!el) return;
+      setInterval(function () {
+        i = (i + 1) % texts.length;
+        el.textContent = texts[i];
+      }, 900);
+    })();
+    </script>
   </body>
 </html>

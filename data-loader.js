@@ -24,6 +24,11 @@
     return p;
   }
 
+  function hideLoading() {
+    var el = document.getElementById('siteLoading');
+    if (el) el.style.display = 'none';
+  }
+
   async function loadAndRender() {
     var slug = getPageSlug();
     try {
@@ -32,9 +37,11 @@
       cachedConfig = await res.json();
     } catch (e) {
       console.error('[data-loader] Failed to load config:', e);
+      hideLoading(); // 失败也收起，避免卡在加载弹窗
       return;
     }
     renderAll(cachedConfig);
+    hideLoading();
   }
 
   function renderAll(config) {
@@ -180,6 +187,9 @@
   } else {
     loadAndRender();
   }
+
+  // 兜底：即使脚本/网络异常，加载弹窗最多显示 10 秒后自动收起
+  setTimeout(hideLoading, 10000);
 
   // 语言切换时重新渲染链接
   document.addEventListener('languagechange', function () {

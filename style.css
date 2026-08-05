@@ -1149,6 +1149,111 @@ body::after {
 }
 
 /* ============================================
+   网站加载过渡弹窗（data-loader 渲染完成后隐藏）
+   ============================================ */
+.site-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 10, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.site-loading-card {
+  position: relative;
+  width: 230px;
+  padding: 26px 22px 20px;
+  background: var(--surface);
+  border: var(--border-w) solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-x) var(--shadow-y) 0 var(--accent-cyan);
+  text-align: center;
+}
+
+/* 四角装饰 */
+.sl-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--accent-pink);
+}
+.sl-corner-tl { top: 6px; left: 6px; border-right: none; border-bottom: none; }
+.sl-corner-tr { top: 6px; right: 6px; border-left: none; border-bottom: none; }
+.sl-corner-bl { bottom: 6px; left: 6px; border-right: none; border-top: none; }
+.sl-corner-br { bottom: 6px; right: 6px; border-left: none; border-top: none; }
+
+/* LOADING 标题 */
+.sl-title {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  letter-spacing: 0.16em;
+  color: var(--text-dark);
+  animation: slPulse 1.3s ease-in-out infinite;
+}
+.sl-dot {
+  display: inline-block;
+  color: var(--accent-pink);
+  animation: slBlink 1.3s infinite;
+}
+.sl-dot:nth-child(2) { animation-delay: 0.2s; }
+.sl-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* 三色跳动加载条 */
+.sl-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 7px;
+  height: 30px;
+  margin: 14px 0 12px;
+}
+.sl-bar {
+  width: 11px;
+  height: 26px;
+  background: var(--accent-cyan);
+  border: 2px solid var(--border);
+  animation: slBar 0.9s ease-in-out infinite;
+}
+.sl-bar:nth-child(2) { background: var(--accent-pink); animation-delay: 0.15s; }
+.sl-bar:nth-child(3) { background: var(--accent-yellow); animation-delay: 0.3s; }
+.sl-bar:nth-child(4) { background: var(--accent-cyan); animation-delay: 0.45s; }
+
+/* 轮播状态文案 */
+.sl-status {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  opacity: 0.65;
+  letter-spacing: 0.5px;
+}
+
+@keyframes slBar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+@keyframes slBlink {
+  0%, 80%, 100% { opacity: 0.15; }
+  40% { opacity: 1; }
+}
+@keyframes slPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@media (max-width: 480px) {
+  .site-loading-card {
+    width: 200px;
+    padding: 22px 18px 18px;
+  }
+  .sl-title { font-size: 1.4rem; }
+}
+
+/* ============================================
    GALLERY — 图片相册（由 gallery.js 使用）
    ============================================ */
 
