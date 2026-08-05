@@ -249,8 +249,19 @@
 
   /* ======================== 核心函数 ======================== */
 
-  /** 翻译 —— 支持普通字符串和数组 */
+  /** 翻译 —— 支持普通字符串和数组
+   *  优先从数据库翻译 (window.__dbTranslations) 获取，fallback 到硬编码 dict
+   */
   function __(key) {
+    // 1. 优先使用数据库翻译
+    var dbTrans = window.__dbTranslations;
+    if (dbTrans && dbTrans[key]) {
+      var dbVal = dbTrans[key][currentLang];
+      if (dbVal !== undefined && dbVal !== null) return dbVal;
+      var dbFb = dbTrans[key][fallbackLang];
+      if (dbFb !== undefined && dbFb !== null) return dbFb;
+    }
+    // 2. fallback 到硬编码 dict
     var entry = dict[key];
     if (!entry) return key;
     var val = entry[currentLang];

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理面板 — 登录</title>
+    <link rel="icon" href="../assets/images/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="admin.css">
+  </head>
+  <body>
+    <div class="brutal-corner-tl"></div>
+    <div class="brutal-corner-tr"></div>
+    <div class="brutal-corner-bl"></div>
+    <div class="brutal-corner-br"></div>
+
+    <main class="admin-login">
+      <div class="brutal-bar"></div>
+      <h1>🔧 管理面板</h1>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">用户名</label>
+          <input type="text" id="username" name="username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">密码</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+        <div id="loginError" class="error-msg" style="display:none"></div>
+        <button type="submit" class="brutal-btn">登录</button>
+      </form>
+    </main>
+
+    <script>
+    (function() {
+      // 已登录则跳转到管理面板
+      if (localStorage.getItem('admin_token')) {
+        window.location.href = 'admin.html';
+        return;
+      }
+
+      document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var username = document.getElementById('username').value;
+        var password = document.getElementById('password').value;
+        var errorEl = document.getElementById('loginError');
+        errorEl.style.display = 'none';
+
+        try {
+          var res = await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username, password: password })
+          });
+          var data = await res.json();
+
+          if (res.ok && data.token) {
+            localStorage.setItem('admin_token', data.token);
+            localStorage.setItem('admin_username', data.username);
+            window.location.href = 'admin.html';
+          } else {
+            errorEl.textContent = data.error || '登录失败';
+            errorEl.style.display = 'block';
+          }
+        } catch (err) {
+          errorEl.textContent = '网络错误，请重试';
+          errorEl.style.display = 'block';
+        }
+      });
+    })();
+    </script>
+  </body>
+</html>

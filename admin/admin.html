@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理面板</title>
+    <link rel="icon" href="../assets/images/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="admin.css">
+  </head>
+  <body>
+    <div class="brutal-corner-tl"></div>
+    <div class="brutal-corner-tr"></div>
+    <div class="brutal-corner-bl"></div>
+    <div class="brutal-corner-br"></div>
+
+    <div class="admin-layout">
+      <!-- 侧边栏 -->
+      <aside class="admin-sidebar">
+        <h2>🔧 管理面板</h2>
+        <nav>
+          <a href="#" data-section="site-config" class="nav-item active">
+            <i class="fas fa-cog"></i> 站点配置
+          </a>
+          <a href="#" data-section="links" class="nav-item">
+            <i class="fas fa-link"></i> 链接管理
+          </a>
+          <a href="#" data-section="gallery" class="nav-item">
+            <i class="fas fa-images"></i> 相册管理
+          </a>
+          <a href="#" data-section="pet" class="nav-item">
+            <i class="fas fa-paw"></i> 宠物管理
+          </a>
+          <a href="#" data-section="translations" class="nav-item">
+            <i class="fas fa-language"></i> 翻译管理
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <span id="adminUser"></span>
+          <button id="logoutBtn" class="brutal-btn-sm">退出</button>
+        </div>
+      </aside>
+
+      <!-- 主内容区 -->
+      <main class="admin-main">
+        <!-- 站点配置 -->
+        <section id="section-site-config" class="admin-section active">
+          <h3>⚙️ 站点配置</h3>
+          <form id="siteConfigForm" class="admin-form">
+            <div class="form-group">
+              <label>头像 URL</label>
+              <input type="text" name="avatar" placeholder="assets/images/avatar.webp">
+            </div>
+            <div class="form-group">
+              <label>用户名</label>
+              <input type="text" name="username" placeholder="HUOLIN">
+            </div>
+            <div class="form-group">
+              <label>Favicon URL</label>
+              <input type="text" name="favicon" placeholder="assets/images/favicon.svg">
+            </div>
+            <button type="submit" class="brutal-btn">保存</button>
+          </form>
+        </section>
+
+        <!-- 链接管理 -->
+        <section id="section-links" class="admin-section">
+          <h3>🔗 链接管理</h3>
+          <div class="section-toolbar">
+            <select id="linkPageFilter">
+              <option value="">全部页面</option>
+            </select>
+            <button id="addLinkBtn" class="brutal-btn-sm">+ 添加链接</button>
+          </div>
+          <div id="linksList" class="admin-list"></div>
+          <!-- 链接编辑表单 -->
+          <div id="linkEditor" class="admin-editor" style="display:none">
+            <h4 id="linkEditorTitle">添加链接</h4>
+            <form id="linkForm" class="admin-form">
+              <input type="hidden" name="id">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>所属页面</label>
+                  <select name="page_id" required></select>
+                </div>
+                <div class="form-group">
+                  <label>排序</label>
+                  <input type="number" name="sort_order" value="0">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>标签名</label>
+                  <input type="text" name="label" required placeholder="QQ">
+                </div>
+                <div class="form-group">
+                  <label>跳转 URL</label>
+                  <input type="text" name="url" placeholder="https://...">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>图标 URL</label>
+                  <input type="text" name="icon" placeholder="assets/icons/qq.svg">
+                </div>
+                <div class="form-group">
+                  <label>二维码 URL</label>
+                  <input type="text" name="qr_code" placeholder="assets/qrcodes/qq.jpg">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>弹窗提示</label>
+                <input type="text" name="popup_note" placeholder="点击上方按钮直接访问">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="brutal-btn">保存</button>
+                <button type="button" id="cancelLinkBtn" class="brutal-btn-sm">取消</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- 相册管理 -->
+        <section id="section-gallery" class="admin-section">
+          <h3>🖼️ 相册管理</h3>
+          <div class="section-toolbar">
+            <select id="galleryPageFilter">
+              <option value="">全部页面</option>
+            </select>
+            <button id="addGalleryBtn" class="brutal-btn-sm">+ 添加图片</button>
+          </div>
+          <div id="galleryList" class="admin-list"></div>
+          <div id="galleryEditor" class="admin-editor" style="display:none">
+            <h4 id="galleryEditorTitle">添加图片</h4>
+            <form id="galleryForm" class="admin-form">
+              <input type="hidden" name="id">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>所属页面</label>
+                  <select name="page_id" required></select>
+                </div>
+                <div class="form-group">
+                  <label>排序</label>
+                  <input type="number" name="sort_order" value="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>图片 URL</label>
+                <input type="text" name="src" required placeholder="https://...">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="brutal-btn">保存</button>
+                <button type="button" id="cancelGalleryBtn" class="brutal-btn-sm">取消</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- 宠物管理 -->
+        <section id="section-pet" class="admin-section">
+          <h3>🐾 宠物管理</h3>
+          <div class="section-toolbar">
+            <select id="petPageFilter">
+              <option value="">全部页面</option>
+            </select>
+            <button id="addPetBtn" class="brutal-btn-sm">+ 添加宠物</button>
+          </div>
+          <div id="petList" class="admin-list"></div>
+          <div id="petEditor" class="admin-editor" style="display:none">
+            <h4 id="petEditorTitle">添加宠物</h4>
+            <form id="petForm" class="admin-form">
+              <input type="hidden" name="id">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>所属页面</label>
+                  <select name="page_id" required></select>
+                </div>
+                <div class="form-group">
+                  <label>宠物类型（i18n key）</label>
+                  <input type="text" name="pet_type" placeholder="cat / dog">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>宠物图片/视频 URL</label>
+                <input type="text" name="pet_image" required placeholder="assets/pets/pet.webm">
+              </div>
+              <div class="form-group">
+                <label>中文语录（每行一条）</label>
+                <textarea name="messages_zh" rows="6" placeholder="嗷呜～ 你吵醒本王午睡了…"></textarea>
+              </div>
+              <div class="form-group">
+                <label>英文语录（每行一条）</label>
+                <textarea name="messages_en" rows="6" placeholder="Ow~ You woke me from my nap…"></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="brutal-btn">保存</button>
+                <button type="button" id="cancelPetBtn" class="brutal-btn-sm">取消</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- 翻译管理 -->
+        <section id="section-translations" class="admin-section">
+          <h3>🌐 翻译管理</h3>
+          <div class="section-toolbar">
+            <input type="text" id="transSearch" placeholder="搜索 key...">
+            <button id="addTransBtn" class="brutal-btn-sm">+ 添加翻译</button>
+          </div>
+          <div id="transList" class="admin-list"></div>
+          <div id="transEditor" class="admin-editor" style="display:none">
+            <h4 id="transEditorTitle">添加翻译</h4>
+            <form id="transForm" class="admin-form">
+              <input type="hidden" name="id">
+              <div class="form-group">
+                <label>Key</label>
+                <input type="text" name="key" required placeholder="brand.qq">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>语言</label>
+                  <select name="language" required>
+                    <option value="zh-CN">中文 (zh-CN)</option>
+                    <option value="en">English (en)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>翻译内容</label>
+                <input type="text" name="value" required placeholder="QQ">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="brutal-btn">保存</button>
+                <button type="button" id="cancelTransBtn" class="brutal-btn-sm">取消</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- 消息提示 -->
+    <div id="toast" class="toast" style="display:none"></div>
+
+    <script src="admin.js"></script>
+  </body>
+</html>

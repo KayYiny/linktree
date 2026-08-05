@@ -60,4 +60,10 @@
     initPet();
   }
 
+  // data-loader 加载完成后重新初始化（使用数据库中的宠物数据）
+  document.addEventListener('configloaded', function () {
+    // 重新初始化 pet，使用从数据库加载的图片和消息
+    initPet();
+  });
+
 })();

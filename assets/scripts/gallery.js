@@ -27,8 +27,7 @@
   // ──────────────────────────────────────────────
   //  读取配置
   // ──────────────────────────────────────────────
-  var images = window.__galleryImages;
-  if (!images || !images.length) return;
+  var images = window.__galleryImages || [];
   var totalImages = images.length;
 
   // 按列数取展示行数（保证完整行，不留半行）
@@ -359,6 +358,14 @@
     pagePrevBtn.innerHTML = '<i class="fas fa-chevron-left"></i> ' + __('gallery.prev');
     pageNextBtn.innerHTML = __('gallery.next') + ' <i class="fas fa-chevron-right"></i>';
     backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> ' + __('gallery.back');
+  });
+
+  // data-loader 加载完成后重新读取相册图片
+  document.addEventListener('configloaded', function () {
+    images = window.__galleryImages || [];
+    totalImages = images.length;
+    built = false;
+    init();
   });
 
 })();

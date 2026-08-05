@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noarchive, nofollow">
-    <title data-i18n="page.title.main">火林 · 这是我的名片</title>
+    <title>火林 · 这是我的名片</title>
     <!-- Favicon -->
     <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
     <!-- Font Awesome icons -->
     <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
     <!-- Core theme CSS -->
     <link rel="stylesheet" href="style.css">
-    <!-- 页面背景 -->
+    <!-- 页面背景（data-loader 会覆盖） -->
     <style>
       body {
         --bg-image: url('assets/images/bg.jpg');
@@ -27,6 +27,8 @@
     <script defer src="assets/scripts/easter-egg.js"></script>
     <script defer src="assets/scripts/qrcode-popup.js"></script>
     <script defer src="assets/scripts/hint-popup.js"></script>
+    <!-- 数据加载器：从数据库 API 获取配置并渲染 -->
+    <script defer src="data-loader.js"></script>
   </head>
 
   <body>
@@ -43,11 +45,11 @@
       <div class="brutal-bar"></div>
 
       <div id="profilePicture">
-        <img src="assets/images/avatar.webp" alt="头像">
+        <!-- data-loader 动态渲染 -->
       </div>
 
       <div id="userName">
-        HUOLIN
+        <!-- data-loader 动态渲染 -->
       </div>
 
       <!-- 粗野主义分隔符 -->
@@ -69,37 +71,13 @@
       </div>
 
       <div id="links">
-        <!-- QQ — 点击显示二维码，底部可跳转链接 -->
-        <a class="link img-popup-trigger" data-img="assets/qrcodes/qq.jpg" data-url="https://qm.qq.com/q/KbsdxQ17W0" data-i18n-note="popup.note.visit" data-note="点击上方按钮直接访问">
-          <span class="link-icon"><img src="assets/icons/qq.svg" class="brand-icon" alt="QQ"></span>
-          <span class="link-label" data-i18n="brand.qq">QQ</span>
-        </a>
-        <!-- 微信 — 点击显示二维码，无跳转链接 -->
-        <a class="link img-popup-trigger" data-img="assets/qrcodes/wechat.jpg" data-i18n-note="popup.note.wechat" data-note="使用微信长按识别">
-          <span class="link-icon"><img src="assets/icons/wechat.svg" class="brand-icon" alt="WeChat"></span>
-          <span class="link-label" data-i18n="brand.wechat">WeChat</span>
-        </a>
-        <!-- B站 — 点击显示二维码 -->
-        <a class="link img-popup-trigger" data-img="assets/qrcodes/bilibili.jpg" data-url="http://space.bilibili.com/430552995" data-i18n-note="popup.note.visit" data-note="点击上方按钮直接访问">
-          <span class="link-icon"><img src="assets/icons/bilibili.svg" class="brand-icon" alt="Bilibili"></span>
-          <span class="link-label" data-i18n="brand.bilibili">Bilibili</span>
-        </a>
-        <!-- 抖音 — 点击显示二维码 -->
-        <a class="link img-popup-trigger" data-img="assets/qrcodes/douyin.jpg" data-url="https://www.douyin.com/user/MS4wLjABAAAAYuXxtdsArkxgZpoGgQHE1Z2e5mvPeP4UCSezKlzUiALP4vyL0yqLi0vjneoLi5wz" data-i18n-note="popup.note.visit" data-note="点击上方按钮直接访问">
-          <span class="link-icon"><img src="assets/icons/tiktok.svg" class="brand-icon" alt="TikTok"></span>
-          <span class="link-label" data-i18n="brand.tiktok">TikTok</span>
-        </a>
-        <!-- 小红书 — 点击显示二维码 -->
-        <a class="link img-popup-trigger" data-img="assets/qrcodes/xiaohongshu.jpg" data-url="http://xhslink.com/m/3qScrydPm6Z" data-i18n-note="popup.note.visit" data-note="点击上方按钮直接访问">
-          <span class="link-icon"><img src="assets/icons/xiaohongshu.svg" class="brand-icon" alt="Xiaohongshu"></span>
-          <span class="link-label" data-i18n="brand.xiaohongshu">RED</span>
-        </a>
+        <!-- data-loader 动态渲染 -->
       </div>
 
       <!-- ========== 虚拟宠物 ========== -->
       <div id="pet">
         <div class="pet-bubble" id="petBubble"></div>
-        <video src="assets/pets/pet.webm" alt="宠物" id="petImage" autoplay loop muted playsinline>
+        <!-- data-loader 动态渲染 -->
       </div>
 
       <div id="hashtag">
@@ -116,14 +94,6 @@
     (function() {
       'use strict';
 
-      // ---- 入场动画延迟 ----
-      (function() {
-        var els = document.querySelectorAll('#links .link');
-        for (var i = 0; i < els.length; i++) {
-          els[i].style.animationDelay = (0.10 + i * 0.08) + 's';
-        }
-      })();
-
       // ---- Easter Egg 配置（跳转至隐藏页，带上当日密钥） ----
       window.__eggConfig = {
         clicks: 5,
@@ -134,21 +104,8 @@
         }
       };
 
-      // ---- 宠物语录（由 i18n 按语言提供） ----
-      window.__petMessagesKey = 'pet.cat';
-
-      // ---- 相册图片 ----
-      window.__galleryImages = [
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe94ce4ba9.png' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe94d412a4.png' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe94f43386.png' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe951955ae.png' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe9528ce69.png' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe95313dc8.png' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe953c3b1c.png' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe953c6082.jpeg' },
-        { src: 'https://lsky.puppyis.cool/i/2026/06/27/6a3fe95454f88.jpeg' },
-      ];
+      // ---- 相册图片（data-loader 会覆盖） ----
+      window.__galleryImages = window.__galleryImages || [];
 
     })();
 

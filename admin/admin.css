@@ -1,0 +1,345 @@
+/**
+ * admin.css — 管理面板样式（新粗野主义风格）
+ */
+
+/* ---- 登录页 ---- */
+.admin-login {
+  max-width: 360px;
+  margin: 80px auto;
+  padding: 2rem;
+  border: var(--brutal-border, 3px solid #000);
+  border-radius: var(--brutal-radius, 12px);
+  background: var(--bg, #f0e7d8);
+  box-shadow: 6px 6px 0 #000;
+  text-align: center;
+}
+.admin-login h1 {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+/* ---- 布局 ---- */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---- 侧边栏 ---- */
+.admin-sidebar {
+  width: 200px;
+  min-height: 100vh;
+  padding: 1.5rem 1rem;
+  background: var(--bg, #f0e7d8);
+  border-right: 3px solid #000;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+}
+.admin-sidebar h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.admin-sidebar nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.nav-item {
+  display: block;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.15s;
+}
+.nav-item:hover {
+  border-color: #000;
+  background: rgba(0,0,0,0.05);
+}
+.nav-item.active {
+  border-color: #000;
+  background: #000;
+  color: #fff;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+}
+.sidebar-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+/* ---- 主内容区 ---- */
+.admin-main {
+  flex: 1;
+  margin-left: 200px;
+  padding: 2rem;
+}
+
+/* ---- 管理区块 ---- */
+.admin-section {
+  display: none;
+}
+.admin-section.active {
+  display: block;
+}
+.admin-section h3 {
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+}
+
+/* ---- 工具栏 ---- */
+.section-toolbar {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+.section-toolbar select,
+.section-toolbar input {
+  flex: 1;
+}
+
+/* ---- 表单 ---- */
+.admin-form {
+  max-width: 600px;
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid #000;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #fff;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.form-group textarea {
+  resize: vertical;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+}
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+.form-row .form-group {
+  flex: 1;
+}
+.form-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+/* ---- 按钮 ---- */
+.brutal-btn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border: 3px solid #000;
+  border-radius: 10px;
+  background: #000;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+  transition: all 0.1s;
+}
+.brutal-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+}
+.brutal-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+.brutal-btn-sm {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border: 2px solid #000;
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.brutal-btn-sm:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* ---- 列表 ---- */
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 700px;
+}
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid #000;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.9rem;
+}
+.list-item-label {
+  flex: 1;
+  font-weight: 600;
+  word-break: break-all;
+}
+.list-item-sub {
+  color: #666;
+  font-size: 0.8rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list-item-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+.list-item-actions button {
+  padding: 0.2rem 0.5rem;
+  border: 1px solid #000;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.list-item-actions button:hover {
+  background: #000;
+  color: #fff;
+}
+.list-item-actions .btn-delete {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+.list-item-actions .btn-delete:hover {
+  background: #c0392b;
+  color: #fff;
+}
+
+/* ---- 编辑器 ---- */
+.admin-editor {
+  margin-top: 1.5rem;
+  padding: 1.2rem;
+  border: 3px solid #000;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+  max-width: 700px;
+}
+.admin-editor h4 {
+  margin-bottom: 1rem;
+}
+
+/* ---- 消息提示 ---- */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.8rem 1.2rem;
+  border: 2px solid #000;
+  border-radius: 8px;
+  background: #2ecc71;
+  color: #000;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+  z-index: 1000;
+  animation: toastIn 0.3s ease;
+}
+.toast.error {
+  background: #e74c3c;
+  color: #fff;
+}
+@keyframes toastIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ---- 错误信息 ---- */
+.error-msg {
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: 2px solid #c0392b;
+  border-radius: 6px;
+  background: #ffe0e0;
+  color: #c0392b;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 100%;
+    min-height: auto;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 3px solid #000;
+    padding: 0.8rem;
+  }
+  .admin-sidebar h2 {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  .admin-sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .nav-item {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+  .sidebar-footer {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 2px solid #000;
+  }
+  .admin-main {
+    margin-left: 0;
+    padding: 1rem;
+  }
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
