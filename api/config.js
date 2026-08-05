@@ -228,9 +228,9 @@ export default async function handler(req, res) {
       links: Array.isArray(stored.links) ? stored.links : DEFAULT_LINKS,
       gallery: Array.isArray(stored.gallery) ? stored.gallery : DEFAULT_GALLERY,
     };
-    // 配置不常变：允许 CDN 边缘缓存 60s，访客从就近节点读取，避免跨区调用函数；
-    // 后台保存后最迟 60s 内全站生效（后台自己读取时带时间戳绕过缓存）
-    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+    // 配置缓存：CDN 边缘缓存 10s（保证保存后改动尽快生效，又避免每次都回源函数）
+    // 后台保存后最迟约 10s 内全站生效（后台自己读取时带时间戳绕过缓存）
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=10');
     res.status(200).json(config);
     return;
   }

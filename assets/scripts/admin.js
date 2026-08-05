@@ -68,7 +68,7 @@
 
   // 登录时校验口令（无需返回数据）
   function apiVerify(pwd) {
-    return fetch('api/config?verify=' + encodeURIComponent(pwd), { headers: { Accept: 'application/json' } })
+    return fetch('api/config?verify=' + encodeURIComponent(pwd) + '&_=' + Date.now(), { headers: { Accept: 'application/json' } })
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
@@ -445,10 +445,15 @@
     }
     saveBtn.disabled = true;
     apiSave(extra).then(function () {
-      toast('已保存，所有访客将看到最新内容 ✓');
+      var msg = '已保存，所有访客将看到最新内容 ✓';
+      if (extra && extra.newPassword) {
+        // 本会话同步新口令，避免下次保存仍用旧口令而被拒
+        password = extra.newPassword;
+        msg = '已保存 ✓ 口令已更新，下次登录请使用新口令';
+      }
       $('#newPwdInput').value = '';
       $('#newPwdInput2').value = '';
-      markClean();
+      toast(msg);
       saveBtn.disabled = false;
     }).catch(function (err) {
       toast('保存失败：' + err.message, true);
