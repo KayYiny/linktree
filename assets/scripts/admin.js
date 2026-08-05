@@ -2,7 +2,7 @@
  * Admin — 站点管理后台
  *
  * 管理「链接 / 相册（主页与耳语页）/ 站点信息 / 宠物 / 彩蛋 / 耳语页」，
- * 数据经 api/config 持久化到 Vercel Blob，保存后所有访客立即看到最新内容。
+ * 数据经 api/config 持久化到 PostgreSQL，保存后所有访客立即看到最新内容。
  * 支持导出 / 导入 JSON 备份，数据随时可迁移。
  */
 (function () {
@@ -368,10 +368,10 @@
       loginHint.className = 'login-hint';
       loginBtn.disabled = false;
     }).catch(function (err) {
-      if (/401/.test(err.message || '')) {
+      if (/401|口令/.test(err.message || '')) {
         loginHint.textContent = '口令错误，请重新输入';
       } else {
-        loginHint.textContent = '无法连接配置接口：请确认通过 Vercel 部署访问（本地直接打开无法在线管理）';
+        loginHint.textContent = '无法连接配置接口：请确认已通过 Vercel 部署访问，且网络正常';
       }
       loginHint.className = 'login-hint is-error';
       loginBtn.disabled = false;
@@ -544,6 +544,6 @@
     writeSettings();
     loaded = true;
   }).catch(function () {
-    showBanner('⚠ 无法连接配置接口：当前页面可能未通过 Vercel 部署访问，或尚未创建 Blob 存储。在线保存将不可用，但仍可编辑并「导出」备份。', true);
+    showBanner('⚠ 无法连接配置接口：请确认已通过 Vercel 部署访问，并检查数据库（PostgreSQL）连接是否正常。在线保存将不可用，但仍可编辑并「导出」备份。', true);
   });
 })();
