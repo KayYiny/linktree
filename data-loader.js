@@ -59,8 +59,22 @@
       location.replace('../'); // 密钥无效 → 跳回首页
       return;
     }
+    normalizeKeyUrl(cachedConfig.site);
     renderAll(cachedConfig);
     hideLoading();
+  }
+
+  // 用永久密钥（或非当前轮换密钥）访问时，地址栏瞬间换成当前有效轮换密钥，不暴露永久密钥
+  // 仅在密钥有效（命中永久密钥）时转换；无效密钥保留原样
+  function normalizeKeyUrl(site) {
+    if (!site || !window.__keygen) return;
+    var k = new URLSearchParams(window.location.search).get('k');
+    if (!k) return;
+    var rot = window.__keygen.currentKey(site.key_rotation || 'daily', site.key_salt || '');
+    if (k === rot) return;
+    var ok = window.__keygen.isValid(k, site.key_rotation || 'daily', site.key_salt || '', site.key_permanent || '');
+    if (!ok) return;
+    window.history.replaceState(null, '', window.location.pathname + '?k=' + rot + window.location.hash);
   }
 
   function renderAll(config) {
@@ -75,6 +89,7 @@
     renderGallery(config.gallery);
     loadTranslations(config.translations);
     applyEggConfig(config.site);
+    window.__dbConfig = config; // 供 hint-popup 等读取密钥配置
     document.dispatchEvent(new Event('configloaded'));
   }
 

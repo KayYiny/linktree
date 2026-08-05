@@ -748,6 +748,13 @@
       if (navigator.clipboard) navigator.clipboard.writeText(link);
       showToast('已复制耳语页链接（含当前密钥）');
     });
+    document.getElementById('keyCopyMainBtn').addEventListener('click', function () {
+      if (!window.__keygen) { showToast('密钥模块未加载', true); return; }
+      var k = window.__keygen.currentKey(S.key.rotation || 'daily', S.key.salt || '');
+      var link = window.location.origin + '/?k=' + k;
+      if (navigator.clipboard) navigator.clipboard.writeText(link);
+      showToast('已复制主页入口链接（含密钥），打开后提示如何用彩蛋进入耳语页');
+    });
   })();
 
   // ==================== 设置：修改用户名 / 密码（即时生效） ====================
