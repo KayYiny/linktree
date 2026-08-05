@@ -56,13 +56,6 @@
   font-display: swap;
   src: url('assets/fonts/NotoSansSC-Bold.ttf') format('truetype');
 }
-@font-face {
-  font-family: 'Noto Sans SC';
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-  src: url('assets/fonts/NotoSansSC-Black.ttf') format('truetype');
-}
 
 :root {
   /* ── Colors ── */
