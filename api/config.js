@@ -97,10 +97,11 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    // 口令校验（登录用）：GET /api/config?verify=口令
+    // 口令校验（登录用）：GET /api/config?verify=口令（不缓存）
     if (req.query && req.query.verify !== undefined) {
       const stored = await readConfig();
       const expected = (stored && stored.adminPassword) || DEFAULT_PASSWORD;
+      res.setHeader('Cache-Control', 'no-store');
       if (String(req.query.verify) === expected) {
         res.status(200).json({ ok: true });
       } else {
@@ -112,7 +113,9 @@ export default async function handler(req, res) {
     const stored = await readConfig();
     const links = stored && Array.isArray(stored.links) ? stored.links : DEFAULT_LINKS;
     const gallery = stored && Array.isArray(stored.gallery) ? stored.gallery : DEFAULT_GALLERY;
-    res.setHeader('Cache-Control', 'no-store');
+    // 配置不常变：允许 CDN 边缘缓存 60s，访客从就近节点读取，避免跨区调用函数；
+    // 后台保存后最迟 60s 内全站生效（后台自己读取时带时间戳绕过缓存）
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
     res.status(200).json({ links, gallery });
     return;
   }

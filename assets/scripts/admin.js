@@ -50,7 +50,8 @@
 
   // ---- API ----
   function apiGet() {
-    return fetch('api/config', { headers: { Accept: 'application/json' } })
+    // 加时间戳绕过 CDN 边缘缓存，保证后台始终读取到最新数据
+    return fetch('api/config?_=' + Date.now(), { headers: { Accept: 'application/json' } })
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
