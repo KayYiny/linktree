@@ -324,6 +324,15 @@
   document.getElementById('saveBtn').addEventListener('click', async function () {
     var errors = [];
 
+    // 保存站点配置
+    var siteForm = document.getElementById('siteConfigForm');
+    var siteRes = await api('/api/admin/site-config', 'PUT', {
+      avatar: siteForm.avatar.value,
+      username: siteForm.username.value,
+      favicon: siteForm.favicon.value
+    });
+    if (!siteRes) errors.push('站点配置');
+
     // 保存链接
     var linkCards = document.querySelectorAll('#linksList .link-card');
     for (var i = 0; i < linkCards.length; i++) {
