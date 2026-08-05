@@ -219,6 +219,20 @@
     });
     S.trans = Object.keys(transBy).map(function (k) { return transBy[k]; });
 
+    // links: 从翻译回显中英文名（方案A：表单只填中文名/英文名，键自动生成）
+    S.links.forEach(function (l) {
+      if (l.i18n_key) {
+        var lt = transBy[l.i18n_key];
+        l.label_zh = (lt && lt.zh) ? lt.zh : (l.label || '');
+        l.label_en = (lt && lt.en) ? lt.en : '';
+        l._autoKey = l.i18n_key.indexOf('link_') === 0;
+      } else {
+        l.label_zh = l.label || '';
+        l.label_en = '';
+        l._autoKey = false;
+      }
+    });
+
     // site
     var cfg = site || {};
     var managedKeys = ['avatar', 'username', 'favicon', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'];
@@ -292,7 +306,7 @@
       card.innerHTML =
         '<div class="card-head">' +
           '<span class="dirty-badge"' + (link._dirty ? '' : ' style="display:none"') + '>● 未保存</span>' +
-          '<span class="card-title">' + esc(link.label || '新链接') + '</span>' +
+          '<span class="card-title">' + esc(link.label_zh || link.label || '新链接') + '</span>' +
           '<div class="card-head-actions">' +
             '<label class="switch" title="启用/停用"><input type="checkbox" data-field="is_active"' + (link.is_active ? ' checked' : '') + '><span class="switch-slider"></span></label>' +
             '<button class="btn-icon" data-action="up"' + (edge.first ? ' disabled' : '') + ' title="上移">&#8593;</button>' +
@@ -303,12 +317,13 @@
         '<div class="link-form">' +
           '<div class="form-row">' +
             '<div class="form-group"><label>所属页面</label><select data-field="page_id">' + pageOptions(link.page_id) + '</select></div>' +
-            '<div class="form-group"><label>显示名称</label><input data-field="label" value="' + esc(link.label) + '"></div>' +
+            '<div class="form-group"><label>中文名</label><input data-field="label_zh" value="' + esc(link.label_zh || '') + '"></div>' +
           '</div>' +
           '<div class="form-row">' +
-            '<div class="form-group"><label>多语言键(可选)</label><input data-field="i18n_key" list="i18nKeyOptions" placeholder="如 brand.qq" value="' + esc(link.i18n_key || '') + '"></div>' +
+            '<div class="form-group"><label>英文名(可选，留空=中英相同)</label><input data-field="label_en" value="' + esc(link.label_en || '') + '"></div>' +
             '<div class="form-group"><label>图标 URL</label><input data-field="icon" value="' + esc(link.icon || '') + '"></div>' +
           '</div>' +
+          '<div class="sec-hint" style="margin-bottom:8px">翻译键：' + esc(link.i18n_key || '自动生成') + '（保存时自动写入翻译，无需手动填）</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>跳转链接(可选)</label><input data-field="url" value="' + esc(link.url || '') + '"></div>' +
             '<div class="form-group"><label>二维码图片(可选)</label><input data-field="qr_code" value="' + esc(link.qr_code || '') + '"></div>' +
@@ -320,6 +335,13 @@
         '</div>';
       wrap.appendChild(card);
       bindEntityCard(card, link, S.links, function (x) { return x.page_id; }, '该链接');
+      // 中文名输入时同步内部 label（前端 fallback）与卡片标题
+      var zhInput = card.querySelector('[data-field="label_zh"]');
+      if (zhInput) zhInput.addEventListener('input', function () {
+        link.label = zhInput.value;
+        var title = card.querySelector('.card-title');
+        if (title) title.textContent = zhInput.value || '新链接';
+      });
     });
   }
 
@@ -360,8 +382,9 @@
     var pid = document.getElementById('linkPageFilter').value || firstPageId();
     if (!pid) { showToast('请先创建页面', true); return; }
     S.links.push({
-      id: nextNewId(), page_id: pid, label: '新链接', url: '', icon: '', qr_code: '',
-      popup_note: '', i18n_key: '', note_i18n_key: '', is_active: true, sort_order: 0,
+      id: nextNewId(), page_id: pid, label: '新链接', label_zh: '新链接', label_en: '',
+      url: '', icon: '', qr_code: '', popup_note: '', i18n_key: '', note_i18n_key: '',
+      is_active: true, sort_order: 0, _autoKey: false,
       _new: true, _deleted: false, _dirty: true
     });
     updateDirtyUI(); renderLinks();
@@ -938,15 +961,49 @@
     } catch (e) { errs.push('相册：' + e.message); }
   }
 
+  // 自动生成翻译键 + 把链接的中英文名同步进翻译表（方案A：用户不感知键）
+  function genAutoKey() {
+    return 'link_' + Math.random().toString(36).slice(2, 10);
+  }
+  function syncLinkTrans() {
+    S.links.forEach(function (l) {
+      if (l._deleted) return;
+      if (!l.i18n_key) { l.i18n_key = genAutoKey(); l._autoKey = true; }
+      if (l.label_zh == null && l.label_en == null) return;
+      var t = S.trans.find(function (x) { return !x._deleted && x.key === l.i18n_key; });
+      var zh = (l.label_zh != null && l.label_zh !== '') ? l.label_zh : l.label;
+      var en = l.label_en || '';
+      if (!t) {
+        S.trans.push({ key: l.i18n_key, zh: zh || '', en: en || '', id_zh: null, id_en: null, _new: true, _deleted: false, _dirty: true });
+      } else {
+        if (zh && zh !== t.zh) { t.zh = zh; t._dirty = true; }
+        if (en && en !== t.en) { t.en = en; t._dirty = true; }
+      }
+    });
+  }
+
   async function saveLinks(errs) {
     var arr = S.links;
     if (!arr.some(function (l) { return l._dirty; })) return;
+    syncLinkTrans();
+    // 收集将被删除的自动键翻译（孤儿），删除链接后交给 saveTrans 一并清理
+    var orphanKeys = [];
+    arr.forEach(function (it) {
+      if (it._deleted && it.i18n_key && it.i18n_key.indexOf('link_') === 0) {
+        var stillUsed = arr.some(function (x) { return !x._deleted && x.i18n_key === it.i18n_key; });
+        if (!stillUsed) orphanKeys.push(it.i18n_key);
+      }
+    });
     try {
       for (var it of arr) if (it._deleted && !it._new && it.id != null) await api('/api/admin/links?id=' + it.id, 'DELETE');
+      orphanKeys.forEach(function (k) {
+        var t = S.trans.find(function (x) { return !x._deleted && x.key === k; });
+        if (t) { t._deleted = true; t._dirty = true; }
+      });
       assignSort(arr, function (l) { return l.page_id; });
       for (var it of arr) if (it._new && !it._deleted) {
         await api('/api/admin/links', 'POST', {
-          page_id: it.page_id, label: it.label || '链接', url: it.url || null, icon: it.icon || null,
+          page_id: it.page_id, label: it.label_zh || it.label || '链接', url: it.url || null, icon: it.icon || null,
           qr_code: it.qr_code || null, popup_note: it.popup_note || null,
           i18n_key: it.i18n_key || null, note_i18n_key: it.note_i18n_key || null,
           is_active: it.is_active, sort_order: it.sort_order
@@ -954,7 +1011,7 @@
       }
       for (var it of arr) if (!it._new && !it._deleted && it._dirty) {
         await api('/api/admin/links?id=' + it.id, 'PUT', {
-          page_id: it.page_id, label: it.label || '链接', url: it.url || null, icon: it.icon || null,
+          page_id: it.page_id, label: it.label_zh || it.label || '链接', url: it.url || null, icon: it.icon || null,
           qr_code: it.qr_code || null, popup_note: it.popup_note || null,
           i18n_key: it.i18n_key || null, note_i18n_key: it.note_i18n_key || null,
           is_active: it.is_active, sort_order: it.sort_order
