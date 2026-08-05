@@ -1169,7 +1169,7 @@ body::after {
   padding: 26px 22px 20px;
   background: var(--surface);
   border: var(--border-w) solid var(--border);
-  border-radius: 14px;
+  border-radius: 0; /* 直角方框 — 与粗野主义主题统一 */
   box-shadow: var(--shadow-x) var(--shadow-y) 0 var(--accent-cyan);
   text-align: center;
 }
