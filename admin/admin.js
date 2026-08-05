@@ -1124,6 +1124,15 @@
       label: '返回主页', hint: '',
       run: function () { window.location.href = '/'; }
     });
+    cmdItems.push({
+      label: '退出登录', hint: '',
+      run: function () {
+        if (!confirm('确定退出登录？')) return;
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_username');
+        window.location.href = '/admin/';
+      }
+    });
   }
 
   function renderCmdList(q) {
@@ -1218,6 +1227,14 @@
 
   // ==================== 初始化 ====================
   document.getElementById('loginUser').textContent = '@' + (localStorage.getItem('admin_username') || '');
+
+  document.getElementById('logoutBtn').addEventListener('click', function () {
+    if (!confirm('确定退出登录？')) return;
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_username');
+    window.location.href = '/admin/';
+  });
+
   loadAll().catch(function (e) {
     showToast('加载失败：' + e.message, true, 4000);
   });
