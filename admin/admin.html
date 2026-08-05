@@ -17,12 +17,10 @@
       </div>
       <div class="topbar-actions">
         <span class="last-save">上次保存 <strong id="sysLastSave">—</strong></span>
-        <a href="/" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> 返回主页</a>
-        <button class="btn btn-ghost" id="logoutBtn" title="退出登录"><i class="fas fa-sign-out-alt"></i> 退出</button>
-        <button class="btn btn-ghost" id="exportBtn"><i class="fas fa-download"></i> 导出</button>
-        <button class="btn btn-ghost" id="importBtn"><i class="fas fa-upload"></i> 导入</button>
-        <button class="btn btn-ghost" id="revertBtn" title="放弃所有未保存修改"><i class="fas fa-undo"></i> 撤销</button>
-        <button class="btn btn-primary" id="saveBtn" disabled><i class="fas fa-save"></i> 保存全部</button>
+        <a href="/" class="btn btn-ghost" title="返回主页"><i class="fas fa-arrow-left"></i><span class="btn-label"> 返回主页</span></a>
+        <button class="btn btn-ghost" id="logoutBtn" title="退出登录"><i class="fas fa-sign-out-alt"></i><span class="btn-label"> 退出</span></button>
+        <button class="btn btn-ghost" id="revertBtn" title="放弃所有未保存修改"><i class="fas fa-undo"></i><span class="btn-label"> 撤销</span></button>
+        <button class="btn btn-primary" id="saveBtn" disabled><i class="fas fa-save"></i><span class="btn-label"> 保存全部</span></button>
       </div>
     </header>
 
@@ -246,6 +244,16 @@
               </div>
               <button type="submit" class="btn btn-primary" style="margin-top:0.5rem">修改密码</button>
             </form>
+          </div>
+
+          <!-- 数据备份与迁移 -->
+          <div class="settings-section">
+            <h3><i class="fas fa-database"></i> 数据备份与迁移 <span class="sec-hint">（导出全量配置；导入会整库重建并覆盖现有数据）</span></h3>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button type="button" class="btn btn-primary" id="exportBtn"><i class="fas fa-download"></i> 导出全部数据</button>
+              <button type="button" class="btn btn-ghost" id="importBtn"><i class="fas fa-upload"></i> 导入数据</button>
+            </div>
+            <p class="sec-hint" style="margin-top:0.6rem">导出的 JSON 包含页面 / 链接 / 相册 / 宠物 / 翻译 / 站点配置，可用于备份或在其他站点还原。</p>
           </div>
         </div>
 
