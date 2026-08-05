@@ -33,6 +33,7 @@
     siteDirty: false
   };
   var newSeq = 1;
+  var lastSaveTime = null; // SYS 状态行：上次保存时间
 
   // ---- API 封装 ----
   async function api(url, method, body) {
@@ -72,6 +73,7 @@
       document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
       this.classList.add('active');
       document.getElementById('panel-' + this.dataset.tab).classList.add('active');
+      updateSysBar();
     });
   });
 
@@ -93,9 +95,38 @@
     btn.innerHTML = n > 0
       ? '<i class="fas fa-save"></i> 保存全部 (' + n + ')'
       : '<i class="fas fa-save"></i> 保存全部';
+    updateSysBar();
   }
 
   function markDirty() { updateDirtyUI(); }
+
+  // ==================== SYS 状态行 ====================
+  function updateSysBar() {
+    var n = dirtyCount();
+    var dirtyEl = document.getElementById('sysDirty');
+    if (dirtyEl) {
+      var t = document.getElementById('sysDirtyText');
+      if (t) t.textContent = n + ' 未保存';
+      dirtyEl.classList.toggle('has-dirty', n > 0);
+    }
+    var f = document.getElementById('sysFilter');
+    if (f) {
+      var tab = document.querySelector('.tab.active');
+      var filterId = null;
+      if (tab) {
+        var tabName = tab.dataset.tab;
+        if (tabName === 'links') filterId = 'linkPageFilter';
+        else if (tabName === 'gallery') filterId = 'galleryPageFilter';
+        else if (tabName === 'pet') filterId = 'petPageFilter';
+      }
+      var val = filterId ? ((document.getElementById(filterId) || {}).value || '') : '';
+      f.textContent = val ? pageName(val) : '全部';
+    }
+    var ls = document.getElementById('sysLastSave');
+    if (ls) ls.textContent = lastSaveTime || '—';
+    var i18n = document.getElementById('sysI18n');
+    if (i18n) i18n.textContent = S.trans.length + ' 键';
+  }
 
   function setSaving(on) {
     document.getElementById('saveBtn').disabled = on;
@@ -312,7 +343,7 @@
     });
   }
 
-  document.getElementById('linkPageFilter').addEventListener('change', renderLinks);
+  document.getElementById('linkPageFilter').addEventListener('change', function () { renderLinks(); updateSysBar(); });
   document.getElementById('addLinkBtn').addEventListener('click', function () {
     var pid = document.getElementById('linkPageFilter').value || firstPageId();
     if (!pid) { showToast('请先创建页面', true); return; }
@@ -356,7 +387,7 @@
     });
   }
 
-  document.getElementById('galleryPageFilter').addEventListener('change', renderGallery);
+  document.getElementById('galleryPageFilter').addEventListener('change', function () { renderGallery(); updateSysBar(); });
 
   function addGallery() {
     var pid = document.getElementById('galleryPageFilter').value || firstPageId();
@@ -451,7 +482,7 @@
     });
   }
 
-  document.getElementById('petPageFilter').addEventListener('change', renderPet);
+  document.getElementById('petPageFilter').addEventListener('change', function () { renderPet(); updateSysBar(); });
 
   // ==================== 翻译管理 ====================
   function renderTrans() {
@@ -726,6 +757,7 @@
       showToast('保存完成，但有 ' + errs.length + ' 处失败：' + errs.slice(0, 3).join('；'), true, 4500);
     } else {
       showToast('全部保存成功！');
+      lastSaveTime = new Date().toTimeString().slice(0, 5);
     }
     try { await loadAll(); } catch (e) { /* 已提示 */ }
   }

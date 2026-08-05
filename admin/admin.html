@@ -9,11 +9,6 @@
     <link rel="stylesheet" href="admin.css">
   </head>
   <body class="dark-theme">
-    <div class="brutal-corner-tl"></div>
-    <div class="brutal-corner-tr"></div>
-    <div class="brutal-corner-bl"></div>
-    <div class="brutal-corner-br"></div>
-
     <!-- 顶部栏 -->
     <header class="admin-header">
       <div class="header-left">
@@ -192,6 +187,14 @@
 
     <!-- 导入文件输入 -->
     <input type="file" id="importFileInput" accept=".json" style="display:none">
+
+    <!-- SYS 状态行：后台实况读数 -->
+    <footer class="sys-bar">
+      <span class="sys-seg sys-dirty" id="sysDirty"><span class="sys-dot"></span><span id="sysDirtyText">0 未保存</span></span>
+      <span class="sys-seg">上次保存 <strong id="sysLastSave">—</strong></span>
+      <span class="sys-seg">过滤 <strong id="sysFilter">全部</strong></span>
+      <span class="sys-seg">i18n <strong id="sysI18n">0 键</strong></span>
+    </footer>
 
     <script src="admin.js"></script>
   </body>

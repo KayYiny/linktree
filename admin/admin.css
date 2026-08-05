@@ -57,26 +57,27 @@
 
 /* ---- 继承主站设计令牌 ---- */
 :root {
-  /* Colors — 与主站一致 */
-  --bg: #0a0a0a;
+  /* Colors — 主站同源 · 后台变体：霓虹色只保留语义用途 */
+  --bg: #0d0d0d;
   --surface: #ffffff;
   --text: #ffffff;
-  --text-dark: #0a0a0a;
-  --text-muted: rgba(255, 255, 255, 0.5);
+  --text-dark: #0d0d0d;
+  --text-muted: rgba(255, 255, 255, 0.45);
   --border: #000000;
   --shadow: #2a2a2a;
-  --accent-cyan: #00f0ff;
-  --accent-pink: #ff0066;
-  --accent-yellow: #ffea00;
+  --accent-cyan: #00f0ff;    /* 仅主操作：保存 / 新增 / 焦点 */
+  --accent-pink: #ff0066;    /* 仅破坏性操作：删除 / 错误 */
+  --accent-yellow: #ffea00;  /* 仅未保存（dirty）状态 */
 
   /* Typography — 与主站一致 */
   --font-display: 'Bebas Neue', 'Noto Sans SC', sans-serif;
   --font-body: 'DM Sans', 'Noto Sans SC', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
 
-  /* Brutalist tokens — 与主站一致 */
-  --border-w: 4px;
-  --shadow-x: 8px;
-  --shadow-y: 8px;
+  /* Brutalist tokens — 后台变体：降半档，把音量让给内容 */
+  --border-w: 2px;
+  --shadow-x: 4px;
+  --shadow-y: 4px;
   --transition: 0.12s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -98,22 +99,7 @@ body.dark-theme {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ---- 新粗野主义装饰角标 ---- */
-.brutal-corner-tl,
-.brutal-corner-tr,
-.brutal-corner-bl,
-.brutal-corner-br {
-  position: fixed;
-  width: 28px;
-  height: 28px;
-  border: var(--border-w) solid var(--accent-cyan);
-  z-index: 9999;
-  pointer-events: none;
-}
-.brutal-corner-tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
-.brutal-corner-tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
-.brutal-corner-bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
-.brutal-corner-br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+/* 后台变体：不再使用装饰角标（那是给观众看的，后台是工作台） */
 
 /* ==================== 登录页 ==================== */
 .login-container {
@@ -196,9 +182,9 @@ body.dark-theme {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 0.9rem 1.5rem;
   background: var(--surface);
-  border-bottom: var(--border-w) solid var(--border);
+  border-bottom: 4px solid var(--accent-cyan); /* 唯一保留的品牌压条 */
   position: sticky;
   top: 0;
   z-index: 100;
@@ -229,27 +215,28 @@ body.dark-theme {
 }
 
 .tab {
-  padding: 0.9rem 1.3rem;
+  padding: 0.75rem 1.2rem;
   background: transparent;
   border: none;
-  border-bottom: 5px solid transparent;
+  border-right: 2px solid var(--border);
   color: var(--text-dark);
-  opacity: 0.5;
+  opacity: 0.6;
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background var(--transition), opacity var(--transition);
   white-space: nowrap;
 }
 
 .tab:hover {
-  opacity: 0.8;
+  opacity: 1;
+  background: #f2f2f2;
 }
 
 .tab.active {
   opacity: 1;
-  color: var(--accent-pink);
-  border-bottom-color: var(--accent-pink);
+  background: var(--text-dark);
+  color: var(--surface);
 }
 
 /* ---- 内容区 ---- */
@@ -1085,4 +1072,125 @@ body.dark-theme {
 .page-filter::placeholder {
   color: rgba(10, 10, 10, 0.5);
   opacity: 1;
+}
+
+/* =====================================================================
+   后台变体 Backstage（2026-08-06）
+   同一粗野家族，更安静的调性：霓虹色只保留语义、密度提高、等宽标注
+   ===================================================================== */
+
+/* ---- 圆角归一：工作台略收紧 ---- */
+.card, .link-card, .pet-card, .pet-empty, .page-card, .settings-section,
+.data-table, .gallery-item, .login-card {
+  border-radius: 8px;
+}
+
+.btn, .btn-icon, .inline-add input, .page-filter, .error-msg,
+.login-card input,
+.form-group input, .form-group select, .form-group textarea,
+.data-table input, .gallery-src, .extra-key-row input {
+  border-radius: 6px;
+}
+
+/* ---- 密度：内容优先，压缩留白 ---- */
+.link-card, .page-card, .pet-card {
+  padding: 0.9rem 1rem;
+}
+.settings-section {
+  padding: 1.25rem 1.5rem;
+}
+.btn {
+  padding: 0.55rem 1.05rem;
+}
+.form-group input, .form-group select, .form-group textarea {
+  padding: 0.55rem 0.75rem;
+}
+
+/* 底部留出 SYS 状态行的空间 */
+.admin-content {
+  padding-bottom: 4rem;
+}
+
+/* ---- 等宽标注字段（URL / key / slug 等「接线标签」） ---- */
+.inline-add input,
+#transSearch,
+.data-table .t-key,
+.extra-key-row .ek-key,
+.gallery-body .gallery-src,
+input[data-field="url"],
+input[data-field="qr_code"],
+input[data-field="i18n_key"],
+input[data-field="note_i18n_key"],
+input[data-field="slug"],
+input[data-field="background_image"] {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+/* ---- SYS 状态行（后台 signature：显式保存模型的可见存在） ---- */
+.sys-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+  padding: 0.55rem 1.5rem;
+  background: #0d0d0d;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  z-index: 999;
+}
+
+.sys-seg {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.sys-seg strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.sys-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.sys-dirty.has-dirty {
+  color: var(--accent-yellow);
+}
+.sys-dirty.has-dirty .sys-dot {
+  background: var(--accent-yellow);
+  box-shadow: 0 0 6px rgba(255, 234, 0, 0.7);
+}
+
+@media (max-width: 768px) {
+  .sys-bar {
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.68rem;
+  }
+}
+
+/* ---- 无障碍：尊重减弱动效 ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .tab-panel.active {
+    animation: none !important;
+  }
 }
