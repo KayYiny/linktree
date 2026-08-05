@@ -28,6 +28,7 @@
   popupDom.id = 'imgPopup';
   popupDom.innerHTML = '<div class="img-popup-card">'
     + '<img class="img-popup-image" id="imgPopupImage" src="" alt="">'
+    + '<div class="img-popup-loading" id="imgPopupLoading"><i class="fas fa-spinner fa-spin"></i> ' + __('popup.loading') + '</div>'
     + '<div class="img-popup-label" id="imgPopupLabel"></div>'
     + '<a class="img-popup-btn" id="imgPopupBtn" href="#" target="_blank" style="display:none"><i class="fas fa-external-link-alt"></i> ' + __('popup.visit') + '</a>'
     + '<div class="img-popup-note" id="imgPopupNote"></div>'
@@ -37,9 +38,29 @@
 
   var imgPopup = document.getElementById('imgPopup');
   var imgPopupImage = document.getElementById('imgPopupImage');
+  var imgPopupLoading = document.getElementById('imgPopupLoading');
   var imgPopupLabel = document.getElementById('imgPopupLabel');
   var imgPopupBtn = document.getElementById('imgPopupBtn');
   var imgPopupClose = document.getElementById('imgPopupCloseBtn');
+
+  // ---- 二维码图片加载状态 ----
+  function popupImageLoading() {
+    imgPopupLoading.setAttribute('data-state', 'loading');
+    imgPopupLoading.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + __('popup.loading');
+    imgPopupLoading.style.display = 'flex';
+    imgPopupImage.style.display = 'none';
+  }
+  function popupImageReady() {
+    imgPopupLoading.style.display = 'none';
+    imgPopupImage.style.display = 'block';
+  }
+  imgPopupImage.onload = popupImageReady;
+  imgPopupImage.onerror = function () {
+    imgPopupLoading.setAttribute('data-state', 'error');
+    imgPopupLoading.innerHTML = '<i class="fas fa-image"></i> ' + __('popup.loadFailed');
+    imgPopupLoading.style.display = 'flex';
+    imgPopupImage.style.display = 'none';
+  };
 
   // ---- 绑定触发器点击（事件委托，支持动态渲染的链接） ----
   document.addEventListener('click', function (e) {
@@ -52,6 +73,7 @@
     var note = btn.getAttribute('data-note') || '';
     var labelEl = btn.querySelector('.link-label');
     var label = labelEl ? labelEl.textContent : '';
+    popupImageLoading();
     imgPopupImage.src = imgSrc;
     imgPopupImage.alt = label;
     imgPopupLabel.textContent = label;
@@ -92,6 +114,14 @@
     imgPopupBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> ' + __('popup.visit');
     imgPopupBtn.setAttribute('href', href);
     if (wasVisible) imgPopupBtn.style.display = 'inline-flex';
+
+    // 刷新加载提示文字（loading / error 状态）
+    var lState = imgPopupLoading.getAttribute('data-state');
+    if (lState === 'loading') {
+      imgPopupLoading.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + __('popup.loading');
+    } else if (lState === 'error') {
+      imgPopupLoading.innerHTML = '<i class="fas fa-image"></i> ' + __('popup.loadFailed');
+    }
 
     // 更新标签和备注（从当前触发器重新读取）
     if (activeTrigger) {

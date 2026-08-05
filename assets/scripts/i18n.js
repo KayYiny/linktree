@@ -91,6 +91,14 @@
       { 'zh-CN': '使用微信长按识别',
         'en':     'Long press to scan on WeChat' },
 
+    'popup.loading':
+      { 'zh-CN': '二维码加载中…',
+        'en':     'QR code loading…' },
+
+    'popup.loadFailed':
+      { 'zh-CN': '二维码加载失败',
+        'en':     'QR code failed to load' },
+
     /* ── 语言切换按钮（不再使用，由 applyI18n 动态生成） ── */
 
     /* ── 宠物：默认气泡（pet.js 兜底） ── */

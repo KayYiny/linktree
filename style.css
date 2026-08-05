@@ -686,6 +686,21 @@ body::after {
   display: block;
 }
 
+.img-popup-loading {
+  width: 100%;
+  min-height: 220px;
+  border: var(--border-w) solid var(--border);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-muted, #666);
+}
+
 .img-popup-label {
   color: var(--text-dark);
   font-family: var(--font-display);
