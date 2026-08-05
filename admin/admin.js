@@ -6,7 +6,7 @@
 
   var token = localStorage.getItem('admin_token');
   var username = localStorage.getItem('admin_username');
-  if (!token) { window.location.href = 'index.html'; return; }
+  if (!token) { window.location.href = '/admin/'; return; }
 
   var headers = {
     'Content-Type': 'application/json',
@@ -20,7 +20,7 @@
   document.getElementById('logoutBtn').addEventListener('click', function () {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_username');
-    window.location.href = 'index.html';
+    window.location.href = '/admin/';
   });
 
   // ---- 侧边栏导航 ----
@@ -59,7 +59,7 @@
     var res = await fetch(url, opts);
     if (res.status === 401) {
       localStorage.removeItem('admin_token');
-      window.location.href = 'index.html';
+      window.location.href = '/admin/';
       return null;
     }
     if (res.status === 204) return null;

@@ -36,7 +36,7 @@
     (function() {
       // 已登录则跳转到管理面板
       if (localStorage.getItem('admin_token')) {
-        window.location.href = 'admin.html';
+        window.location.href = '/admin/admin.html';
         return;
       }
 
@@ -58,7 +58,7 @@
           if (res.ok && data.token) {
             localStorage.setItem('admin_token', data.token);
             localStorage.setItem('admin_username', data.username);
-            window.location.href = 'admin.html';
+            window.location.href = '/admin/admin.html';
           } else {
             errorEl.textContent = data.error || '登录失败';
             errorEl.style.display = 'block';
