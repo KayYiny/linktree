@@ -13,6 +13,17 @@
     return 'main';
   }
 
+  // 相对资源路径解析：数据库里存的是相对根目录的路径（如 assets/images/avatar.webp），
+  // 在耳语页等子目录页面需补 '../'，否则会解析成 /whisper/assets/... 404。
+  function resolvePath(p) {
+    if (!p) return p;
+    if (p.indexOf('//') === 0 || /^[a-z][a-z0-9+.-]*:/i.test(p)) return p; // // 或 https: 等协议
+    if (p.indexOf('data:') === 0) return p;
+    if (p.indexOf('/') === 0) return p; // 绝对路径
+    if (getPageSlug() === 'whisper') return '../' + p;
+    return p;
+  }
+
   async function loadAndRender() {
     var slug = getPageSlug();
     try {
@@ -29,7 +40,8 @@
   function renderAll(config) {
     renderSiteConfig(config.site);
     if (config.page && config.page.background_image) {
-      document.body.style.setProperty('--bg-image', "url('" + config.page.background_image + "')");
+      var bg = resolvePath(config.page.background_image);
+      document.body.style.setProperty('--bg-image', "url('" + bg + "')");
       document.body.style.background = 'var(--bg) var(--bg-image) center/cover fixed no-repeat';
     }
     renderLinks(config.links, config.translations);
@@ -44,7 +56,7 @@
     if (!site) return;
     var profileEl = document.getElementById('profilePicture');
     if (profileEl && site.avatar) {
-      profileEl.innerHTML = '<img src="' + site.avatar + '" alt="头像">';
+      profileEl.innerHTML = '<img src="' + resolvePath(site.avatar) + '" alt="头像">';
     }
     var nameEl = document.getElementById('userName');
     if (nameEl && site.username) {
@@ -74,7 +86,7 @@
       var a = document.createElement('a');
       a.className = 'link' + (link.qr_code ? ' img-popup-trigger' : '');
 
-      if (link.qr_code) a.setAttribute('data-img', link.qr_code);
+      if (link.qr_code) a.setAttribute('data-img', resolvePath(link.qr_code));
       if (link.url) a.setAttribute('data-url', link.url);
 
       // 弹窗提示（优先 i18n key）
@@ -102,7 +114,7 @@
       }
 
       a.innerHTML =
-        '<span class="link-icon"><img src="' + link.icon + '" class="brand-icon" alt="' + label + '"></span>' +
+        '<span class="link-icon"><img src="' + resolvePath(link.icon) + '" class="brand-icon" alt="' + label + '"></span>' +
         '<span class="link-label">' + label + '</span>';
 
       linksEl.appendChild(a);
@@ -119,9 +131,10 @@
     if (bubble) petEl.appendChild(bubble);
 
     var ext = pet.image.split('.').pop().toLowerCase();
+    var petSrc = resolvePath(pet.image);
     if (ext === 'webm' || ext === 'mp4') {
       var video = document.createElement('video');
-      video.src = pet.image;
+      video.src = petSrc;
       video.alt = '宠物';
       video.id = 'petImage';
       video.autoplay = true;
@@ -131,7 +144,7 @@
       petEl.appendChild(video);
     } else {
       var img = document.createElement('img');
-      img.src = pet.image;
+      img.src = petSrc;
       img.alt = '宠物';
       img.id = 'petImage';
       petEl.appendChild(img);
@@ -152,7 +165,7 @@
 
   function renderGallery(gallery) {
     if (!gallery || !gallery.length) return;
-    window.__galleryImages = gallery.map(function (img) { return { src: img.src }; });
+    window.__galleryImages = gallery.map(function (img) { return { src: resolvePath(img.src) }; });
   }
 
   function loadTranslations(translations) {
