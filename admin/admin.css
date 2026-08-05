@@ -1055,3 +1055,34 @@ body.dark-theme {
     width: 100%;
   }
 }
+
+/* =====================================================================
+   输入框可见性修复（2026-08-06）
+   深色输入框从纯黑提到深灰，并显式设置占位提示颜色，确保提示词清晰可见
+   ===================================================================== */
+.form-group input,
+.form-group select,
+.form-group textarea,
+.data-table input,
+.gallery-src,
+.extra-key-row input {
+  background: #1b1b1b;
+  color: #ffffff;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.form-group select::placeholder,
+.data-table input::placeholder,
+.gallery-src::placeholder,
+.extra-key-row input::placeholder {
+  color: #9a9a9a;
+  opacity: 1;
+}
+
+/* 浅色（白底）输入框的占位提示 */
+.inline-add input::placeholder,
+.page-filter::placeholder {
+  color: rgba(10, 10, 10, 0.5);
+  opacity: 1;
+}
