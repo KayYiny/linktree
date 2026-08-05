@@ -171,6 +171,44 @@
             </form>
           </div>
 
+          <!-- 密钥设置 -->
+          <div class="settings-section">
+            <h3><i class="fas fa-key"></i> 密钥设置 <span class="sec-hint">（耳语页 ?k= 访问控制，属于批量保存的一部分）</span></h3>
+            <form id="keyConfigForm">
+              <div class="form-row">
+                <div class="form-group" style="display:flex;align-items:center;gap:10px">
+                  <label style="margin:0">启用密钥</label>
+                  <label class="switch"><input type="checkbox" id="keyEnabled" checked><span class="switch-slider"></span></label>
+                </div>
+                <div class="form-group">
+                  <label>更换周期</label>
+                  <select id="keyRotation">
+                    <option value="hourly">每小时</option>
+                    <option value="daily" selected>每天</option>
+                    <option value="weekly">每周</option>
+                    <option value="monthly">每月</option>
+                    <option value="never">永不更换</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>盐值（可选，改了密钥就变）</label>
+                  <input type="text" id="keySalt" placeholder="留空用默认值">
+                </div>
+                <div class="form-group">
+                  <label>永久跳转密钥（可选，永远有效）</label>
+                  <input type="text" id="keyPermanent" placeholder="自定义永久密钥">
+                </div>
+              </div>
+              <div class="key-current" id="keyCurrentBox">
+                <span class="sec-hint">当前有效密钥</span>
+                <code id="keyCurrent">——</code>
+                <button type="button" class="btn btn-primary" id="keyCopyBtn"><i class="fas fa-link"></i> 复制耳语页链接（含密钥）</button>
+              </div>
+            </form>
+          </div>
+
           <!-- 账号设置（即时生效） -->
           <div class="settings-section">
             <h3><i class="fas fa-user-cog"></i> 账号设置 <span class="sec-hint">（修改即时生效）</span></h3>
@@ -229,6 +267,8 @@
     <!-- 导入文件输入 -->
     <input type="file" id="importFileInput" accept=".json" style="display:none">
 
+    <!-- 密钥生成（耳语页访问控制，供「密钥设置」实时显示当前密钥） -->
+    <script src="../assets/scripts/keygen.js"></script>
     <script src="admin.js"></script>
   </body>
 </html>

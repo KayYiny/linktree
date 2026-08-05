@@ -29,6 +29,20 @@
     if (el) el.style.display = 'none';
   }
 
+  // 耳语页密钥校验：?k= 需命中当前轮换密钥或永久密钥，否则跳回首页
+  function gateWhisper(site) {
+    if (getPageSlug() !== 'whisper') return true;
+    if (!site || site.key_enabled === '0') return true; // 未启用密钥则放行
+    var k = new URLSearchParams(window.location.search).get('k') || '';
+    if (!window.__keygen) return true; // 兜底：keygen 未加载则放行
+    return window.__keygen.isValid(
+      k,
+      site.key_rotation || 'daily',
+      site.key_salt || '',
+      site.key_permanent || ''
+    );
+  }
+
   async function loadAndRender() {
     var slug = getPageSlug();
     try {
@@ -37,7 +51,12 @@
       cachedConfig = await res.json();
     } catch (e) {
       console.error('[data-loader] Failed to load config:', e);
+      if (slug === 'whisper') { location.replace('../'); return; } // 无法校验密钥则回首页
       hideLoading(); // 失败也收起，避免卡在加载弹窗
+      return;
+    }
+    if (!gateWhisper(cachedConfig.site)) {
+      location.replace('../'); // 密钥无效 → 跳回首页
       return;
     }
     renderAll(cachedConfig);
@@ -74,11 +93,17 @@
   // 彩蛋配置：从 site.egg_* 注入 window.__eggConfig（easter-egg.js 读取）
   function applyEggConfig(site) {
     if (!site) return;
+    var target = site.egg_target || 'whisper/';
+    // 若跳转目标是耳语页且密钥开启，自动带上当前有效密钥（彩蛋永远能进）
+    if (target.indexOf('whisper') !== -1 && site.key_enabled !== '0' && window.__keygen) {
+      var k = window.__keygen.currentKey(site.key_rotation || 'daily', site.key_salt || '');
+      target += (target.indexOf('?') === -1 ? '?' : '&') + 'k=' + k;
+    }
     window.__eggConfig = {
       enabled: site.egg_enabled === '0' ? false : true,
       clicks: parseInt(site.egg_clicks, 10) || 5,
       timeout: parseInt(site.egg_timeout, 10) || 2000,
-      target: site.egg_target || 'whisper/'
+      target: target
     };
   }
 

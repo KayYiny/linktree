@@ -32,7 +32,9 @@
     site: { avatar: '', username: '', favicon: '', extra: [] }, // extra: {key, value, _new, _deleted, _dirty}
     siteDirty: false,
     egg: { enabled: true, clicks: '5', timeout: '2000', target: '' }, // 彩蛋配置
-    eggDirty: false
+    eggDirty: false,
+    key: { enabled: true, rotation: 'daily', salt: '', permanent: '' }, // 密钥设置
+    keyDirty: false
   };
   var newSeq = 1;
   var lastSaveTime = null; // SYS 状态行：上次保存时间
@@ -88,6 +90,7 @@
     S.site.extra.forEach(function (it) { if (it._dirty) n++; });
     if (S.siteDirty) n++;
     if (S.eggDirty) n++;
+    if (S.keyDirty) n++;
     return n;
   }
 
@@ -218,7 +221,7 @@
 
     // site
     var cfg = site || {};
-    var managedKeys = ['avatar', 'username', 'favicon', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target'];
+    var managedKeys = ['avatar', 'username', 'favicon', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'];
     S.site = {
       avatar: cfg.avatar || '',
       username: cfg.username || '',
@@ -234,6 +237,13 @@
       target: cfg.egg_target || ''
     };
     S.eggDirty = false;
+    S.key = {
+      enabled: cfg.key_enabled !== '0',
+      rotation: cfg.key_rotation || 'daily',
+      salt: cfg.key_salt || '',
+      permanent: cfg.key_permanent || ''
+    };
+    S.keyDirty = false;
 
     fillPageFilters();
     renderAll();
@@ -241,7 +251,7 @@
   }
 
   function renderAll() {
-    renderLinks(); renderGallery(); renderPet(); renderTrans(); renderPages(); renderSite(); renderEgg();
+    renderLinks(); renderGallery(); renderPet(); renderTrans(); renderPages(); renderSite(); renderEgg(); renderKey();
   }
 
   // ==================== 链接管理 ====================
@@ -672,7 +682,7 @@
     var key = input.value.trim();
     if (!key) { showToast('请先输入配置键名', true); return; }
     if (S.site.extra.some(function (e) { return !e._deleted && e.key === key; }) ||
-        ['avatar', 'username', 'favicon', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target'].indexOf(key) !== -1) {
+        ['avatar', 'username', 'favicon', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'].indexOf(key) !== -1) {
       showToast('该键已存在', true); return;
     }
     S.site.extra.push({ key: key, value: '', _new: true, _deleted: false, _dirty: true });
@@ -702,6 +712,42 @@
     f.eggClicks.addEventListener('input', function () { S.egg.clicks = f.eggClicks.value; mark(); });
     f.eggTimeout.addEventListener('input', function () { S.egg.timeout = f.eggTimeout.value; mark(); });
     f.eggTarget.addEventListener('input', function () { S.egg.target = f.eggTarget.value; mark(); });
+  })();
+
+  // ==================== 设置：密钥（耳语页 ?k= 访问控制） ====================
+  function renderKey() {
+    var f = document.getElementById('keyConfigForm');
+    if (!f) return;
+    f.keyEnabled.checked = !!S.key.enabled;
+    f.keyRotation.value = S.key.rotation;
+    f.keySalt.value = S.key.salt;
+    f.keyPermanent.value = S.key.permanent;
+    updateKeyCurrent();
+  }
+  function updateKeyCurrent() {
+    var el = document.getElementById('keyCurrent');
+    if (!el) return;
+    el.textContent = window.__keygen ? window.__keygen.currentKey(S.key.rotation || 'daily', S.key.salt || '') : '——';
+  }
+  (function () {
+    var f = document.getElementById('keyConfigForm');
+    if (!f) return;
+    function mark() {
+      S.keyDirty = true;
+      updateDirtyUI();
+      updateKeyCurrent();
+    }
+    f.keyEnabled.addEventListener('change', function () { S.key.enabled = f.keyEnabled.checked; mark(); });
+    f.keyRotation.addEventListener('change', function () { S.key.rotation = f.keyRotation.value; mark(); });
+    f.keySalt.addEventListener('input', function () { S.key.salt = f.keySalt.value; mark(); });
+    f.keyPermanent.addEventListener('input', function () { S.key.permanent = f.keyPermanent.value; mark(); });
+    document.getElementById('keyCopyBtn').addEventListener('click', function () {
+      if (!window.__keygen) { showToast('密钥模块未加载', true); return; }
+      var k = window.__keygen.currentKey(S.key.rotation || 'daily', S.key.salt || '');
+      var link = window.location.origin + '/whisper/?k=' + k;
+      if (navigator.clipboard) navigator.clipboard.writeText(link);
+      showToast('已复制耳语页链接（含当前密钥）');
+    });
   })();
 
   // ==================== 设置：修改用户名 / 密码（即时生效） ====================
@@ -934,6 +980,12 @@
         body.egg_timeout = String(S.egg.timeout || '2000');
         body.egg_target = S.egg.target || '';
       }
+      if (S.keyDirty) {
+        body.key_enabled = S.key.enabled ? '1' : '0';
+        body.key_rotation = S.key.rotation || 'daily';
+        body.key_salt = S.key.salt || '';
+        body.key_permanent = S.key.permanent || '';
+      }
       S.site.extra.forEach(function (e) {
         if (e._dirty && !e._deleted) body[e.key] = e.value || '';
       });
@@ -982,7 +1034,9 @@
     data.siteConfig = {
       avatar: S.site.avatar, username: S.site.username, favicon: S.site.favicon,
       egg_enabled: S.egg.enabled ? '1' : '0',
-      egg_clicks: S.egg.clicks, egg_timeout: S.egg.timeout, egg_target: S.egg.target
+      egg_clicks: S.egg.clicks, egg_timeout: S.egg.timeout, egg_target: S.egg.target,
+      key_enabled: S.key.enabled ? '1' : '0',
+      key_rotation: S.key.rotation, key_salt: S.key.salt, key_permanent: S.key.permanent
     };
     S.site.extra.filter(function (e) { return !e._deleted; }).forEach(function (e) { data.siteConfig[e.key] = e.value; });
 

@@ -25,7 +25,7 @@
     return function () {
       var isRemote = t.indexOf('://') !== -1;
       if (!isRemote) {
-        var tPath = t.replace(/^\//, '').replace(/\/+$/, '');
+        var tPath = t.split('?')[0].replace(/^\//, '').replace(/\/+$/, '');
         var cur = (window.location.pathname || '/').replace(/^\//, '').replace(/\/+$/, '');
         if (tPath && cur && cur.indexOf(tPath) !== -1) {
           window.location.href = '/';
