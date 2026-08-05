@@ -61,6 +61,10 @@
           <i class="fas fa-images"></i>
           <span data-i18n="album.label">Album</span>
         </a>
+        <button class="album-btn" id="shareWhisperBtn">
+          <i class="fas fa-share-alt"></i>
+          <span data-i18n="share.button">分享入口</span>
+        </button>
       </div>
 
       <div id="links">
@@ -98,6 +102,27 @@
 
     })();
 
+    </script>
+
+    <!-- 分享耳语页链接（复制时自动带上当前有效密钥 ?k=） -->
+    <script>
+    (function() {
+      var btn = document.getElementById('shareWhisperBtn');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        var cfg = (window.__dbConfig && window.__dbConfig.site) || null;
+        var k = '';
+        if (cfg && cfg.key_enabled !== '0' && window.__keygen) {
+          k = window.__keygen.currentKey(cfg.key_rotation || 'daily', cfg.key_salt || '');
+        }
+        var url = window.location.origin + window.location.pathname + (k ? '?k=' + k : '');
+        if (navigator.clipboard) navigator.clipboard.writeText(url);
+        var check = (window.getLang && window.getLang() === 'en') ? 'Copied!' : '已复制';
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> <span>' + check + '</span>';
+        setTimeout(function () { btn.innerHTML = orig; }, 2000);
+      });
+    })();
     </script>
 
     <!-- 网站加载过渡弹窗（data-loader 连接数据库并渲染完成后自动隐藏） -->
