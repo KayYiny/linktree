@@ -25,24 +25,46 @@ const DEFAULT_PASSWORD = 'admin123'; // 首次默认口令，登录后请在管�
 
 const PG_TABLE = 'site_config';
 
-/** PostgreSQL 连接（Vercel Postgres 或自建，读 DATABASE_URL / POSTGRES_URL） */
-function pgConfig() {
+/** PostgreSQL 连接（读 DATABASE_URL / POSTGRES_URL） */
+let pool = null;
+let useSsl = process.env.PGSSL !== 'false'; // 默认尝试 SSL，PGSSL=false 强制不用
+let sslResolved = false; // 是否已确定 SSL 模式（避免反复切换）
+
+function buildPool() {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
   const cfg = { connectionString: url, max: 5, idleTimeoutMillis: 20000 };
-  // 公网连接默认启用 SSL（Vercel Postgres / Neon / Supabase / RDS 一般要求）；
-  // 你的库不需要 SSL 时，设置环境变量 PGSSL=false
-  cfg.ssl = process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false };
-  return cfg;
+  if (useSsl) cfg.ssl = { rejectUnauthorized: false };
+  return new Pool(cfg);
 }
 
-let pool;
 function getPool() {
-  if (!pool) pool = new Pool(pgConfig());
+  if (!pool) pool = buildPool();
   return pool;
 }
 
+async function resetPool() {
+  try { if (pool) await pool.end(); } catch (e) { /* ignore */ }
+  pool = null;
+}
+
+/** 统一查询入口：首次连接失败时自动切换为明文重试一次（覆盖各种“不支持 SSL”报错） */
+async function dbQuery(text, params) {
+  try {
+    return await getPool().query(text, params);
+  } catch (err) {
+    // 首次失败（无论错误类型）→ 切明文重试一次；若服务端确实没开 SSL 则成功
+    if (!sslResolved) {
+      useSsl = false;
+      sslResolved = true;
+      await resetPool();
+      return await getPool().query(text, params);
+    }
+    throw err;
+  }
+}
+
 async function initSchema() {
-  await getPool().query(
+  await dbQuery(
     'CREATE TABLE IF NOT EXISTS "' + PG_TABLE + '" (' +
       'id INTEGER PRIMARY KEY, ' +
       'data JSONB NOT NULL, ' +
@@ -55,7 +77,7 @@ async function initSchema() {
 async function readConfig() {
   try {
     await initSchema();
-    const { rows } = await getPool().query(
+    const { rows } = await dbQuery(
       'SELECT data FROM "' + PG_TABLE + '" WHERE id = 1'
     );
     if (!rows || !rows.length) return null;
@@ -71,7 +93,7 @@ async function readConfig() {
 async function writeConfig(cfg) {
   await initSchema();
   const data = JSON.stringify(cfg);
-  await getPool().query(
+  await dbQuery(
     'INSERT INTO "' + PG_TABLE + '" (id, data) VALUES (1, $1) ' +
     'ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data',
     [data]
