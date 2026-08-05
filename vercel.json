@@ -1,15 +1,7 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "admin/**", "use": "@vercel/static" },
-    { "src": "*.html", "use": "@vercel/static" },
-    { "src": "style.css", "use": "@vercel/static" },
-    { "src": "assets/**", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/admin/(.*)", "dest": "/admin/$1" },
-    { "src": "/whisper/(.*)", "dest": "/whisper/$1" }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/admin/(.*)", "destination": "/admin/$1" },
+    { "source": "/whisper/(.*)", "destination": "/whisper/$1" }
   ]
 }
