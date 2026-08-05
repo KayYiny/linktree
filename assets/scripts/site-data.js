@@ -124,30 +124,29 @@
   }
 
   function loadAndRender() {
-    var links = DEFAULT_LINKS;
-    var gallery = DEFAULT_GALLERY;
+    // 先用默认值立即渲染：页面打开即完整呈现，无需等待接口
+    renderLinks(DEFAULT_LINKS);
+    window.__galleryImages = DEFAULT_GALLERY;
+    if (window.applyI18n) window.applyI18n();
 
-    function done() {
-      renderLinks(links);
-      window.__galleryImages = gallery;
-      // 重新应用 i18n，让动态渲染的 data-i18n / data-i18n-note 生效
-      if (window.applyI18n) window.applyI18n();
-    }
-
-    // 同源下拉取最新配置；失败（静态部署/离线）则静默使用默认值
+    // 再异步拉取最新配置，就绪后无缝替换；失败则保持默认值
     fetch('api/config', { headers: { Accept: 'application/json' } })
       .then(function (res) {
         if (!res.ok) throw new Error('config request failed: ' + res.status);
         return res.json();
       })
       .then(function (cfg) {
-        if (cfg) {
-          if (Array.isArray(cfg.links)) links = cfg.links;
-          if (Array.isArray(cfg.gallery)) gallery = cfg.gallery;
-        }
+        if (!cfg) return;
+        var links = Array.isArray(cfg.links) ? cfg.links : DEFAULT_LINKS;
+        var gallery = Array.isArray(cfg.gallery) ? cfg.gallery : DEFAULT_GALLERY;
+        // 与默认值一致时无需重绘（避免重复入场动画）
+        if (JSON.stringify(links) === JSON.stringify(DEFAULT_LINKS) &&
+            JSON.stringify(gallery) === JSON.stringify(DEFAULT_GALLERY)) return;
+        renderLinks(links);
+        window.__galleryImages = gallery;
+        if (window.applyI18n) window.applyI18n();
       })
-      .catch(function () { /* 回退默认值 */ })
-      .then(done);
+      .catch(function () { /* 保持默认值 */ });
   }
 
   loadAndRender();
