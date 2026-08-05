@@ -25,11 +25,10 @@
   'use strict';
 
   // ──────────────────────────────────────────────
-  //  读取配置
+  //  读取配置（数据由 site-data.js 异步提供，构建时再读取）
   // ──────────────────────────────────────────────
-  var images = window.__galleryImages;
-  if (!images || !images.length) return;
-  var totalImages = images.length;
+  var images = [];
+  var totalImages = 0;
 
   // 按列数取展示行数（保证完整行，不留半行）
   function getItemsPerPage() {
@@ -58,6 +57,12 @@
   //  构建 DOM
   // ──────────────────────────────────────────────
   function build() {
+    // 数据就绪后才构建；未就绪则等待下次点击相册
+    var imgs = window.__galleryImages;
+    if (!imgs || !imgs.length) return;
+    images = imgs;
+    totalImages = images.length;
+
     overlay = document.createElement('div');
     overlay.className = 'gallery-overlay';
 
@@ -233,6 +238,9 @@
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) close();
     });
+
+    // 构建成功标记
+    built = true;
   }
 
   // ──────────────────────────────────────────────
@@ -341,8 +349,9 @@
     if (!trigger) return;
     trigger.addEventListener('click', function (e) {
       e.preventDefault();
-      if (!built) { build(); built = true; }
-      open();
+      // 数据未就绪时先不构建，等下次点击（site-data 通常很快加载完成）
+      if (!built) build();
+      if (built) open();
     });
   }
 

@@ -19,10 +19,7 @@
 (function () {
   'use strict';
 
-  // 没有触发器则直接退出
-  var triggers = document.querySelectorAll('.img-popup-trigger');
-  if (!triggers.length) return;
-
+  // 链接由 site-data.js 动态渲染，这里使用事件委托，任意时刻添加的触发器都生效
   var activeTrigger = null; // 当前打开的触发器
 
   // ---- 创建弹窗 DOM ----
@@ -44,30 +41,29 @@
   var imgPopupBtn = document.getElementById('imgPopupBtn');
   var imgPopupClose = document.getElementById('imgPopupCloseBtn');
 
-  // ---- 绑定触发器点击 ----
-  triggers.forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      activeTrigger = this;
-      var imgSrc = this.dataset.img;
-      var url = this.dataset.url;
-      var note = this.dataset.note || '';
-      var label = this.querySelector('.link-label')?.textContent || '';
-      if (imgSrc) {
-        imgPopupImage.src = imgSrc;
-        imgPopupImage.alt = label;
-        imgPopupLabel.textContent = label;
-        imgPopupNote.textContent = note;
-        if (url) {
-          imgPopupBtn.href = url;
-          imgPopupBtn.style.display = 'inline-flex';
-        } else {
-          imgPopupBtn.style.display = 'none';
-        }
-        imgPopup.classList.add('active');
-        document.body.style.overflow = 'hidden';
-      }
-    });
+  // ---- 绑定触发器点击（事件委托，支持动态渲染的链接） ----
+  document.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest('.img-popup-trigger') : null;
+    if (!btn || !btn.hasAttribute('data-img')) return;
+    e.preventDefault();
+    activeTrigger = btn;
+    var imgSrc = btn.getAttribute('data-img');
+    var url = btn.getAttribute('data-url');
+    var note = btn.getAttribute('data-note') || '';
+    var labelEl = btn.querySelector('.link-label');
+    var label = labelEl ? labelEl.textContent : '';
+    imgPopupImage.src = imgSrc;
+    imgPopupImage.alt = label;
+    imgPopupLabel.textContent = label;
+    imgPopupNote.textContent = note;
+    if (url) {
+      imgPopupBtn.href = url;
+      imgPopupBtn.style.display = 'inline-flex';
+    } else {
+      imgPopupBtn.style.display = 'none';
+    }
+    imgPopup.classList.add('active');
+    document.body.style.overflow = 'hidden';
   });
 
   // ---- 关闭弹窗 ----

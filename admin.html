@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>HUOLIN · Admin</title>
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="assets/styles/admin.css">
+</head>
+<body>
+
+  <!-- ========== 登录门 ========== -->
+  <div id="loginView" class="login-view">
+    <form id="loginForm" class="login-card" autocomplete="off">
+      <div class="admin-logo">HUOLIN<br>ADMIN</div>
+      <div class="brutal-divider"><span>///</span></div>
+      <label class="field-label" for="pwdInput">管理口令</label>
+      <input type="password" id="pwdInput" class="admin-input" placeholder="请输入口令" autocomplete="current-password">
+      <button type="submit" class="admin-btn admin-btn-primary" id="loginBtn"><i class="fas fa-unlock"></i> 进入后台</button>
+      <div id="loginHint" class="login-hint">首次默认口令 admin123 · 登录后请在「设置」修改</div>
+    </form>
+  </div>
+
+  <!-- ========== 管理界面 ========== -->
+  <div id="appView" class="app-view" style="display:none">
+
+    <header class="admin-topbar">
+      <div class="admin-title">HUOLIN<span class="accent">·</span>ADMIN</div>
+      <div class="topbar-actions">
+        <a class="admin-btn admin-btn-ghost" href="index.html"><i class="fas fa-arrow-left"></i> 返回主页</a>
+        <button class="admin-btn admin-btn-ghost" id="exportBtn" type="button"><i class="fas fa-download"></i> 导出</button>
+        <label class="admin-btn admin-btn-ghost" for="importFile"><i class="fas fa-upload"></i> 导入</label>
+        <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+        <button class="admin-btn admin-btn-primary" id="saveBtn" type="button"><i class="fas fa-save"></i> 保存</button>
+      </div>
+    </header>
+
+    <div id="banner" class="admin-banner" style="display:none"></div>
+
+    <nav class="admin-tabs">
+      <button class="admin-tab is-active" data-tab="links" type="button"><i class="fas fa-link"></i> 链接管理</button>
+      <button class="admin-tab" data-tab="gallery" type="button"><i class="fas fa-images"></i> 相册管理</button>
+      <button class="admin-tab" data-tab="settings" type="button"><i class="fas fa-cog"></i> 设置</button>
+    </nav>
+
+    <main class="admin-main">
+
+      <!-- 链接管理 -->
+      <section id="tab-links" class="tab-panel is-active">
+        <div class="panel-head">
+          <h2>链接管理</h2>
+          <button class="admin-btn admin-btn-accent" id="addLinkBtn" type="button"><i class="fas fa-plus"></i> 新增链接</button>
+        </div>
+        <div id="linksList" class="cards-list"></div>
+      </section>
+
+      <!-- 相册管理 -->
+      <section id="tab-gallery" class="tab-panel">
+        <div class="panel-head"><h2>相册管理</h2></div>
+        <div class="gallery-add">
+          <input type="text" id="galSrcInput" class="admin-input" placeholder="图片链接（必填）">
+          <input type="text" id="galLabelInput" class="admin-input" placeholder="标签（可选）">
+          <button class="admin-btn admin-btn-accent" id="addGalBtn" type="button"><i class="fas fa-plus"></i> 添加图片</button>
+        </div>
+        <div id="galleryList" class="gallery-grid"></div>
+      </section>
+
+      <!-- 设置 -->
+      <section id="tab-settings" class="tab-panel">
+        <div class="panel-head"><h2>设置</h2></div>
+        <div class="settings-card">
+          <label class="field-label" for="newPwdInput">修改管理口令</label>
+          <input type="password" id="newPwdInput" class="admin-input" placeholder="新口令（留空则不变）" autocomplete="new-password">
+          <label class="field-label" for="newPwdInput2">确认新口令</label>
+          <input type="password" id="newPwdInput2" class="admin-input" placeholder="再次输入新口令" autocomplete="new-password">
+          <div class="settings-note">新口令会随下次点击「保存」时一并生效。请勿使用过于简单的口令。</div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="admin-footer">
+      <span id="saveStatus" class="save-status"></span>
+    </footer>
+  </div>
+
+  <script src="assets/scripts/admin.js"></script>
+</body>
+</html>

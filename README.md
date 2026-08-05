@@ -25,6 +25,7 @@
 - [功能详解](#-功能详解)
   - [主页面](#-主页面-indexhtml)
   - [耳语子页面](#-耳语子页面-whisperindexhtml)
+- [管理后台](#-管理后台)
 - [核心脚本](#-核心脚本)
 - [响应式设计](#-响应式设计)
 - [自定义指南](#-自定义指南)
@@ -72,7 +73,12 @@
 linktree/
 ├── index.html                       # 主页面
 ├── style.css                        # 新粗野主义设计系统
+├── admin.html                       # 管理后台（链接 / 相册在线管理）
+├── package.json                     # Vercel 函数依赖（@vercel/blob）
 ├── README.md                        # 项目文档
+│
+├── api/
+│   └── config.js                    # Vercel 无服务器函数：读写站点配置（Blob 存储）
 │
 ├── assets/
 │   ├── fontawesome/                 # Font Awesome 6 图标库
@@ -89,7 +95,10 @@ linktree/
 │       ├── anti-inspect.js          # 前端防护
 │       ├── easter-egg.js            # 彩蛋模块
 │       ├── gallery.js               # 图片相册（分页 + 灯箱）
-│       └── pet.js                   # 虚拟宠物交互
+│       ├── site-data.js             # 站点数据加载（链接/相册动态渲染）
+│       ├── admin.js                 # 管理后台逻辑
+│       ├── pet.js                   # 虚拟宠物交互
+│       └── qrcode-popup.js          # 二维码弹窗（事件委托）
 │
 └── whisper/
     └── index.html                   # 隐藏子页面「耳语」
@@ -192,11 +201,41 @@ linktree/
 
 ---
 
+## �️ 管理后台
+
+> 通过可视化界面**在线增删改**「社交链接」和「相册图片」，保存后**所有访客立即生效**。
+> 架构：纯前端界面 + Vercel Serverless 函数（`api/config.js`）+ Vercel Blob 存储，无需常驻服务器。
+
+### 功能
+
+- 🔗 **链接管理**：新增 / 编辑 / 删除 / 排序（显示名称、图标、跳转链接、二维码、备注）
+- 🖼️ **相册管理**：新增 / 删除 / 排序图片（支持标签）
+- 🔑 **口令保护**：进入后台需口令，保存时服务端再次校验
+- 📦 **导出 / 导入**：JSON 一键备份与迁移，数据始终掌握在自己手里
+
+### 启用步骤
+
+1. **添加 Blob 存储**：Vercel 控制台 → 项目 → **Storage** → **Create Database** → 选 **Blob**，关联到当前项目（自动生成 `BLOB_READ_WRITE_TOKEN` 环境变量，无需手动配置）
+2. **部署**：`git push`，Vercel 自动部署（`api/` 目录会被自动识别为无服务器函数）
+3. **访问后台**：`你的域名/admin.html`
+4. **首次登录**：默认口令 `admin123`，登录后请在「设置」中修改
+
+### 数据说明
+
+- 配置仅为一个几 KB 的 JSON，存于 Vercel Blob（免费额度 10 GB 存储）
+- 每次访问主页调用 1 次无服务器函数拉取配置（Hobby 免费 10 万次/月）
+- 未部署 / 本地直接打开时，主页自动回退到内置默认数据，正常显示
+- 若更换平台：管理页「导出」JSON → 在新环境部署后「导入」即可迁移
+
+---
+
 ## 🛠️ 自定义指南
+
+> 💡 推荐通过「管理后台」（`admin.html`）在线维护链接与相册，无需改代码；以下为手动修改方式。
 
 ### 修改社交链接
 
-编辑 `index.html` 中 `#links` 部分：
+> 手动修改位置：`assets/scripts/site-data.js` 中的 `DEFAULT_LINKS`（`api/config.js` 中为同名默认值）。
 
 ```html
 <a class="link img-popup-trigger"
@@ -234,12 +273,12 @@ window.__eggConfig = {
 
 ## 🚀 部署方式
 
-本项目为纯静态站点，无需构建，可直接部署到任何静态托管服务：
+前端为纯静态站点，可部署到任何静态托管；**管理后台需要 Vercel**（无服务器函数 + Blob）。
 
-| 方式 | 操作 |
+| 方式 | 说明 |
 |------|------|
-| **GitHub Pages** | `git push` 后，在仓库 Settings > Pages 中选择 `main` 分支启用 |
-| **Vercel / Netlify** | 直接导入仓库，自动部署，零配置 |
+| **Vercel（推荐，含管理后台）** | 导入仓库自动部署；先在 Storage 创建 **Blob** 并关联项目，然后 `git push` 即可 |
+| **GitHub Pages / Netlify / 其他静态托管** | 可正常显示站点（内置默认数据），但管理后台的在线保存不可用 |
 | **任意 Web 服务器** | 将项目文件放入服务器根目录即可访问 |
 
 ---

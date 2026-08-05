@@ -1,0 +1,13 @@
+{
+  "name": "huolin-linktree",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "HuoLin Linktree — 个人名片站 + 管理后台（Vercel Serverless + Blob）",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.6.1"
+  }
+}
