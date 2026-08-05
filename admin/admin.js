@@ -1,10 +1,19 @@
 /**
- * admin.js — 管理面板逻辑（重写版）
+ * admin.js — 管理面板逻辑（重做版 · 显式保存模型）
+ *
+ * 设计要点：
+ * 1. 所有增/删/改/排序都先落在本地「工作副本」，不触发任何写库；
+ *    统一由顶部「保存全部(N)」批量提交。
+ * 2. 每个被修改的条目显示「● 未保存」角标，保存按钮实时显示待保存数量。
+ * 3. 「撤销全部」从服务器重新拉取，放弃所有本地修改。
+ * 4. 有未保存改动时离开页面会弹窗提醒（beforeunload）。
+ * 5. 排序号保存时按 page_id 分组重算，杜绝跨页排序错乱。
+ * 6. 导出/导入字段对称：导出全量，导入走事务式 /api/admin/import 整库重建。
  */
 (function () {
   'use strict';
 
-  // ---- 认证检查 ----
+  // ---- 认证 ----
   var token = localStorage.getItem('admin_token');
   if (!token) { window.location.href = '/admin/'; return; }
 
@@ -13,8 +22,17 @@
     'Authorization': 'Bearer ' + token
   };
 
-  var pagesCache = [];
-  var allTranslations = [];
+  // ---- 本地工作副本状态 ----
+  var S = {
+    pages: [],   // {id, slug, title, background_image, is_active, sort_order, _new, _deleted, _dirty}
+    links: [],   // {id, page_id, label, url, icon, qr_code, popup_note, i18n_key, note_i18n_key, is_active, sort_order, _new, _deleted, _dirty}
+    gallery: [], // {id, page_id, src, sort_order, _new, _deleted, _dirty}
+    pets: [],    // {id, page_id, pet_image, pet_type, messages:{'zh-CN':[],'en':[]}, _new, _deleted, _dirty}
+    trans: [],   // {key, zh, en, id_zh, id_en, _new, _deleted, _dirty}
+    site: { avatar: '', username: '', favicon: '', extra: [] }, // extra: {key, value, _new, _deleted, _dirty}
+    siteDirty: false
+  };
+  var newSeq = 1;
 
   // ---- API 封装 ----
   async function api(url, method, body) {
@@ -24,23 +42,28 @@
     if (res.status === 401) {
       localStorage.removeItem('admin_token');
       window.location.href = '/admin/';
-      return null;
+      throw new Error('未登录或登录已过期');
     }
     if (res.status === 204) return null;
-    return await res.json();
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    return data;
   }
 
-  function showToast(msg, isError) {
+  function showToast(msg, isError, ms) {
     var toast = document.getElementById('toast');
     toast.textContent = msg;
     toast.className = 'toast' + (isError ? ' error' : '');
     toast.style.display = 'block';
-    setTimeout(function () { toast.style.display = 'none'; }, 2500);
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () { toast.style.display = 'none'; }, ms || 2600);
   }
 
   function esc(s) {
-    return s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '';
+    return s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
+
+  function nextNewId() { return 'new-' + (newSeq++); }
 
   // ==================== 标签页 ====================
   document.querySelectorAll('.tab').forEach(function (tab) {
@@ -52,371 +75,876 @@
     });
   });
 
-  // ==================== 页面列表 ====================
-  async function loadPages() {
-    pagesCache = await api('/api/admin/pages', 'GET') || [];
+  // ==================== 脏标记 / 保存按钮 ====================
+  function dirtyCount() {
+    var n = 0;
+    ['pages', 'links', 'gallery', 'pets', 'trans'].forEach(function (k) {
+      S[k].forEach(function (it) { if (it._dirty) n++; });
+    });
+    S.site.extra.forEach(function (it) { if (it._dirty) n++; });
+    if (S.siteDirty) n++;
+    return n;
+  }
+
+  function updateDirtyUI() {
+    var n = dirtyCount();
+    var btn = document.getElementById('saveBtn');
+    btn.disabled = n === 0;
+    btn.innerHTML = n > 0
+      ? '<i class="fas fa-save"></i> 保存全部 (' + n + ')'
+      : '<i class="fas fa-save"></i> 保存全部';
+  }
+
+  function markDirty() { updateDirtyUI(); }
+
+  function setSaving(on) {
+    document.getElementById('saveBtn').disabled = on;
+    document.getElementById('saveBtn').innerHTML = on
+      ? '<i class="fas fa-spinner fa-spin"></i> 保存中…'
+      : '<i class="fas fa-save"></i> 保存全部';
+    document.getElementById('revertBtn').disabled = on;
+    document.getElementById('exportBtn').disabled = on;
+    document.getElementById('importBtn').disabled = on;
+    if (!on) updateDirtyUI();
+  }
+
+  window.addEventListener('beforeunload', function (e) {
+    if (dirtyCount() > 0) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ==================== 页面相关工具 ====================
+  function pageName(id) {
+    var p = S.pages.find(function (x) { return String(x.id) === String(id); });
+    return p ? (p.slug || '?') : '?';
+  }
+
+  function firstPageId() {
+    var p = S.pages.find(function (x) { return !x._deleted; });
+    return p ? String(p.id) : '';
+  }
+
+  function pageOptions(selected) {
+    return S.pages.filter(function (p) { return !p._deleted; }).map(function (p) {
+      return '<option value="' + p.id + '"' + (String(p.id) === String(selected) ? ' selected' : '') + '>' +
+        esc(p.slug) + (p._new ? ' (新)' : '') + '</option>';
+    }).join('');
+  }
+
+  function fillPageFilters() {
+    var opts = '<option value="">全部页面</option>' + S.pages.filter(function (p) { return !p._deleted; }).map(function (p) {
+      return '<option value="' + p.id + '">' + esc(p.slug) + (p._new ? ' (新)' : '') + '</option>';
+    }).join('');
     ['linkPageFilter', 'galleryPageFilter', 'petPageFilter'].forEach(function (id) {
       var sel = document.getElementById(id);
       if (!sel) return;
       var cur = sel.value;
-      sel.innerHTML = '<option value="">全部页面</option>';
-      pagesCache.forEach(function (p) {
-        sel.innerHTML += '<option value="' + p.id + '">' + esc(p.slug) + ' — ' + esc(p.title || '') + '</option>';
-      });
-      if (cur) sel.value = cur;
+      sel.innerHTML = opts;
+      if (cur && S.pages.some(function (p) { return String(p.id) === cur; })) sel.value = cur;
+      else sel.value = '';
     });
+  }
+
+  // 页内移动：只与同页相邻项交换（避免跨页交换）
+  function moveWithinPage(arr, id, dir, getPage) {
+    var i = arr.findIndex(function (x) { return String(x.id) === String(id); });
+    if (i < 0) return;
+    var step = dir === 'up' ? -1 : 1;
+    var k = i + step;
+    while (k >= 0 && k < arr.length && String(getPage(arr[k])) !== String(getPage(arr[i]))) k += step;
+    if (k < 0 || k >= arr.length) return;
+    var tmp = arr[i]; arr[i] = arr[k]; arr[k] = tmp;
+    arr[i]._dirty = true; arr[k]._dirty = true;
+    updateDirtyUI();
+  }
+
+  // 判断某条目是否是同页第一条 / 最后一条（用于上移/下移禁用）
+  function pageEdge(arr, item, getPage) {
+    var pid = String(getPage(item));
+    var same = arr.filter(function (x) { return !x._deleted && String(getPage(x)) === pid; });
+    return {
+      first: same.length && String(same[0].id) === String(item.id),
+      last: same.length && String(same[same.length - 1].id) === String(item.id)
+    };
+  }
+
+  // ==================== 全量加载 ====================
+  async function loadAll() {
+    var results = await Promise.all([
+      api('/api/admin/pages', 'GET'),
+      api('/api/admin/links', 'GET'),
+      api('/api/admin/gallery', 'GET'),
+      api('/api/admin/pet', 'GET'),
+      api('/api/admin/translations', 'GET'),
+      api('/api/admin/site-config', 'GET')
+    ]);
+    var pages = results[0], links = results[1], gallery = results[2], pets = results[3], trans = results[4], site = results[5];
+
+    S.pages = (pages || []).map(function (p) { return Object.assign({ _new: false, _deleted: false, _dirty: false }, p); });
+    S.links = (links || []).map(function (l) { return Object.assign({ _new: false, _deleted: false, _dirty: false }, l); });
+    S.gallery = (gallery || []).map(function (g) { return Object.assign({ _new: false, _deleted: false, _dirty: false }, g); });
+
+    // pets: JOIN 行 -> 归一化（每只宠物一个对象，messages 按语言聚合）
+    var petsBy = {};
+    (pets || []).forEach(function (r) {
+      if (!petsBy[r.id]) petsBy[r.id] = { id: r.id, page_id: r.page_id, pet_image: r.pet_image, pet_type: r.pet_type, messages: {} };
+      if (r.language && r.messages !== null && r.messages !== undefined) {
+        petsBy[r.id].messages[r.language] = typeof r.messages === 'string' ? JSON.parse(r.messages) : r.messages;
+      }
+    });
+    S.pets = Object.keys(petsBy).map(function (k) {
+      return Object.assign({ _new: false, _deleted: false, _dirty: false }, petsBy[k]);
+    });
+
+    // trans: 行 -> 按 key 分组
+    var transBy = {};
+    (trans || []).forEach(function (r) {
+      if (!transBy[r.key]) transBy[r.key] = { key: r.key, zh: '', en: '', id_zh: null, id_en: null, _new: false, _deleted: false, _dirty: false };
+      if (r.language === 'zh-CN') { transBy[r.key].id_zh = r.id; transBy[r.key].zh = r.value; }
+      if (r.language === 'en') { transBy[r.key].id_en = r.id; transBy[r.key].en = r.value; }
+    });
+    S.trans = Object.keys(transBy).map(function (k) { return transBy[k]; });
+
+    // site
+    var cfg = site || {};
+    S.site = {
+      avatar: cfg.avatar || '',
+      username: cfg.username || '',
+      favicon: cfg.favicon || '',
+      extra: Object.keys(cfg).filter(function (k) { return k !== 'avatar' && k !== 'username' && k !== 'favicon'; })
+        .map(function (k) { return { key: k, value: cfg[k] == null ? '' : String(cfg[k]), _new: false, _deleted: false, _dirty: false }; })
+    };
+    S.siteDirty = false;
+
+    fillPageFilters();
+    renderAll();
+    updateDirtyUI();
+  }
+
+  function renderAll() {
+    renderLinks(); renderGallery(); renderPet(); renderTrans(); renderPages(); renderSite();
   }
 
   // ==================== 链接管理 ====================
-  var linksData = [];
-
-  async function loadLinks() {
-    await loadPages();
+  function visibleLinks() {
     var pid = document.getElementById('linkPageFilter').value;
-    linksData = await api('/api/admin/links' + (pid ? '?page_id=' + pid : ''), 'GET') || [];
-    renderLinks();
+    var list = S.links.filter(function (l) { return !l._deleted; });
+    if (pid) list = list.filter(function (l) { return String(l.page_id) === String(pid); });
+    return list;
   }
 
   function renderLinks() {
-    var list = document.getElementById('linksList');
-    list.innerHTML = '';
-    linksData.forEach(function (link, idx) {
-      var d = document.createElement('div');
-      d.className = 'link-card';
-      d.dataset.id = link.id;
-      d.innerHTML =
-        '<div class="link-preview">' +
-          '<img src="' + esc(link.icon) + '" onerror="this.src=\'data:image/svg+xml,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 24 24\\\'><text y=\\\'18\\\' font-size=\\\'18\\\'>🔗</text></svg>\'">' +
-          '<span>' + esc(link.label) + '</span></div>' +
+    var list = visibleLinks();
+    var pid = document.getElementById('linkPageFilter').value;
+    document.getElementById('linkFilterHint').textContent =
+      '共 ' + list.length + ' 条' + (pid ? '（页面：' + pageName(pid) + '）' : '');
+
+    var wrap = document.getElementById('linksList');
+    wrap.innerHTML = '';
+
+    list.forEach(function (link) {
+      var edge = pageEdge(S.links, link, function (x) { return x.page_id; });
+      var card = document.createElement('div');
+      card.className = 'card link-card' + (link._dirty ? ' dirty' : '');
+      card.dataset.id = link.id;
+      card.innerHTML =
+        '<div class="card-head">' +
+          '<span class="dirty-badge"' + (link._dirty ? '' : ' style="display:none"') + '>● 未保存</span>' +
+          '<span class="card-title">' + esc(link.label || '新链接') + '</span>' +
+          '<div class="card-head-actions">' +
+            '<label class="switch" title="启用/停用"><input type="checkbox" data-field="is_active"' + (link.is_active ? ' checked' : '') + '><span class="switch-slider"></span></label>' +
+            '<button class="btn-icon" data-action="up"' + (edge.first ? ' disabled' : '') + ' title="上移">&#8593;</button>' +
+            '<button class="btn-icon" data-action="down"' + (edge.last ? ' disabled' : '') + ' title="下移">&#8595;</button>' +
+            '<button class="btn-icon btn-danger" data-action="delete" title="删除">&times;</button>' +
+          '</div>' +
+        '</div>' +
         '<div class="link-form">' +
           '<div class="form-row">' +
+            '<div class="form-group"><label>所属页面</label><select data-field="page_id">' + pageOptions(link.page_id) + '</select></div>' +
             '<div class="form-group"><label>显示名称</label><input data-field="label" value="' + esc(link.label) + '"></div>' +
-            '<div class="form-group"><label>多语言键(可选)</label><input data-field="i18n_key" value="' + esc(link.i18n_key || '') + '"></div></div>' +
+          '</div>' +
           '<div class="form-row">' +
-            '<div class="form-group"><label>图标</label><input data-field="icon" value="' + esc(link.icon || '') + '"></div>' +
-            '<div class="form-group"><label>跳转链接(可选)</label><input data-field="url" value="' + esc(link.url || '') + '"></div></div>' +
+            '<div class="form-group"><label>多语言键(可选)</label><input data-field="i18n_key" value="' + esc(link.i18n_key || '') + '"></div>' +
+            '<div class="form-group"><label>图标 URL</label><input data-field="icon" value="' + esc(link.icon || '') + '"></div>' +
+          '</div>' +
           '<div class="form-row">' +
+            '<div class="form-group"><label>跳转链接(可选)</label><input data-field="url" value="' + esc(link.url || '') + '"></div>' +
             '<div class="form-group"><label>二维码图片(可选)</label><input data-field="qr_code" value="' + esc(link.qr_code || '') + '"></div>' +
-            '<div class="form-group"><label>备注(可选)</label><input data-field="popup_note" value="' + esc(link.popup_note || '') + '"></div></div>' +
-          '<div class="form-group"><label>备注多语言键(可选)</label><input data-field="note_i18n_key" value="' + esc(link.note_i18n_key || '') + '"></div>' +
-        '</div>' +
-        '<div class="link-actions">' +
-          '<button class="btn-icon" data-action="up"' + (idx === 0 ? ' disabled' : '') + '>&#8593;</button>' +
-          '<button class="btn-icon" data-action="down"' + (idx === linksData.length - 1 ? ' disabled' : '') + '>&#8595;</button>' +
-          '<button class="btn-icon btn-danger" data-action="delete">&times;</button></div>';
-      list.appendChild(d);
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label>备注(可选)</label><input data-field="popup_note" value="' + esc(link.popup_note || '') + '"></div>' +
+            '<div class="form-group"><label>备注多语言键(可选)</label><input data-field="note_i18n_key" value="' + esc(link.note_i18n_key || '') + '"></div>' +
+          '</div>' +
+        '</div>';
+      wrap.appendChild(card);
+      bindEntityCard(card, link, S.links, function (x) { return x.page_id; }, '该链接');
     });
+  }
 
-    list.querySelectorAll('.btn-icon').forEach(function (btn) {
+  // 通用卡片事件绑定：字段编辑 / 启停开关 / 上移下移 / 删除
+  function bindEntityCard(card, item, arr, getPage, name) {
+    var badge = card.querySelector('.dirty-badge');
+    function mark() {
+      item._dirty = true;
+      card.classList.add('dirty');
+      if (badge) badge.style.display = '';
+      updateDirtyUI();
+    }
+    card.querySelectorAll('[data-field]').forEach(function (input) {
+      if (input.type === 'checkbox') {
+        input.addEventListener('change', function () { item.is_active = input.checked; mark(); });
+      } else {
+        input.addEventListener('input', function () { item[input.dataset.field] = input.value; mark(); });
+      }
+    });
+    card.querySelectorAll('[data-action]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var id = parseInt(this.closest('.link-card').dataset.id);
-        var action = this.dataset.action;
-        if (action === 'delete') deleteLink(id);
-        else moveLink(id, action === 'up' ? -1 : 1);
+        var action = btn.dataset.action;
+        if (action === 'delete') {
+          if (!confirm('确定删除' + name + '？')) return;
+          item._deleted = true; item._dirty = true;
+          updateDirtyUI();
+          renderAll();
+        } else if (action === 'up' || action === 'down') {
+          moveWithinPage(arr, item.id, action, getPage);
+          renderAll();
+        }
       });
     });
   }
 
-  function moveLink(id, dir) {
-    var i = linksData.findIndex(function (l) { return l.id === id; });
-    var j = i + dir;
-    if (j < 0 || j >= linksData.length) return;
-    var tmp = linksData[i]; linksData[i] = linksData[j]; linksData[j] = tmp;
-    linksData.forEach(function (l, k) { l.sort_order = k; });
-    renderLinks();
-  }
-
-  async function deleteLink(id) {
-    if (!confirm('确定删除？')) return;
-    await api('/api/admin/links?id=' + id, 'DELETE');
-    showToast('已删除'); loadLinks();
-  }
-
-  document.getElementById('linkPageFilter').addEventListener('change', loadLinks);
-  document.getElementById('addLinkBtn').addEventListener('click', async function () {
-    var pid = pagesCache.length ? pagesCache[0].id : 1;
-    await api('/api/admin/links', 'POST', { page_id: pid, label: '新链接', sort_order: linksData.length });
-    showToast('已添加'); loadLinks();
+  document.getElementById('linkPageFilter').addEventListener('change', renderLinks);
+  document.getElementById('addLinkBtn').addEventListener('click', function () {
+    var pid = document.getElementById('linkPageFilter').value || firstPageId();
+    if (!pid) { showToast('请先创建页面', true); return; }
+    S.links.push({
+      id: nextNewId(), page_id: pid, label: '新链接', url: '', icon: '', qr_code: '',
+      popup_note: '', i18n_key: '', note_i18n_key: '', is_active: true, sort_order: 0,
+      _new: true, _deleted: false, _dirty: true
+    });
+    updateDirtyUI(); renderLinks();
   });
 
   // ==================== 相册管理 ====================
-  var galleryData = [];
-
-  async function loadGallery() {
-    await loadPages();
+  function visibleGallery() {
     var pid = document.getElementById('galleryPageFilter').value;
-    galleryData = await api('/api/admin/gallery' + (pid ? '?page_id=' + pid : ''), 'GET') || [];
-    renderGallery();
+    var list = S.gallery.filter(function (g) { return !g._deleted; });
+    if (pid) list = list.filter(function (g) { return String(g.page_id) === String(pid); });
+    return list;
   }
 
   function renderGallery() {
-    var list = document.getElementById('galleryList');
-    list.innerHTML = '';
-    galleryData.forEach(function (img) {
+    var list = visibleGallery();
+    document.getElementById('galleryFilterHint').textContent = '共 ' + list.length + ' 张';
+    var wrap = document.getElementById('galleryList');
+    wrap.innerHTML = '';
+    list.forEach(function (img) {
+      var edge = pageEdge(S.gallery, img, function (x) { return x.page_id; });
       var d = document.createElement('div');
-      d.className = 'gallery-item';
-      d.innerHTML = '<img src="' + esc(img.src) + '" onerror="this.style.display=\'none\'">' +
-        '<div class="gallery-item-actions"><button class="btn-icon btn-danger" data-id="' + img.id + '">&times;</button></div>';
-      list.appendChild(d);
-    });
-    list.querySelectorAll('.btn-icon').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        if (!confirm('确定删除？')) return;
-        await api('/api/admin/gallery?id=' + this.dataset.id, 'DELETE');
-        showToast('已删除'); loadGallery();
-      });
-    });
-  }
-
-  document.getElementById('galleryPageFilter').addEventListener('change', loadGallery);
-  document.getElementById('addGalleryBtn').addEventListener('click', async function () {
-    var src = prompt('请输入图片 URL：');
-    if (!src) return;
-    var pid = pagesCache.length ? pagesCache[0].id : 1;
-    await api('/api/admin/gallery', 'POST', { page_id: pid, src: src, sort_order: galleryData.length });
-    showToast('已添加'); loadGallery();
-  });
-
-  // ==================== 宠物管理 ====================
-  var petData = [];
-
-  async function loadPet() {
-    await loadPages();
-    var pid = document.getElementById('petPageFilter').value;
-    petData = await api('/api/admin/pet' + (pid ? '?page_id=' + pid : ''), 'GET') || [];
-    renderPet();
-  }
-
-  function renderPet() {
-    var list = document.getElementById('petList');
-    list.innerHTML = '';
-    var seen = {};
-    petData.forEach(function (p) {
-      if (seen[p.id]) return;
-      seen[p.id] = true;
-      var zh = [], en = [];
-      petData.filter(function (x) { return x.id === p.id; }).forEach(function (x) {
-        if (x.language === 'zh-CN' && x.messages) zh = x.messages;
-        if (x.language === 'en' && x.messages) en = x.messages;
-      });
-      var d = document.createElement('div');
-      d.className = 'card';
-      d.style.padding = '1rem';
-      d.dataset.id = p.id;
+      d.className = 'gallery-item' + (img._dirty ? ' dirty' : '');
       d.innerHTML =
-        '<div class="form-row">' +
-          '<div class="form-group"><label>所属页面</label><select data-field="page_id">' +
-            pagesCache.map(function (pg) { return '<option value="' + pg.id + '"' + (pg.id == p.page_id ? ' selected' : '') + '>' + esc(pg.slug) + '</option>'; }).join('') +
-          '</select></div>' +
-          '<div class="form-group"><label>宠物类型</label><input data-field="pet_type" value="' + esc(p.pet_type || '') + '"></div></div>' +
-        '<div class="form-group"><label>宠物图片/视频 URL</label><input data-field="pet_image" value="' + esc(p.pet_image || '') + '"></div>' +
-        '<div class="form-row">' +
-          '<div class="form-group"><label>中文语录（每行一条）</label><textarea data-field="messages_zh" rows="4">' + esc(zh.join('\n')) + '</textarea></div>' +
-          '<div class="form-group"><label>英文语录（每行一条）</label><textarea data-field="messages_en" rows="4">' + esc(en.join('\n')) + '</textarea></div></div>' +
-        '<div style="margin-top:0.8rem"><button class="btn-icon btn-danger" data-action="delete">&times;</button></div>';
-      list.appendChild(d);
-    });
-    list.querySelectorAll('[data-action="delete"]').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        if (!confirm('确定删除？')) return;
-        await api('/api/admin/pet?id=' + this.closest('.card').dataset.id, 'DELETE');
-        showToast('已删除'); loadPet();
-      });
+        '<div class="gallery-thumb"><img src="' + esc(img.src) + '" onerror="this.style.visibility=\'hidden\'"></div>' +
+        '<div class="gallery-body">' +
+          '<input class="gallery-src" data-field="src" value="' + esc(img.src || '') + '" placeholder="图片 URL">' +
+          '<div class="gallery-actions">' +
+            '<button class="btn-icon" data-action="up"' + (edge.first ? ' disabled' : '') + ' title="上移">&#8593;</button>' +
+            '<button class="btn-icon" data-action="down"' + (edge.last ? ' disabled' : '') + ' title="下移">&#8595;</button>' +
+            '<button class="btn-icon btn-danger" data-action="delete" title="删除">&times;</button>' +
+          '</div>' +
+        '</div>';
+      wrap.appendChild(d);
+      bindEntityCard(d, img, S.gallery, function (x) { return x.page_id; }, '该图片');
     });
   }
 
-  document.getElementById('petPageFilter').addEventListener('change', loadPet);
-  document.getElementById('addPetBtn').addEventListener('click', async function () {
-    var pid = pagesCache.length ? pagesCache[0].id : 1;
-    await api('/api/admin/pet', 'POST', { page_id: pid, pet_image: 'assets/pets/pet.webm', pet_type: 'cat', messages: { 'zh-CN': ['你好！'], 'en': ['Hello!'] } });
-    showToast('已添加'); loadPet();
-  });
+  document.getElementById('galleryPageFilter').addEventListener('change', renderGallery);
+
+  function addGallery() {
+    var pid = document.getElementById('galleryPageFilter').value || firstPageId();
+    if (!pid) { showToast('请先创建页面', true); return; }
+    var input = document.getElementById('galleryNewSrc');
+    var src = input.value.trim();
+    if (!src) { showToast('请先输入图片 URL', true); return; }
+    S.gallery.push({ id: nextNewId(), page_id: pid, src: src, sort_order: 0, _new: true, _deleted: false, _dirty: true });
+    input.value = '';
+    updateDirtyUI(); renderGallery();
+  }
+  document.getElementById('galleryAddConfirm').addEventListener('click', addGallery);
+  document.getElementById('galleryNewSrc').addEventListener('keydown', function (e) { if (e.key === 'Enter') addGallery(); });
+
+  // ==================== 宠物管理（每页一只） ====================
+  function renderPet() {
+    var pid = document.getElementById('petPageFilter').value;
+    var pages = S.pages.filter(function (p) {
+      return !p._deleted && (!pid || String(p.id) === String(pid));
+    });
+    var wrap = document.getElementById('petList');
+    wrap.innerHTML = '';
+    if (!pages.length) {
+      wrap.innerHTML = '<p class="empty-tip">当前没有可管理的页面。</p>';
+      return;
+    }
+    pages.forEach(function (pg) {
+      var pet = S.pets.find(function (x) { return !x._deleted && String(x.page_id) === String(pg.id); });
+      var section = document.createElement('div');
+      if (pet) {
+        var zh = (pet.messages && pet.messages['zh-CN']) || [];
+        var en = (pet.messages && pet.messages['en']) || [];
+        var card = document.createElement('div');
+        card.className = 'card pet-card' + (pet._dirty ? ' dirty' : '');
+        card.innerHTML =
+          '<div class="card-head">' +
+            '<span class="dirty-badge"' + (pet._dirty ? '' : ' style="display:none"') + '>● 未保存</span>' +
+            '<span class="card-title">' + esc(pg.slug) + ' · 宠物</span>' +
+            '<div class="card-head-actions"><button class="btn-icon btn-danger" data-action="delete" title="删除">&times;</button></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label>宠物类型</label><input data-field="pet_type" value="' + esc(pet.pet_type || '') + '"></div>' +
+            '<div class="form-group"><label>图片/视频 URL</label><input data-field="pet_image" value="' + esc(pet.pet_image || '') + '"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label>中文语录（每行一条）</label><textarea data-field="messages_zh" rows="5">' + esc(zh.join('\n')) + '</textarea></div>' +
+            '<div class="form-group"><label>英文语录（每行一条）</label><textarea data-field="messages_en" rows="5">' + esc(en.join('\n')) + '</textarea></div>' +
+          '</div>';
+        section.appendChild(card);
+
+        var badge = card.querySelector('.dirty-badge');
+        function mark() {
+          pet._dirty = true;
+          card.classList.add('dirty');
+          badge.style.display = '';
+          updateDirtyUI();
+        }
+        card.querySelectorAll('[data-field]').forEach(function (input) {
+          if (input.dataset.field === 'messages_zh' || input.dataset.field === 'messages_en') {
+            input.addEventListener('input', function () {
+              var lang = input.dataset.field === 'messages_zh' ? 'zh-CN' : 'en';
+              if (!pet.messages) pet.messages = {};
+              pet.messages[lang] = input.value.split('\n').map(function (l) { return l.replace(/\r$/, ''); }).filter(function (l) { return l.trim(); });
+              mark();
+            });
+          } else {
+            input.addEventListener('input', function () { pet[input.dataset.field] = input.value; mark(); });
+          }
+        });
+        card.querySelector('[data-action="delete"]').addEventListener('click', function () {
+          if (!confirm('确定删除该宠物？')) return;
+          pet._deleted = true; pet._dirty = true;
+          updateDirtyUI(); renderPet();
+        });
+      } else {
+        var empty = document.createElement('div');
+        empty.className = 'card pet-empty';
+        empty.innerHTML =
+          '<div class="card-head"><span class="card-title">' + esc(pg.slug) + ' · 暂无宠物</span></div>' +
+          '<button class="btn btn-primary" data-addpet="' + pg.id + '"><i class="fas fa-plus"></i> 为此页添加宠物</button>';
+        section.appendChild(empty);
+        empty.querySelector('[data-addpet]').addEventListener('click', function () {
+          S.pets.push({
+            id: nextNewId(), page_id: pg.id, pet_image: 'assets/pets/pet.webm', pet_type: 'cat',
+            messages: { 'zh-CN': ['你好！'], 'en': ['Hello!'] },
+            _new: true, _deleted: false, _dirty: true
+          });
+          updateDirtyUI(); renderPet();
+        });
+      }
+      wrap.appendChild(section);
+    });
+  }
+
+  document.getElementById('petPageFilter').addEventListener('change', renderPet);
 
   // ==================== 翻译管理 ====================
-  async function loadTranslations() {
-    allTranslations = await api('/api/admin/translations', 'GET') || [];
-    renderTranslations();
-  }
-
-  function renderTranslations() {
+  function renderTrans() {
     var sv = (document.getElementById('transSearch').value || '').toLowerCase();
-    var grouped = {};
-    allTranslations.forEach(function (t) {
-      if (sv && t.key.toLowerCase().indexOf(sv) === -1) return;
-      if (!grouped[t.key]) grouped[t.key] = { id_zh: null, id_en: null, zh: '', en: '' };
-      if (t.language === 'zh-CN') { grouped[t.key].id_zh = t.id; grouped[t.key].zh = t.value; }
-      if (t.language === 'en') { grouped[t.key].id_en = t.id; grouped[t.key].en = t.value; }
-    });
+    var rows = S.trans.filter(function (t) { return !t._deleted && (!sv || t.key.toLowerCase().indexOf(sv) !== -1); });
+    rows.sort(function (a, b) { return a.key < b.key ? -1 : a.key > b.key ? 1 : 0; });
 
-    var list = document.getElementById('transList');
-    var html = '<table class="data-table"><thead><tr><th>Key</th><th>中文</th><th>English</th><th>操作</th></tr></thead><tbody>';
-    Object.keys(grouped).sort().forEach(function (key) {
-      var g = grouped[key];
-      html += '<tr data-key="' + esc(key) + '">' +
-        '<td><input data-field="key" value="' + esc(key) + '"></td>' +
-        '<td><input data-field="zh" value="' + esc(g.zh) + '"></td>' +
-        '<td><input data-field="en" value="' + esc(g.en) + '"></td>' +
-        '<td><button class="btn-icon btn-danger" data-action="delete">&times;</button></td></tr>';
+    var wrap = document.getElementById('transList');
+    var html = '<table class="data-table"><thead><tr><th>Key</th><th>中文</th><th>English</th><th></th></tr></thead><tbody>';
+    rows.forEach(function (t) {
+      html += '<tr class="' + (t._dirty ? 'dirty' : '') + '" data-key="' + esc(t.key) + '">' +
+        '<td><input class="t-key" value="' + esc(t.key) + '"></td>' +
+        '<td><input class="t-zh" value="' + esc(t.zh) + '"></td>' +
+        '<td><input class="t-en" value="' + esc(t.en) + '"></td>' +
+        '<td><button class="btn-icon btn-danger" data-action="delete" title="删除">&times;</button></td></tr>';
     });
     html += '</tbody></table>';
-    list.innerHTML = html;
+    wrap.innerHTML = html;
 
-    list.querySelectorAll('[data-action="delete"]').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        var key = this.closest('tr').dataset.key;
-        if (!confirm('确定删除「' + key + '」？')) return;
-        var items = allTranslations.filter(function (t) { return t.key === key; });
-        for (var i = 0; i < items.length; i++) {
-          await api('/api/admin/translations?id=' + items[i].id, 'DELETE');
-        }
-        showToast('已删除'); loadTranslations();
+    var trs = wrap.querySelectorAll('tbody tr');
+    Array.prototype.forEach.call(trs, function (tr) {
+      var key = tr.dataset.key;
+      var item = S.trans.find(function (t) { return !t._deleted && t.key === key; });
+      if (!item) return;
+      var kIn = tr.querySelector('.t-key'), zhIn = tr.querySelector('.t-zh'), enIn = tr.querySelector('.t-en');
+      function mark() {
+        item._dirty = true;
+        tr.classList.add('dirty');
+        updateDirtyUI();
+      }
+      kIn.addEventListener('input', function () { item.key = kIn.value; mark(); });
+      zhIn.addEventListener('input', function () { item.zh = zhIn.value; mark(); });
+      enIn.addEventListener('input', function () { item.en = enIn.value; mark(); });
+      tr.querySelector('[data-action="delete"]').addEventListener('click', function () {
+        if (!confirm('确定删除翻译「' + item.key + '」（中英一起删除）？')) return;
+        item._deleted = true; item._dirty = true;
+        updateDirtyUI(); renderTrans();
       });
     });
   }
 
-  document.getElementById('transSearch').addEventListener('input', renderTranslations);
-  document.getElementById('addTransBtn').addEventListener('click', async function () {
-    var key = prompt('请输入翻译 key：');
-    if (!key) return;
-    await api('/api/admin/translations', 'POST', { key: key, language: 'zh-CN', value: '' });
-    await api('/api/admin/translations', 'POST', { key: key, language: 'en', value: '' });
-    showToast('已添加'); loadTranslations();
-  });
+  document.getElementById('transSearch').addEventListener('input', renderTrans);
 
-  // ==================== 设置 ====================
-  async function loadSiteConfig() {
-    var config = await api('/api/admin/site-config', 'GET');
-    if (!config) return;
-    var form = document.getElementById('siteConfigForm');
-    form.avatar.value = config.avatar || '';
-    form.username.value = config.username || '';
-    form.favicon.value = config.favicon || '';
+  function addTrans() {
+    var input = document.getElementById('transNewKey');
+    var key = input.value.trim();
+    if (!key) { showToast('请先输入翻译 key', true); return; }
+    if (S.trans.some(function (t) { return !t._deleted && t.key.toLowerCase() === key.toLowerCase(); })) {
+      showToast('该 key 已存在', true); return;
+    }
+    S.trans.push({ key: key, zh: '', en: '', id_zh: null, id_en: null, _new: true, _deleted: false, _dirty: true });
+    input.value = '';
+    updateDirtyUI(); renderTrans();
+  }
+  document.getElementById('transAddConfirm').addEventListener('click', addTrans);
+  document.getElementById('transNewKey').addEventListener('keydown', function (e) { if (e.key === 'Enter') addTrans(); });
+
+  // ==================== 页面管理 ====================
+  function renderPages() {
+    var list = S.pages.filter(function (p) { return !p._deleted; });
+    var wrap = document.getElementById('pagesList');
+    wrap.innerHTML = '';
+    list.forEach(function (p) {
+      var edge = pageEdge(S.pages, p, function () { return 0; });
+      var card = document.createElement('div');
+      card.className = 'card page-card' + (p._dirty ? ' dirty' : '');
+      card.innerHTML =
+        '<div class="card-head">' +
+          '<span class="dirty-badge"' + (p._dirty ? '' : ' style="display:none"') + '>● 未保存</span>' +
+          '<span class="card-title">/' + esc(p.slug || '') + '</span>' +
+          '<div class="card-head-actions">' +
+            '<label class="switch" title="启用/停用"><input type="checkbox" data-field="is_active"' + (p.is_active ? ' checked' : '') + '><span class="switch-slider"></span></label>' +
+            '<button class="btn-icon" data-action="up"' + (edge.first ? ' disabled' : '') + ' title="上移">&#8593;</button>' +
+            '<button class="btn-icon" data-action="down"' + (edge.last ? ' disabled' : '') + ' title="下移">&#8595;</button>' +
+            '<button class="btn-icon btn-danger" data-action="delete" title="删除">&times;</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Slug（URL 路径）</label><input data-field="slug" value="' + esc(p.slug) + '"></div>' +
+          '<div class="form-group"><label>标题</label><input data-field="title" value="' + esc(p.title || '') + '"></div>' +
+        '</div>' +
+        '<div class="form-group"><label>背景图片 URL</label><input data-field="background_image" value="' + esc(p.background_image || '') + '"></div>';
+      wrap.appendChild(card);
+
+      var badge = card.querySelector('.dirty-badge');
+      function mark() {
+        p._dirty = true;
+        card.classList.add('dirty');
+        badge.style.display = '';
+        updateDirtyUI();
+      }
+      card.querySelectorAll('[data-field]').forEach(function (input) {
+        if (input.type === 'checkbox') {
+          input.addEventListener('change', function () { p.is_active = input.checked; mark(); });
+        } else {
+          input.addEventListener('input', function () { p[input.dataset.field] = input.value; mark(); });
+        }
+      });
+      card.querySelectorAll('[data-action]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var action = btn.dataset.action;
+          if (action === 'delete') deletePage(p);
+          else if (action === 'up' || action === 'down') {
+            moveWithinPage(S.pages, p.id, action, function () { return 0; });
+            renderPages();
+          }
+        });
+      });
+    });
   }
 
-  document.getElementById('siteConfigForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    await api('/api/admin/site-config', 'PUT', {
-      avatar: this.avatar.value,
-      username: this.username.value,
-      favicon: this.favicon.value
+  function deletePage(p) {
+    var childCount = 0;
+    ['links', 'gallery', 'pets'].forEach(function (k) {
+      S[k].forEach(function (it) { if (String(it.page_id) === String(p.id) && !it._deleted) childCount++; });
     });
-    showToast('站点配置已保存');
+    var msg = '确定删除页面「' + p.slug + '」？' + (childCount ? ' 其下 ' + childCount + ' 条内容（链接/相册/宠物）将一并删除。' : '');
+    if (!confirm(msg)) return;
+    p._deleted = true; p._dirty = true;
+    // 级联删除子内容
+    ['links', 'gallery', 'pets'].forEach(function (k) {
+      S[k].forEach(function (it) {
+        if (String(it.page_id) === String(p.id)) { it._deleted = true; it._dirty = true; }
+      });
+    });
+    // 页面排序变化 → 全部标记
+    S.pages.forEach(function (x) { if (!x._deleted) x._dirty = true; });
+    updateDirtyUI();
+    fillPageFilters();
+    renderAll();
+  }
+
+  function addPage() {
+    var input = document.getElementById('pageNewSlug');
+    var slug = input.value.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!slug) { showToast('请先输入页面 slug', true); return; }
+    if (S.pages.some(function (p) { return !p._deleted && p.slug.toLowerCase() === slug; })) {
+      showToast('该 slug 已存在', true); return;
+    }
+    S.pages.push({
+      id: nextNewId(), slug: slug, title: slug, background_image: '',
+      is_active: true, sort_order: S.pages.length,
+      _new: true, _deleted: false, _dirty: true
+    });
+    input.value = '';
+    fillPageFilters(); updateDirtyUI(); renderAll();
+  }
+  document.getElementById('pageAddConfirm').addEventListener('click', addPage);
+  document.getElementById('pageNewSlug').addEventListener('keydown', function (e) { if (e.key === 'Enter') addPage(); });
+
+  // ==================== 设置：站点配置 ====================
+  function renderSite() {
+    var f = document.getElementById('siteConfigForm');
+    f.avatar.value = S.site.avatar || '';
+    f.username.value = S.site.username || '';
+    f.favicon.value = S.site.favicon || '';
+
+    var wrap = document.getElementById('extraKeysList');
+    wrap.innerHTML = '';
+    S.site.extra.filter(function (e) { return !e._deleted; }).forEach(function (e) {
+      var row = document.createElement('div');
+      row.className = 'extra-key-row' + (e._dirty ? ' dirty' : '');
+      row.innerHTML =
+        '<input class="ek-key" value="' + esc(e.key) + '" placeholder="键名">' +
+        '<input class="ek-value" value="' + esc(e.value) + '" placeholder="值">' +
+        '<button class="btn-icon btn-danger" data-action="delete" title="删除">&times;</button>';
+      wrap.appendChild(row);
+      var kIn = row.querySelector('.ek-key'), vIn = row.querySelector('.ek-value');
+      function mark() {
+        e._dirty = true;
+        row.classList.add('dirty');
+        updateDirtyUI();
+      }
+      kIn.addEventListener('input', function () { e.key = kIn.value; mark(); });
+      vIn.addEventListener('input', function () { e.value = vIn.value; mark(); });
+      row.querySelector('[data-action="delete"]').addEventListener('click', function () {
+        if (!confirm('确定删除配置项「' + e.key + '」？')) return;
+        e._deleted = true;
+        updateDirtyUI(); renderSite();
+      });
+    });
+  }
+
+  // 站点基础字段（批量保存的一部分）
+  (function () {
+    var f = document.getElementById('siteConfigForm');
+    ['avatar', 'username', 'favicon'].forEach(function (name) {
+      f[name].addEventListener('input', function () {
+        S.site[name] = f[name].value;
+        S.siteDirty = true;
+        updateDirtyUI();
+      });
+    });
+  })();
+
+  function addExtraKey() {
+    var input = document.getElementById('extraKeyNew');
+    var key = input.value.trim();
+    if (!key) { showToast('请先输入配置键名', true); return; }
+    if (S.site.extra.some(function (e) { return !e._deleted && e.key === key; }) ||
+        ['avatar', 'username', 'favicon'].indexOf(key) !== -1) {
+      showToast('该键已存在', true); return;
+    }
+    S.site.extra.push({ key: key, value: '', _new: true, _deleted: false, _dirty: true });
+    input.value = '';
+    updateDirtyUI(); renderSite();
+  }
+  document.getElementById('extraKeyAddConfirm').addEventListener('click', addExtraKey);
+  document.getElementById('extraKeyNew').addEventListener('keydown', function (e) { if (e.key === 'Enter') addExtraKey(); });
+
+  // ==================== 设置：修改用户名 / 密码（即时生效） ====================
+  document.getElementById('changeUsernameForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    try {
+      var res = await api('/api/admin/change-password', 'POST', {
+        oldPassword: this.oldPassword.value,
+        newUsername: this.newUsername.value.trim()
+      });
+      if (res && res.success) {
+        var name = res.username || this.newUsername.value.trim();
+        localStorage.setItem('admin_username', name);
+        document.getElementById('loginUser').textContent = '@' + name;
+        showToast('用户名已修改为 ' + name);
+        this.reset();
+      } else {
+        showToast((res && res.error) || '修改失败', true);
+      }
+    } catch (err) {
+      showToast(err.message || '修改失败', true);
+    }
   });
 
   document.getElementById('changePasswordForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     if (this.newPassword.value !== this.confirmPassword.value) {
-      showToast('两次输入的密码不一致', true); return;
+      showToast('两次输入的新密码不一致', true); return;
     }
-    var res = await api('/api/admin/change-password', 'POST', {
-      oldPassword: this.oldPassword.value,
-      newPassword: this.newPassword.value
-    });
-    if (res && res.success) {
-      showToast('密码修改成功');
-      this.reset();
-    } else {
-      showToast(res?.error || '修改失败', true);
+    try {
+      var res = await api('/api/admin/change-password', 'POST', {
+        oldPassword: this.oldPassword.value,
+        newPassword: this.newPassword.value
+      });
+      if (res && res.success) {
+        showToast('密码修改成功');
+        this.reset();
+      } else {
+        showToast((res && res.error) || '修改失败', true);
+      }
+    } catch (err) {
+      showToast(err.message || '修改失败', true);
     }
   });
 
-  // ==================== 保存所有修改 ====================
-  document.getElementById('saveBtn').addEventListener('click', async function () {
-    var errors = [];
-
-    // 保存站点配置
-    var siteForm = document.getElementById('siteConfigForm');
-    var siteRes = await api('/api/admin/site-config', 'PUT', {
-      avatar: siteForm.avatar.value,
-      username: siteForm.username.value,
-      favicon: siteForm.favicon.value
-    });
-    if (!siteRes) errors.push('站点配置');
-
-    // 保存链接
-    var linkCards = document.querySelectorAll('#linksList .link-card');
-    for (var i = 0; i < linkCards.length; i++) {
-      var card = linkCards[i];
-      var id = parseInt(card.dataset.id);
-      var data = { sort_order: i };
-      card.querySelectorAll('[data-field]').forEach(function (input) {
-        data[input.dataset.field] = input.value || null;
-      });
-      var res = await api('/api/admin/links?id=' + id, 'PUT', data);
-      if (!res) errors.push('链接 #' + id);
+  // ==================== 保存全部（批量提交） ====================
+  // 依赖顺序：先建/改页面（新页面 id 供子内容引用）→ 子内容 → 删页面 → 翻译 → 站点配置
+  async function saveAll() {
+    var errs = [];
+    setSaving(true);
+    try {
+      await savePagesPhase1(errs); // 新建 + 更新页面，重映射子内容 page_id
+      await savePets(errs);
+      await saveGallery(errs);
+      await saveLinks(errs);
+      await savePagesPhase2(errs); // 删除页面（子内容已删）
+      await saveTrans(errs);
+      await saveSite(errs);
+    } catch (err) {
+      errs.push(err.message);
     }
-
-    // 保存宠物
-    var petCards = document.querySelectorAll('#petList .card');
-    for (var j = 0; j < petCards.length; j++) {
-      var pcard = petCards[j];
-      var pid = parseInt(pcard.dataset.id);
-      var pdata = {};
-      pcard.querySelectorAll('[data-field]').forEach(function (input) {
-        var field = input.dataset.field;
-        if (field === 'messages_zh' || field === 'messages_en') return;
-        pdata[field] = input.value || null;
-      });
-      // 处理语录
-      var messages = {};
-      var zhEl = pcard.querySelector('[data-field="messages_zh"]');
-      var enEl = pcard.querySelector('[data-field="messages_en"]');
-      if (zhEl && zhEl.value.trim()) messages['zh-CN'] = zhEl.value.split('\n').filter(function (l) { return l.trim(); });
-      if (enEl && enEl.value.trim()) messages['en'] = enEl.value.split('\n').filter(function (l) { return l.trim(); });
-      pdata.messages = messages;
-      var pres = await api('/api/admin/pet?id=' + pid, 'PUT', pdata);
-      if (!pres) errors.push('宠物 #' + pid);
-    }
-
-    // 保存翻译
-    var transRows = document.querySelectorAll('#transList .data-table tbody tr');
-    for (var k = 0; k < transRows.length; k++) {
-      var row = transRows[k];
-      var oldKey = row.dataset.key;
-      var newKey = row.querySelector('[data-field="key"]').value;
-      var zhVal = row.querySelector('[data-field="zh"]').value;
-      var enVal = row.querySelector('[data-field="en"]').value;
-      // 更新中文
-      var zhItem = allTranslations.find(function (t) { return t.key === oldKey && t.language === 'zh-CN'; });
-      if (zhItem) {
-        await api('/api/admin/translations?id=' + zhItem.id, 'PUT', { key: newKey, language: 'zh-CN', value: zhVal });
-      }
-      // 更新英文
-      var enItem = allTranslations.find(function (t) { return t.key === oldKey && t.language === 'en'; });
-      if (enItem) {
-        await api('/api/admin/translations?id=' + enItem.id, 'PUT', { key: newKey, language: 'en', value: enVal });
-      }
-    }
-
-    if (errors.length) {
-      showToast('部分保存失败: ' + errors.join(', '), true);
+    setSaving(false);
+    if (errs.length) {
+      showToast('保存完成，但有 ' + errs.length + ' 处失败：' + errs.slice(0, 3).join('；'), true, 4500);
     } else {
       showToast('全部保存成功！');
     }
-    // 重新加载
-    loadLinks(); loadGallery(); loadPet(); loadTranslations();
+    try { await loadAll(); } catch (e) { /* 已提示 */ }
+  }
+
+  // 按 page_id 分组重算 sort_order（仅作用于非删除条目）
+  function assignSort(arr, getPage) {
+    var byPage = {};
+    arr.forEach(function (it) {
+      if (it._deleted) return;
+      var k = String(getPage(it));
+      (byPage[k] = byPage[k] || []).push(it);
+    });
+    Object.keys(byPage).forEach(function (k) {
+      byPage[k].forEach(function (it, i) { it.sort_order = i; });
+    });
+  }
+
+  async function savePagesPhase1(errs) {
+    var arr = S.pages;
+    var touched = arr.some(function (p) { return p._dirty; });
+    if (!touched) return;
+    try {
+      // 新建页面（先生成真实 id，并重映射子内容引用）
+      for (var it of arr) {
+        if (it._new && !it._deleted) {
+          if (!it.slug || !it.slug.trim()) {
+            errs.push('页面「' + (it.title || '未命名') + '」的 slug 为空，已跳过');
+            continue;
+          }
+          var res = await api('/api/admin/pages', 'POST', {
+            slug: it.slug, title: it.title || '', background_image: it.background_image || null,
+            is_active: it.is_active, sort_order: it.sort_order
+          });
+          if (res && res.id != null) {
+            var oldId = String(it.id);
+            ['links', 'gallery', 'pets'].forEach(function (k) {
+              S[k].forEach(function (c) { if (String(c.page_id) === oldId) c.page_id = res.id; });
+            });
+            it.id = res.id;
+            it._new = false;
+          }
+        }
+      }
+      // 更新已有页面
+      assignSort(arr, function () { return 0; });
+      for (var it2 of arr) {
+        if (!it2._new && !it2._deleted && it2._dirty) {
+          await api('/api/admin/pages?id=' + it2.id, 'PUT', {
+            slug: it2.slug, title: it2.title || '', background_image: it2.background_image || null,
+            is_active: it2.is_active, sort_order: it2.sort_order
+          });
+          it2._dirty = false;
+        }
+      }
+    } catch (e) { errs.push('页面：' + e.message); }
+  }
+
+  async function savePagesPhase2(errs) {
+    var arr = S.pages;
+    try {
+      for (var it of arr) {
+        if (it._deleted && !it._new && it.id != null) {
+          await api('/api/admin/pages?id=' + it.id, 'DELETE');
+        }
+      }
+    } catch (e) { errs.push('删除页面：' + e.message); }
+  }
+
+  async function savePets(errs) {
+    var arr = S.pets;
+    if (!arr.some(function (p) { return p._dirty; })) return;
+    try {
+      for (var it of arr) if (it._deleted && !it._new && it.id != null) await api('/api/admin/pet?id=' + it.id, 'DELETE');
+      for (var it of arr) if (it._new && !it._deleted) {
+        var res = await api('/api/admin/pet', 'POST', {
+          page_id: it.page_id, pet_image: it.pet_image || '', pet_type: it.pet_type || '', messages: it.messages || {}
+        });
+        if (res && res.id != null) it.id = res.id;
+      }
+      for (var it of arr) if (!it._new && !it._deleted && it._dirty) {
+        await api('/api/admin/pet?id=' + it.id, 'PUT', {
+          pet_image: it.pet_image || '', pet_type: it.pet_type || '', messages: it.messages || {}
+        });
+      }
+    } catch (e) { errs.push('宠物：' + e.message); }
+  }
+
+  async function saveGallery(errs) {
+    var arr = S.gallery;
+    if (!arr.some(function (g) { return g._dirty; })) return;
+    try {
+      for (var it of arr) if (it._deleted && !it._new && it.id != null) await api('/api/admin/gallery?id=' + it.id, 'DELETE');
+      assignSort(arr, function (g) { return g.page_id; });
+      for (var it of arr) if (it._new && !it._deleted) {
+        if (!it.src || !it.src.trim()) { errs.push('相册：存在空图片地址，已跳过'); continue; }
+        await api('/api/admin/gallery', 'POST', { page_id: it.page_id, src: it.src, sort_order: it.sort_order });
+      }
+      for (var it of arr) if (!it._new && !it._deleted && it._dirty) {
+        await api('/api/admin/gallery?id=' + it.id, 'PUT', { page_id: it.page_id, src: it.src, sort_order: it.sort_order });
+      }
+    } catch (e) { errs.push('相册：' + e.message); }
+  }
+
+  async function saveLinks(errs) {
+    var arr = S.links;
+    if (!arr.some(function (l) { return l._dirty; })) return;
+    try {
+      for (var it of arr) if (it._deleted && !it._new && it.id != null) await api('/api/admin/links?id=' + it.id, 'DELETE');
+      assignSort(arr, function (l) { return l.page_id; });
+      for (var it of arr) if (it._new && !it._deleted) {
+        await api('/api/admin/links', 'POST', {
+          page_id: it.page_id, label: it.label || '链接', url: it.url || null, icon: it.icon || null,
+          qr_code: it.qr_code || null, popup_note: it.popup_note || null,
+          i18n_key: it.i18n_key || null, note_i18n_key: it.note_i18n_key || null,
+          is_active: it.is_active, sort_order: it.sort_order
+        });
+      }
+      for (var it of arr) if (!it._new && !it._deleted && it._dirty) {
+        await api('/api/admin/links?id=' + it.id, 'PUT', {
+          page_id: it.page_id, label: it.label || '链接', url: it.url || null, icon: it.icon || null,
+          qr_code: it.qr_code || null, popup_note: it.popup_note || null,
+          i18n_key: it.i18n_key || null, note_i18n_key: it.note_i18n_key || null,
+          is_active: it.is_active, sort_order: it.sort_order
+        });
+      }
+    } catch (e) { errs.push('链接：' + e.message); }
+  }
+
+  async function saveTrans(errs) {
+    var arr = S.trans;
+    if (!arr.some(function (t) { return t._dirty; })) return;
+    try {
+      for (var t of arr) if (t._deleted) {
+        if (t.id_zh) await api('/api/admin/translations?id=' + t.id_zh, 'DELETE');
+        if (t.id_en) await api('/api/admin/translations?id=' + t.id_en, 'DELETE');
+      }
+      for (var t of arr) if (t._new && !t._deleted) {
+        if (!t.key || !t.key.trim()) { errs.push('翻译：存在空 key，已跳过'); continue; }
+        if (t.zh) { var r1 = await api('/api/admin/translations', 'POST', { key: t.key, language: 'zh-CN', value: t.zh }); if (r1 && r1.id) t.id_zh = r1.id; }
+        if (t.en) { var r2 = await api('/api/admin/translations', 'POST', { key: t.key, language: 'en', value: t.en }); if (r2 && r2.id) t.id_en = r2.id; }
+      }
+      for (var t of arr) if (!t._new && !t._deleted && t._dirty) {
+        if (!t.key || !t.key.trim()) { errs.push('翻译：存在空 key，已跳过'); continue; }
+        if (t.id_zh) await api('/api/admin/translations?id=' + t.id_zh, 'PUT', { key: t.key, language: 'zh-CN', value: t.zh });
+        else if (t.zh) { var r3 = await api('/api/admin/translations', 'POST', { key: t.key, language: 'zh-CN', value: t.zh }); if (r3 && r3.id) t.id_zh = r3.id; }
+        if (t.id_en) await api('/api/admin/translations?id=' + t.id_en, 'PUT', { key: t.key, language: 'en', value: t.en });
+        else if (t.en) { var r4 = await api('/api/admin/translations', 'POST', { key: t.key, language: 'en', value: t.en }); if (r4 && r4.id) t.id_en = r4.id; }
+      }
+    } catch (e) { errs.push('翻译：' + e.message); }
+  }
+
+  async function saveSite(errs) {
+    try {
+      var body = {};
+      if (S.siteDirty) {
+        body.avatar = S.site.avatar || '';
+        body.username = S.site.username || '';
+        body.favicon = S.site.favicon || '';
+      }
+      S.site.extra.forEach(function (e) {
+        if (e._dirty && !e._deleted) body[e.key] = e.value || '';
+      });
+      for (var e of S.site.extra) {
+        if (e._deleted && !e._new) {
+          await api('/api/admin/site-config?key=' + encodeURIComponent(e.key), 'DELETE');
+        }
+      }
+      if (Object.keys(body).length) await api('/api/admin/site-config', 'PUT', body);
+    } catch (e) { errs.push('站点配置：' + e.message); }
+  }
+
+  // ==================== 顶部按钮 ====================
+  document.getElementById('saveBtn').addEventListener('click', saveAll);
+
+  document.getElementById('revertBtn').addEventListener('click', async function () {
+    if (dirtyCount() === 0) { showToast('当前没有未保存修改'); return; }
+    if (!confirm('放弃所有未保存修改并从服务器重新加载？')) return;
+    setSaving(true);
+    try { await loadAll(); showToast('已撤销全部修改'); }
+    catch (e) { showToast('撤销失败：' + e.message, true); }
+    setSaving(false);
   });
 
-  // ==================== 导出 ====================
-  document.getElementById('exportBtn').addEventListener('click', async function () {
+  document.getElementById('exportBtn').addEventListener('click', function () {
     var data = {
-      pages: await api('/api/admin/pages', 'GET'),
-      links: await api('/api/admin/links', 'GET'),
-      gallery: await api('/api/admin/gallery', 'GET'),
-      pet: await api('/api/admin/pet', 'GET'),
-      translations: await api('/api/admin/translations', 'GET'),
-      siteConfig: await api('/api/admin/site-config', 'GET'),
-      exportedAt: new Date().toISOString()
+      pages: S.pages.filter(function (p) { return !p._deleted; }).map(function (p) {
+        return { id: p.id, slug: p.slug, title: p.title, background_image: p.background_image, is_active: p.is_active, sort_order: p.sort_order };
+      }),
+      links: S.links.filter(function (l) { return !l._deleted; }).map(function (l) {
+        return { page_id: l.page_id, label: l.label, url: l.url, icon: l.icon, qr_code: l.qr_code, popup_note: l.popup_note, i18n_key: l.i18n_key, note_i18n_key: l.note_i18n_key, is_active: l.is_active, sort_order: l.sort_order };
+      }),
+      gallery: S.gallery.filter(function (g) { return !g._deleted; }).map(function (g) {
+        return { page_id: g.page_id, src: g.src, sort_order: g.sort_order };
+      }),
+      pet: S.pets.filter(function (p) { return !p._deleted; }).map(function (p) {
+        return { page_id: p.page_id, pet_image: p.pet_image, pet_type: p.pet_type, messages: p.messages || {} };
+      }),
+      translations: [],
+      siteConfig: {}
     };
+    S.trans.filter(function (t) { return !t._deleted; }).forEach(function (t) {
+      if (t.zh) data.translations.push({ key: t.key, language: 'zh-CN', value: t.zh });
+      if (t.en) data.translations.push({ key: t.key, language: 'en', value: t.en });
+    });
+    data.siteConfig = { avatar: S.site.avatar, username: S.site.username, favicon: S.site.favicon };
+    S.site.extra.filter(function (e) { return !e._deleted; }).forEach(function (e) { data.siteConfig[e.key] = e.value; });
+
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url; a.download = 'linktree-backup-' + new Date().toISOString().slice(0, 10) + '.json';
-    a.click(); URL.revokeObjectURL(url);
-    showToast('导出成功');
+    a.href = url;
+    a.download = 'linktree-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('导出成功（' + Object.keys(data).reduce(function (n, k) { return n + (Array.isArray(data[k]) ? data[k].length : 0); }, 0) + ' 条记录）');
   });
 
-  // ==================== 导入 ====================
   document.getElementById('importBtn').addEventListener('click', function () {
     document.getElementById('importFileInput').click();
   });
@@ -427,33 +955,30 @@
     try {
       var text = await file.text();
       var data = JSON.parse(text);
-      if (!confirm('确定导入备份数据？这将覆盖现有数据。')) return;
-
-      // 导入站点配置
-      if (data.siteConfig) await api('/api/admin/site-config', 'PUT', data.siteConfig);
-
-      // 导入翻译
-      if (data.translations) {
-        for (var t of data.translations) {
-          await api('/api/admin/translations', 'POST', { key: t.key, language: t.language, value: t.value });
-        }
+      if (!confirm('导入将重建全部数据（页面/链接/相册/宠物/翻译/站点配置），当前未保存修改会丢失。确定？')) {
+        this.value = ''; return;
       }
-
-      showToast('导入成功！刷新页面查看效果。');
-      setTimeout(function () { location.reload(); }, 1500);
+      setSaving(true);
+      try {
+        var res = await api('/api/admin/import', 'POST', data);
+        if (res && res.success) {
+          showToast('导入成功！' + JSON.stringify(res.counts || {}));
+          await loadAll();
+        } else {
+          showToast((res && res.error) || '导入失败', true);
+        }
+      } finally {
+        setSaving(false);
+      }
     } catch (err) {
-      showToast('导入失败: ' + err.message, true);
+      showToast('导入失败：' + err.message, true);
     }
     this.value = '';
   });
 
   // ==================== 初始化 ====================
-  loadPages().then(function () {
-    loadLinks();
-    loadGallery();
-    loadPet();
-    loadTranslations();
-    loadSiteConfig();
+  document.getElementById('loginUser').textContent = '@' + (localStorage.getItem('admin_username') || '');
+  loadAll().catch(function (e) {
+    showToast('加载失败：' + e.message, true, 4000);
   });
-
 })();

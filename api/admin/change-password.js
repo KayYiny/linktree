@@ -1,6 +1,7 @@
 /**
  * POST /api/admin/change-password
- * 修改管理员密码
+ * 修改管理员密码 / 修改用户名
+ * Body: { oldPassword, newPassword?, newUsername? }（newPassword 与 newUsername 至少给一个）
  */
 const bcrypt = require('bcryptjs');
 const { query } = require('../db');
@@ -19,12 +20,15 @@ module.exports = async function handler(req, res) {
   const user = verifyToken(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-  const { oldPassword, newPassword } = req.body || {};
-  if (!oldPassword || !newPassword) {
-    return res.status(400).json({ error: '请提供当前密码和新密码' });
+  const { oldPassword, newPassword, newUsername } = req.body || {};
+  if (!oldPassword) {
+    return res.status(400).json({ error: '请提供当前密码' });
   }
-  if (newPassword.length < 4) {
+  if (newPassword && newPassword.length < 4) {
     return res.status(400).json({ error: '新密码至少4个字符' });
+  }
+  if (!newPassword && !newUsername) {
+    return res.status(400).json({ error: '请填写新密码或新用户名' });
   }
 
   try {
@@ -43,14 +47,33 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: '当前密码错误' });
     }
 
-    // 更新密码
-    const newHash = await bcrypt.hash(newPassword, 10);
-    await query(
-      'UPDATE admin_users SET password_hash = $1 WHERE id = $2',
-      [newHash, user.userId]
-    );
+    // 可选：更新密码
+    if (newPassword) {
+      const newHash = await bcrypt.hash(newPassword, 10);
+      await query(
+        'UPDATE admin_users SET password_hash = $1 WHERE id = $2',
+        [newHash, user.userId]
+      );
+    }
 
-    return res.status(200).json({ success: true });
+    // 可选：更新用户名（保持唯一）
+    let resultUsername = rows[0].username;
+    if (newUsername && newUsername !== rows[0].username) {
+      const dup = await query(
+        'SELECT id FROM admin_users WHERE username = $1 AND id <> $2',
+        [newUsername, user.userId]
+      );
+      if (dup.rows.length) {
+        return res.status(409).json({ error: '用户名已被占用' });
+      }
+      await query(
+        'UPDATE admin_users SET username = $1 WHERE id = $2',
+        [newUsername, user.userId]
+      );
+      resultUsername = newUsername;
+    }
+
+    return res.status(200).json({ success: true, username: resultUsername });
   } catch (err) {
     console.error('Change password error:', err);
     return res.status(500).json({ error: 'Internal server error' });

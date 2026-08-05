@@ -16,12 +16,16 @@
 
     <!-- 顶部栏 -->
     <header class="admin-header">
-      <h1>HUOLIN·ADMIN</h1>
+      <div class="header-left">
+        <h1>HUOLIN·ADMIN</h1>
+        <span class="header-sub" id="loginUser"></span>
+      </div>
       <div class="header-actions">
         <a href="/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回主页</a>
         <button class="btn btn-outline" id="exportBtn"><i class="fas fa-download"></i> 导出</button>
         <button class="btn btn-outline" id="importBtn"><i class="fas fa-upload"></i> 导入</button>
-        <button class="btn btn-primary" id="saveBtn"><i class="fas fa-save"></i> 保存</button>
+        <button class="btn btn-outline" id="revertBtn" title="放弃所有未保存修改"><i class="fas fa-undo"></i> 撤销</button>
+        <button class="btn btn-primary" id="saveBtn" disabled><i class="fas fa-save"></i> 保存全部</button>
       </div>
     </header>
 
@@ -31,6 +35,7 @@
       <button class="tab" data-tab="gallery"><i class="fas fa-images"></i> 相册管理</button>
       <button class="tab" data-tab="pet"><i class="fas fa-paw"></i> 宠物管理</button>
       <button class="tab" data-tab="translations"><i class="fas fa-language"></i> 翻译管理</button>
+      <button class="tab" data-tab="pages"><i class="fas fa-file"></i> 页面管理</button>
       <button class="tab" data-tab="settings"><i class="fas fa-cog"></i> 设置</button>
     </nav>
 
@@ -41,13 +46,12 @@
       <div id="panel-links" class="tab-panel active">
         <div class="panel-header">
           <h2>链接管理</h2>
-          <select id="linkPageFilter">
-            <option value="">全部页面</option>
-          </select>
+          <select id="linkPageFilter" class="page-filter"><option value="">全部页面</option></select>
         </div>
-        <button class="btn btn-primary" id="addLinkBtn" style="margin-bottom:1rem">
-          <i class="fas fa-plus"></i> 新增链接
-        </button>
+        <div class="panel-toolbar">
+          <button class="btn btn-primary" id="addLinkBtn"><i class="fas fa-plus"></i> 新增链接</button>
+          <span class="filter-hint" id="linkFilterHint"></span>
+        </div>
         <div id="linksList"></div>
       </div>
 
@@ -55,13 +59,15 @@
       <div id="panel-gallery" class="tab-panel">
         <div class="panel-header">
           <h2>相册管理</h2>
-          <select id="galleryPageFilter">
-            <option value="">全部页面</option>
-          </select>
+          <select id="galleryPageFilter" class="page-filter"><option value="">全部页面</option></select>
         </div>
-        <button class="btn btn-primary" id="addGalleryBtn" style="margin-bottom:1rem">
-          <i class="fas fa-plus"></i> 新增图片
-        </button>
+        <div class="panel-toolbar">
+          <div class="inline-add">
+            <input type="text" id="galleryNewSrc" placeholder="粘贴图片 URL，回车添加">
+            <button class="btn btn-primary" id="galleryAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+          </div>
+          <span class="filter-hint" id="galleryFilterHint"></span>
+        </div>
         <div id="galleryList" class="gallery-grid"></div>
       </div>
 
@@ -69,13 +75,12 @@
       <div id="panel-pet" class="tab-panel">
         <div class="panel-header">
           <h2>宠物管理</h2>
-          <select id="petPageFilter">
-            <option value="">全部页面</option>
-          </select>
+          <select id="petPageFilter" class="page-filter"><option value="">全部页面</option></select>
         </div>
-        <button class="btn btn-primary" id="addPetBtn" style="margin-bottom:1rem">
-          <i class="fas fa-plus"></i> 新增宠物
-        </button>
+        <div class="panel-toolbar">
+          <button class="btn btn-primary" id="addPetBtn"><i class="fas fa-plus"></i> 新增宠物</button>
+          <span class="filter-hint">每页最多一只宠物，先选好「页面过滤」再新增</span>
+        </div>
         <div id="petList"></div>
       </div>
 
@@ -83,12 +88,31 @@
       <div id="panel-translations" class="tab-panel">
         <div class="panel-header">
           <h2>翻译管理</h2>
-          <input type="text" id="transSearch" placeholder="搜索 key..." style="max-width:300px">
+          <input type="text" id="transSearch" placeholder="搜索 key..." class="page-filter" style="max-width:300px">
         </div>
-        <button class="btn btn-primary" id="addTransBtn" style="margin-bottom:1rem">
-          <i class="fas fa-plus"></i> 新增翻译
-        </button>
+        <div class="panel-toolbar">
+          <div class="inline-add">
+            <input type="text" id="transNewKey" placeholder="翻译 key，回车添加">
+            <button class="btn btn-primary" id="transAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+          </div>
+          <span class="filter-hint">key 重命名会同时作用于中英两种语言</span>
+        </div>
         <div id="transList"></div>
+      </div>
+
+      <!-- ========== 页面管理 ========== -->
+      <div id="panel-pages" class="tab-panel">
+        <div class="panel-header">
+          <h2>页面管理</h2>
+        </div>
+        <div class="panel-toolbar">
+          <div class="inline-add">
+            <input type="text" id="pageNewSlug" placeholder="页面 slug（英文/数字），回车添加">
+            <button class="btn btn-primary" id="pageAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+          </div>
+          <span class="filter-hint">删除页面会连同其下的链接/相册/宠物一起删除</span>
+        </div>
+        <div id="pagesList"></div>
       </div>
 
       <!-- ========== 设置 ========== -->
@@ -97,7 +121,7 @@
 
         <!-- 站点配置 -->
         <div class="settings-section">
-          <h3><i class="fas fa-globe"></i> 站点配置</h3>
+          <h3><i class="fas fa-globe"></i> 站点配置 <span class="sec-hint">（属于批量保存的一部分）</span></h3>
           <form id="siteConfigForm">
             <div class="form-row">
               <div class="form-group">
@@ -114,24 +138,46 @@
               <input type="text" name="favicon" placeholder="assets/images/favicon.svg">
             </div>
           </form>
+
+          <h4>自定义配置键值 <span class="sec-hint">（供前端引用的扩展字段，如 showAlbum / copyright）</span></h4>
+          <div id="extraKeysList"></div>
+          <div class="inline-add" style="margin-top:0.6rem">
+            <input type="text" id="extraKeyNew" placeholder="配置键名，回车添加">
+            <button class="btn btn-primary" id="extraKeyAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+          </div>
         </div>
 
-        <!-- 修改密码 -->
+        <!-- 账号设置（即时生效） -->
         <div class="settings-section">
-          <h3><i class="fas fa-lock"></i> 修改密码</h3>
-          <form id="changePasswordForm">
-            <div class="form-group">
-              <label>当前密码</label>
-              <input type="password" name="oldPassword" required>
-            </div>
+          <h3><i class="fas fa-user-cog"></i> 账号设置 <span class="sec-hint">（修改即时生效）</span></h3>
+
+          <form id="changeUsernameForm">
             <div class="form-row">
               <div class="form-group">
+                <label>当前密码</label>
+                <input type="password" name="oldPassword" required autocomplete="current-password">
+              </div>
+              <div class="form-group">
+                <label>新用户名</label>
+                <input type="text" name="newUsername" required minlength="2" autocomplete="username">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top:0.5rem">修改用户名</button>
+          </form>
+
+          <form id="changePasswordForm" style="margin-top:1.5rem">
+            <div class="form-row">
+              <div class="form-group">
+                <label>当前密码</label>
+                <input type="password" name="oldPassword" required autocomplete="current-password">
+              </div>
+              <div class="form-group">
                 <label>新密码</label>
-                <input type="password" name="newPassword" required minlength="4">
+                <input type="password" name="newPassword" required minlength="4" autocomplete="new-password">
               </div>
               <div class="form-group">
                 <label>确认新密码</label>
-                <input type="password" name="confirmPassword" required minlength="4">
+                <input type="password" name="confirmPassword" required minlength="4" autocomplete="new-password">
               </div>
             </div>
             <button type="submit" class="btn btn-primary" style="margin-top:0.5rem">修改密码</button>

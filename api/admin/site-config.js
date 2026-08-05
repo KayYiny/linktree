@@ -6,7 +6,7 @@ const { verifyToken } = require('../auth');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -31,6 +31,12 @@ module.exports = async function handler(req, res) {
           );
         }
         return res.status(200).json({ success: true });
+      }
+      case 'DELETE': {
+        const { key } = req.query;
+        if (!key) return res.status(400).json({ error: 'Missing key' });
+        await query('DELETE FROM site_config WHERE key = $1', [key]);
+        return res.status(204).end();
       }
       default:
         return res.status(405).json({ error: 'Method not allowed' });

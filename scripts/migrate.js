@@ -54,9 +54,15 @@ async function migrate() {
         popup_note VARCHAR(200),
         sort_order INT DEFAULT 0,
         is_active BOOLEAN DEFAULT true,
+        i18n_key VARCHAR(200),
+        note_i18n_key VARCHAR(200),
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
+
+    // 兼容已存在的旧库：幂等补列（新库由上方建表直接包含）
+    await client.query('ALTER TABLE links ADD COLUMN IF NOT EXISTS i18n_key VARCHAR(200);');
+    await client.query('ALTER TABLE links ADD COLUMN IF NOT EXISTS note_i18n_key VARCHAR(200);');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS gallery_images (
