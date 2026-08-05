@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     const { rows: gallery } = await query(
       `SELECT src FROM gallery_images
        WHERE page_id = (SELECT id FROM pages WHERE slug = $1)
-       ORDER BY sort_order`,
+       AND is_active = true ORDER BY sort_order`,
       [pageSlug]
     );
 
@@ -47,7 +47,8 @@ module.exports = async function handler(req, res) {
       `SELECT pc.pet_image, pc.pet_type, pm.language, pm.messages
        FROM pet_config pc
        LEFT JOIN pet_messages pm ON pm.pet_config_id = pc.id
-       WHERE pc.page_id = (SELECT id FROM pages WHERE slug = $1)`,
+       WHERE pc.page_id = (SELECT id FROM pages WHERE slug = $1)
+       AND pc.is_active = true`,
       [pageSlug]
     );
 

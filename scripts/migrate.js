@@ -63,6 +63,8 @@ async function migrate() {
     // 兼容已存在的旧库：幂等补列（新库由上方建表直接包含）
     await client.query('ALTER TABLE links ADD COLUMN IF NOT EXISTS i18n_key VARCHAR(200);');
     await client.query('ALTER TABLE links ADD COLUMN IF NOT EXISTS note_i18n_key VARCHAR(200);');
+    await client.query('ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
+    await client.query('ALTER TABLE pet_config ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS gallery_images (
@@ -70,6 +72,7 @@ async function migrate() {
         page_id INT REFERENCES pages(id),
         src TEXT NOT NULL,
         sort_order INT DEFAULT 0,
+        is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
@@ -80,6 +83,7 @@ async function migrate() {
         page_id INT REFERENCES pages(id) UNIQUE,
         pet_image TEXT NOT NULL,
         pet_type VARCHAR(50),
+        is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);

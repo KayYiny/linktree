@@ -30,10 +30,10 @@ module.exports = async function handler(req, res) {
         return res.status(200).json(rows);
       }
       case 'POST': {
-        const { page_id, pet_image, pet_type, messages } = req.body;
+        const { page_id, pet_image, pet_type, messages, is_active } = req.body;
         const { rows } = await query(
-          'INSERT INTO pet_config (page_id, pet_image, pet_type) VALUES ($1, $2, $3) RETURNING *',
-          [page_id, pet_image, pet_type]
+          'INSERT INTO pet_config (page_id, pet_image, pet_type, is_active) VALUES ($1, $2, $3, $4) RETURNING *',
+          [page_id, pet_image, pet_type, is_active ?? true]
         );
         const petConfig = rows[0];
         // 插入消息
@@ -49,10 +49,10 @@ module.exports = async function handler(req, res) {
       }
       case 'PUT': {
         const { id } = req.query;
-        const { pet_image, pet_type, messages } = req.body;
+        const { pet_image, pet_type, messages, is_active } = req.body;
         const { rows } = await query(
-          'UPDATE pet_config SET pet_image=$1, pet_type=$2 WHERE id=$3 RETURNING *',
-          [pet_image, pet_type, id]
+          'UPDATE pet_config SET pet_image=$1, pet_type=$2, is_active=$3 WHERE id=$4 RETURNING *',
+          [pet_image, pet_type, is_active ?? true, id]
         );
         // 更新消息
         if (messages && typeof messages === 'object') {

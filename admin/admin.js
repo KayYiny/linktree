@@ -410,6 +410,10 @@
       d.innerHTML =
         '<div class="gallery-thumb"><img src="' + esc(img.src) + '" onerror="this.style.visibility=\'hidden\'"></div>' +
         '<div class="gallery-body">' +
+          '<div class="gallery-head-row">' +
+            '<label class="switch" title="显示/隐藏"><input type="checkbox" data-field="is_active"' + (img.is_active === false ? '' : ' checked') + '><span class="switch-slider"></span></label>' +
+            '<span class="gallery-status">' + (img.is_active === false ? '已隐藏' : '显示中') + '</span>' +
+          '</div>' +
           '<input class="gallery-src" data-field="src" value="' + esc(img.src || '') + '" placeholder="图片 URL">' +
           '<div class="gallery-actions">' +
             '<button class="btn-icon" data-action="up"' + (edge.first ? ' disabled' : '') + ' title="上移">&#8593;</button>' +
@@ -430,7 +434,7 @@
     var input = document.getElementById('galleryNewSrc');
     var src = input.value.trim();
     if (!src) { showToast('请先输入图片 URL', true); return; }
-    S.gallery.push({ id: nextNewId(), page_id: pid, src: src, sort_order: 0, _new: true, _deleted: false, _dirty: true });
+    S.gallery.push({ id: nextNewId(), page_id: pid, src: src, sort_order: 0, is_active: true, _new: true, _deleted: false, _dirty: true });
     input.value = '';
     updateDirtyUI(); renderGallery();
   }
@@ -461,7 +465,10 @@
           '<div class="card-head">' +
             '<span class="dirty-badge"' + (pet._dirty ? '' : ' style="display:none"') + '>● 未保存</span>' +
             '<span class="card-title">' + esc(pg.slug) + ' · 宠物</span>' +
-            '<div class="card-head-actions"><button class="btn-icon btn-danger" data-action="delete" title="删除">&times;</button></div>' +
+            '<div class="card-head-actions">' +
+              '<label class="switch" title="显示/隐藏"><input type="checkbox" data-field="is_active"' + (pet.is_active === false ? '' : ' checked') + '><span class="switch-slider"></span></label>' +
+              '<button class="btn-icon btn-danger" data-action="delete" title="删除">&times;</button>' +
+            '</div>' +
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>宠物类型</label><input data-field="pet_type" value="' + esc(pet.pet_type || '') + '"></div>' +
@@ -488,6 +495,8 @@
               pet.messages[lang] = input.value.split('\n').map(function (l) { return l.replace(/\r$/, ''); }).filter(function (l) { return l.trim(); });
               mark();
             });
+          } else if (input.type === 'checkbox') {
+            input.addEventListener('change', function () { pet[input.dataset.field] = input.checked; mark(); });
           } else {
             input.addEventListener('input', function () { pet[input.dataset.field] = input.value; mark(); });
           }
@@ -506,7 +515,7 @@
         section.appendChild(empty);
         empty.querySelector('[data-addpet]').addEventListener('click', function () {
           S.pets.push({
-            id: nextNewId(), page_id: pg.id, pet_image: 'assets/pets/pet.webm', pet_type: 'cat',
+            id: nextNewId(), page_id: pg.id, pet_image: 'assets/pets/pet.webm', pet_type: 'cat', is_active: true,
             messages: { 'zh-CN': ['你好！'], 'en': ['Hello!'] },
             _new: true, _deleted: false, _dirty: true
           });
@@ -933,13 +942,15 @@
       for (var it of arr) if (it._deleted && !it._new && it.id != null) await api('/api/admin/pet?id=' + it.id, 'DELETE');
       for (var it of arr) if (it._new && !it._deleted) {
         var res = await api('/api/admin/pet', 'POST', {
-          page_id: it.page_id, pet_image: it.pet_image || '', pet_type: it.pet_type || '', messages: it.messages || {}
+          page_id: it.page_id, pet_image: it.pet_image || '', pet_type: it.pet_type || '', messages: it.messages || {},
+          is_active: it.is_active !== false
         });
         if (res && res.id != null) it.id = res.id;
       }
       for (var it of arr) if (!it._new && !it._deleted && it._dirty) {
         await api('/api/admin/pet?id=' + it.id, 'PUT', {
-          pet_image: it.pet_image || '', pet_type: it.pet_type || '', messages: it.messages || {}
+          pet_image: it.pet_image || '', pet_type: it.pet_type || '', messages: it.messages || {},
+          is_active: it.is_active !== false
         });
       }
     } catch (e) { errs.push('宠物：' + e.message); }
@@ -953,10 +964,10 @@
       assignSort(arr, function (g) { return g.page_id; });
       for (var it of arr) if (it._new && !it._deleted) {
         if (!it.src || !it.src.trim()) { errs.push('相册：存在空图片地址，已跳过'); continue; }
-        await api('/api/admin/gallery', 'POST', { page_id: it.page_id, src: it.src, sort_order: it.sort_order });
+        await api('/api/admin/gallery', 'POST', { page_id: it.page_id, src: it.src, sort_order: it.sort_order, is_active: it.is_active !== false });
       }
       for (var it of arr) if (!it._new && !it._deleted && it._dirty) {
-        await api('/api/admin/gallery?id=' + it.id, 'PUT', { page_id: it.page_id, src: it.src, sort_order: it.sort_order });
+        await api('/api/admin/gallery?id=' + it.id, 'PUT', { page_id: it.page_id, src: it.src, sort_order: it.sort_order, is_active: it.is_active !== false });
       }
     } catch (e) { errs.push('相册：' + e.message); }
   }
@@ -1096,10 +1107,10 @@
         return { page_id: l.page_id, label: l.label, url: l.url, icon: l.icon, qr_code: l.qr_code, popup_note: l.popup_note, i18n_key: l.i18n_key, note_i18n_key: l.note_i18n_key, is_active: l.is_active, sort_order: l.sort_order };
       }),
       gallery: S.gallery.filter(function (g) { return !g._deleted; }).map(function (g) {
-        return { page_id: g.page_id, src: g.src, sort_order: g.sort_order };
+        return { page_id: g.page_id, src: g.src, sort_order: g.sort_order, is_active: g.is_active !== false };
       }),
       pet: S.pets.filter(function (p) { return !p._deleted; }).map(function (p) {
-        return { page_id: p.page_id, pet_image: p.pet_image, pet_type: p.pet_type, messages: p.messages || {} };
+        return { page_id: p.page_id, pet_image: p.pet_image, pet_type: p.pet_type, is_active: p.is_active !== false, messages: p.messages || {} };
       }),
       translations: [],
       siteConfig: {}

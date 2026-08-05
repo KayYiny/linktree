@@ -27,19 +27,19 @@ module.exports = async function handler(req, res) {
         return res.status(200).json(rows);
       }
       case 'POST': {
-        const { page_id, src, sort_order } = req.body;
+        const { page_id, src, sort_order, is_active } = req.body;
         const { rows } = await query(
-          'INSERT INTO gallery_images (page_id, src, sort_order) VALUES ($1, $2, $3) RETURNING *',
-          [page_id, src, sort_order ?? 0]
+          'INSERT INTO gallery_images (page_id, src, sort_order, is_active) VALUES ($1, $2, $3, $4) RETURNING *',
+          [page_id, src, sort_order ?? 0, is_active ?? true]
         );
         return res.status(201).json(rows[0]);
       }
       case 'PUT': {
         const { id } = req.query;
-        const { page_id, src, sort_order } = req.body;
+        const { page_id, src, sort_order, is_active } = req.body;
         const { rows } = await query(
-          'UPDATE gallery_images SET page_id=$1, src=$2, sort_order=$3 WHERE id=$4 RETURNING *',
-          [page_id, src, sort_order, id]
+          'UPDATE gallery_images SET page_id=$1, src=$2, sort_order=$3, is_active=$4 WHERE id=$5 RETURNING *',
+          [page_id, src, sort_order, is_active ?? true, id]
         );
         return res.status(200).json(rows[0]);
       }

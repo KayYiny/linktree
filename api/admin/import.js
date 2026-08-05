@@ -77,8 +77,8 @@ module.exports = async function handler(req, res) {
     if (Array.isArray(data.gallery)) {
       for (const g of data.gallery) {
         await client.query(
-          'INSERT INTO gallery_images (page_id, src, sort_order) VALUES ($1,$2,$3)',
-          [mapPage(g.page_id), g.src, g.sort_order ?? 0]
+          'INSERT INTO gallery_images (page_id, src, sort_order, is_active) VALUES ($1,$2,$3,$4)',
+          [mapPage(g.page_id), g.src, g.sort_order ?? 0, g.is_active ?? true]
         );
         counts.gallery++;
       }
@@ -90,7 +90,7 @@ module.exports = async function handler(req, res) {
       const byId = {};
       for (const row of data.pet) {
         if (!byId[row.id]) {
-          byId[row.id] = { id: row.id, page_id: row.page_id, pet_image: row.pet_image, pet_type: row.pet_type, messages: {} };
+          byId[row.id] = { id: row.id, page_id: row.page_id, pet_image: row.pet_image, pet_type: row.pet_type, is_active: row.is_active !== false, messages: {} };
         }
         if (row.language && row.messages !== undefined && row.messages !== null) {
           byId[row.id].messages[row.language] = typeof row.messages === 'string' ? JSON.parse(row.messages) : row.messages;
@@ -102,8 +102,8 @@ module.exports = async function handler(req, res) {
     }
     for (const pet of petItems) {
       const { rows } = await client.query(
-        'INSERT INTO pet_config (page_id, pet_image, pet_type) VALUES ($1,$2,$3) RETURNING id',
-        [mapPage(pet.page_id), pet.pet_image ?? '', pet.pet_type ?? '']
+        'INSERT INTO pet_config (page_id, pet_image, pet_type, is_active) VALUES ($1,$2,$3,$4) RETURNING id',
+        [mapPage(pet.page_id), pet.pet_image ?? '', pet.pet_type ?? '', pet.is_active !== false]
       );
       const petId = rows[0].id;
       if (pet.messages && typeof pet.messages === 'object') {
