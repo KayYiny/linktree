@@ -61,8 +61,12 @@
     // 加时间戳绕过 CDN 边缘缓存，保证后台始终读取到最新数据
     return fetch('api/config?_=' + Date.now(), { headers: { Accept: 'application/json' } })
       .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
+        return r.text().then(function (t) {
+          var j = null;
+          try { j = t ? JSON.parse(t) : null; } catch (e) { j = null; }
+          if (!r.ok) throw new Error((j && j.error) || ('HTTP ' + r.status + (t ? '：' + t.slice(0, 160) : '')));
+          return j || {};
+        });
       });
   }
 
@@ -70,8 +74,12 @@
   function apiVerify(pwd) {
     return fetch('api/config?verify=' + encodeURIComponent(pwd) + '&_=' + Date.now(), { headers: { Accept: 'application/json' } })
       .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
+        return r.text().then(function (t) {
+          var j = null;
+          try { j = t ? JSON.parse(t) : null; } catch (e) { j = null; }
+          if (!r.ok) throw new Error((j && j.error) || ('HTTP ' + r.status + (t ? '：' + t.slice(0, 160) : '')));
+          return j || {};
+        });
       });
   }
 
@@ -90,9 +98,11 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     }).then(function (r) {
-      return r.json().then(function (j) {
-        if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
-        return j;
+      return r.text().then(function (t) {
+        var j = null;
+        try { j = t ? JSON.parse(t) : null; } catch (e) { j = null; }
+        if (!r.ok) throw new Error((j && j.error) || ('HTTP ' + r.status + (t ? '：' + t.slice(0, 160) : '')));
+        return j || {};
       });
     });
   }

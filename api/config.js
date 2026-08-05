@@ -32,7 +32,12 @@ let sslResolved = false; // 是否已确定 SSL 模式（避免反复切换）
 
 function buildPool() {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
-  const cfg = { connectionString: url, max: 5, idleTimeoutMillis: 20000 };
+  const cfg = {
+    connectionString: url,
+    max: 5,
+    idleTimeoutMillis: 20000,
+    connectionTimeoutMillis: 8000, // 8s 连不上直接报错，避免 Vercel 函数 10s 超时
+  };
   if (useSsl) cfg.ssl = { rejectUnauthorized: false };
   return new Pool(cfg);
 }
@@ -252,6 +257,16 @@ function mergeObj(base, over) {
 }
 
 export default async function handler(req, res) {
+  try {
+    return await handleRequest(req, res);
+  } catch (err) {
+    // 兜底：任何未捕获异常都返回 JSON 错误，避免 Vercel 返回纯文本 500 页面（前端解析会报 not valid JSON）
+    console.error('[/api/config] handler error:', err);
+    res.status(500).json({ ok: false, error: '服务端错误：' + String((err && err.message) || err) });
+  }
+}
+
+async function handleRequest(req, res) {
   // 预检请求（同源部署一般用不到，保险起见支持）
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
