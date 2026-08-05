@@ -271,6 +271,19 @@
     var wrap = document.getElementById('linksList');
     wrap.innerHTML = '';
 
+    // 重建翻译键下拉提示（datalist），列出翻译管理中所有可用键
+    var oldDl = document.getElementById('i18nKeyOptions');
+    if (oldDl && oldDl.parentNode) oldDl.parentNode.removeChild(oldDl);
+    var dl = document.createElement('datalist');
+    dl.id = 'i18nKeyOptions';
+    S.trans.forEach(function (t) {
+      if (t._deleted) return;
+      var opt = document.createElement('option');
+      opt.value = t.key;
+      dl.appendChild(opt);
+    });
+    document.body.appendChild(dl);
+
     list.forEach(function (link) {
       var edge = pageEdge(S.links, link, function (x) { return x.page_id; });
       var card = document.createElement('div');
@@ -293,7 +306,7 @@
             '<div class="form-group"><label>显示名称</label><input data-field="label" value="' + esc(link.label) + '"></div>' +
           '</div>' +
           '<div class="form-row">' +
-            '<div class="form-group"><label>多语言键(可选)</label><input data-field="i18n_key" value="' + esc(link.i18n_key || '') + '"></div>' +
+            '<div class="form-group"><label>多语言键(可选)</label><input data-field="i18n_key" list="i18nKeyOptions" placeholder="如 brand.qq" value="' + esc(link.i18n_key || '') + '"></div>' +
             '<div class="form-group"><label>图标 URL</label><input data-field="icon" value="' + esc(link.icon || '') + '"></div>' +
           '</div>' +
           '<div class="form-row">' +
@@ -302,7 +315,7 @@
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>备注(可选)</label><input data-field="popup_note" value="' + esc(link.popup_note || '') + '"></div>' +
-            '<div class="form-group"><label>备注多语言键(可选)</label><input data-field="note_i18n_key" value="' + esc(link.note_i18n_key || '') + '"></div>' +
+            '<div class="form-group"><label>备注多语言键(可选)</label><input data-field="note_i18n_key" list="i18nKeyOptions" value="' + esc(link.note_i18n_key || '') + '"></div>' +
           '</div>' +
         '</div>';
       wrap.appendChild(card);
