@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
 
     // 3. 链接
     const { rows: links } = await query(
-      `SELECT label, url, icon, qr_code, popup_note
+      `SELECT label, url, icon, qr_code, popup_note, i18n_key, note_i18n_key
        FROM links WHERE page_id = (SELECT id FROM pages WHERE slug = $1)
        AND is_active = true ORDER BY sort_order`,
       [pageSlug]

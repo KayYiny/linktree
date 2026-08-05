@@ -6,242 +6,145 @@
     <title>管理面板</title>
     <link rel="icon" href="../assets/images/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../assets/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="admin.css">
   </head>
-  <body>
+  <body class="dark-theme">
     <div class="brutal-corner-tl"></div>
     <div class="brutal-corner-tr"></div>
     <div class="brutal-corner-bl"></div>
     <div class="brutal-corner-br"></div>
 
-    <div class="admin-layout">
-      <!-- 侧边栏 -->
-      <aside class="admin-sidebar">
-        <h2>🔧 管理面板</h2>
-        <nav>
-          <a href="#" data-section="site-config" class="nav-item active">
-            <i class="fas fa-cog"></i> 站点配置
-          </a>
-          <a href="#" data-section="links" class="nav-item">
-            <i class="fas fa-link"></i> 链接管理
-          </a>
-          <a href="#" data-section="gallery" class="nav-item">
-            <i class="fas fa-images"></i> 相册管理
-          </a>
-          <a href="#" data-section="pet" class="nav-item">
-            <i class="fas fa-paw"></i> 宠物管理
-          </a>
-          <a href="#" data-section="translations" class="nav-item">
-            <i class="fas fa-language"></i> 翻译管理
-          </a>
-        </nav>
-        <div class="sidebar-footer">
-          <span id="adminUser"></span>
-          <button id="logoutBtn" class="brutal-btn-sm">退出</button>
-        </div>
-      </aside>
+    <!-- 顶部栏 -->
+    <header class="admin-header">
+      <h1>HUOLIN·ADMIN</h1>
+      <div class="header-actions">
+        <a href="/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回主页</a>
+        <button class="btn btn-outline" id="exportBtn"><i class="fas fa-download"></i> 导出</button>
+        <button class="btn btn-outline" id="importBtn"><i class="fas fa-upload"></i> 导入</button>
+        <button class="btn btn-primary" id="saveBtn"><i class="fas fa-save"></i> 保存</button>
+      </div>
+    </header>
 
-      <!-- 主内容区 -->
-      <main class="admin-main">
+    <!-- 标签页导航 -->
+    <nav class="admin-tabs">
+      <button class="tab active" data-tab="links"><i class="fas fa-link"></i> 链接管理</button>
+      <button class="tab" data-tab="gallery"><i class="fas fa-images"></i> 相册管理</button>
+      <button class="tab" data-tab="pet"><i class="fas fa-paw"></i> 宠物管理</button>
+      <button class="tab" data-tab="translations"><i class="fas fa-language"></i> 翻译管理</button>
+      <button class="tab" data-tab="settings"><i class="fas fa-cog"></i> 设置</button>
+    </nav>
+
+    <!-- 内容区 -->
+    <main class="admin-content">
+
+      <!-- ========== 链接管理 ========== -->
+      <div id="panel-links" class="tab-panel active">
+        <div class="panel-header">
+          <h2>链接管理</h2>
+          <select id="linkPageFilter">
+            <option value="">全部页面</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="addLinkBtn" style="margin-bottom:1rem">
+          <i class="fas fa-plus"></i> 新增链接
+        </button>
+        <div id="linksList"></div>
+      </div>
+
+      <!-- ========== 相册管理 ========== -->
+      <div id="panel-gallery" class="tab-panel">
+        <div class="panel-header">
+          <h2>相册管理</h2>
+          <select id="galleryPageFilter">
+            <option value="">全部页面</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="addGalleryBtn" style="margin-bottom:1rem">
+          <i class="fas fa-plus"></i> 新增图片
+        </button>
+        <div id="galleryList" class="gallery-grid"></div>
+      </div>
+
+      <!-- ========== 宠物管理 ========== -->
+      <div id="panel-pet" class="tab-panel">
+        <div class="panel-header">
+          <h2>宠物管理</h2>
+          <select id="petPageFilter">
+            <option value="">全部页面</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="addPetBtn" style="margin-bottom:1rem">
+          <i class="fas fa-plus"></i> 新增宠物
+        </button>
+        <div id="petList"></div>
+      </div>
+
+      <!-- ========== 翻译管理 ========== -->
+      <div id="panel-translations" class="tab-panel">
+        <div class="panel-header">
+          <h2>翻译管理</h2>
+          <input type="text" id="transSearch" placeholder="搜索 key..." style="max-width:300px">
+        </div>
+        <button class="btn btn-primary" id="addTransBtn" style="margin-bottom:1rem">
+          <i class="fas fa-plus"></i> 新增翻译
+        </button>
+        <div id="transList"></div>
+      </div>
+
+      <!-- ========== 设置 ========== -->
+      <div id="panel-settings" class="tab-panel">
+        <h2>设置</h2>
+
         <!-- 站点配置 -->
-        <section id="section-site-config" class="admin-section active">
-          <h3>⚙️ 站点配置</h3>
-          <form id="siteConfigForm" class="admin-form">
-            <div class="form-group">
-              <label>头像 URL</label>
-              <input type="text" name="avatar" placeholder="assets/images/avatar.webp">
-            </div>
-            <div class="form-group">
-              <label>用户名</label>
-              <input type="text" name="username" placeholder="HUOLIN">
+        <div class="settings-section">
+          <h3><i class="fas fa-globe"></i> 站点配置</h3>
+          <form id="siteConfigForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label>头像 URL</label>
+                <input type="text" name="avatar" placeholder="assets/images/avatar.webp">
+              </div>
+              <div class="form-group">
+                <label>用户名</label>
+                <input type="text" name="username" placeholder="HUOLIN">
+              </div>
             </div>
             <div class="form-group">
               <label>Favicon URL</label>
               <input type="text" name="favicon" placeholder="assets/images/favicon.svg">
             </div>
-            <button type="submit" class="brutal-btn">保存</button>
           </form>
-        </section>
+        </div>
 
-        <!-- 链接管理 -->
-        <section id="section-links" class="admin-section">
-          <h3>🔗 链接管理</h3>
-          <div class="section-toolbar">
-            <select id="linkPageFilter">
-              <option value="">全部页面</option>
-            </select>
-            <button id="addLinkBtn" class="brutal-btn-sm">+ 添加链接</button>
-          </div>
-          <div id="linksList" class="admin-list"></div>
-          <!-- 链接编辑表单 -->
-          <div id="linkEditor" class="admin-editor" style="display:none">
-            <h4 id="linkEditorTitle">添加链接</h4>
-            <form id="linkForm" class="admin-form">
-              <input type="hidden" name="id">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>所属页面</label>
-                  <select name="page_id" required></select>
-                </div>
-                <div class="form-group">
-                  <label>排序</label>
-                  <input type="number" name="sort_order" value="0">
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>标签名</label>
-                  <input type="text" name="label" required placeholder="QQ">
-                </div>
-                <div class="form-group">
-                  <label>跳转 URL</label>
-                  <input type="text" name="url" placeholder="https://...">
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>图标 URL</label>
-                  <input type="text" name="icon" placeholder="assets/icons/qq.svg">
-                </div>
-                <div class="form-group">
-                  <label>二维码 URL</label>
-                  <input type="text" name="qr_code" placeholder="assets/qrcodes/qq.jpg">
-                </div>
+        <!-- 修改密码 -->
+        <div class="settings-section">
+          <h3><i class="fas fa-lock"></i> 修改密码</h3>
+          <form id="changePasswordForm">
+            <div class="form-group">
+              <label>当前密码</label>
+              <input type="password" name="oldPassword" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>新密码</label>
+                <input type="password" name="newPassword" required minlength="4">
               </div>
               <div class="form-group">
-                <label>弹窗提示</label>
-                <input type="text" name="popup_note" placeholder="点击上方按钮直接访问">
+                <label>确认新密码</label>
+                <input type="password" name="confirmPassword" required minlength="4">
               </div>
-              <div class="form-actions">
-                <button type="submit" class="brutal-btn">保存</button>
-                <button type="button" id="cancelLinkBtn" class="brutal-btn-sm">取消</button>
-              </div>
-            </form>
-          </div>
-        </section>
+            </div>
+          </form>
+        </div>
+      </div>
 
-        <!-- 相册管理 -->
-        <section id="section-gallery" class="admin-section">
-          <h3>🖼️ 相册管理</h3>
-          <div class="section-toolbar">
-            <select id="galleryPageFilter">
-              <option value="">全部页面</option>
-            </select>
-            <button id="addGalleryBtn" class="brutal-btn-sm">+ 添加图片</button>
-          </div>
-          <div id="galleryList" class="admin-list"></div>
-          <div id="galleryEditor" class="admin-editor" style="display:none">
-            <h4 id="galleryEditorTitle">添加图片</h4>
-            <form id="galleryForm" class="admin-form">
-              <input type="hidden" name="id">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>所属页面</label>
-                  <select name="page_id" required></select>
-                </div>
-                <div class="form-group">
-                  <label>排序</label>
-                  <input type="number" name="sort_order" value="0">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>图片 URL</label>
-                <input type="text" name="src" required placeholder="https://...">
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="brutal-btn">保存</button>
-                <button type="button" id="cancelGalleryBtn" class="brutal-btn-sm">取消</button>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- 宠物管理 -->
-        <section id="section-pet" class="admin-section">
-          <h3>🐾 宠物管理</h3>
-          <div class="section-toolbar">
-            <select id="petPageFilter">
-              <option value="">全部页面</option>
-            </select>
-            <button id="addPetBtn" class="brutal-btn-sm">+ 添加宠物</button>
-          </div>
-          <div id="petList" class="admin-list"></div>
-          <div id="petEditor" class="admin-editor" style="display:none">
-            <h4 id="petEditorTitle">添加宠物</h4>
-            <form id="petForm" class="admin-form">
-              <input type="hidden" name="id">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>所属页面</label>
-                  <select name="page_id" required></select>
-                </div>
-                <div class="form-group">
-                  <label>宠物类型（i18n key）</label>
-                  <input type="text" name="pet_type" placeholder="cat / dog">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>宠物图片/视频 URL</label>
-                <input type="text" name="pet_image" required placeholder="assets/pets/pet.webm">
-              </div>
-              <div class="form-group">
-                <label>中文语录（每行一条）</label>
-                <textarea name="messages_zh" rows="6" placeholder="嗷呜～ 你吵醒本王午睡了…"></textarea>
-              </div>
-              <div class="form-group">
-                <label>英文语录（每行一条）</label>
-                <textarea name="messages_en" rows="6" placeholder="Ow~ You woke me from my nap…"></textarea>
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="brutal-btn">保存</button>
-                <button type="button" id="cancelPetBtn" class="brutal-btn-sm">取消</button>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- 翻译管理 -->
-        <section id="section-translations" class="admin-section">
-          <h3>🌐 翻译管理</h3>
-          <div class="section-toolbar">
-            <input type="text" id="transSearch" placeholder="搜索 key...">
-            <button id="addTransBtn" class="brutal-btn-sm">+ 添加翻译</button>
-          </div>
-          <div id="transList" class="admin-list"></div>
-          <div id="transEditor" class="admin-editor" style="display:none">
-            <h4 id="transEditorTitle">添加翻译</h4>
-            <form id="transForm" class="admin-form">
-              <input type="hidden" name="id">
-              <div class="form-group">
-                <label>Key</label>
-                <input type="text" name="key" required placeholder="brand.qq">
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>语言</label>
-                  <select name="language" required>
-                    <option value="zh-CN">中文 (zh-CN)</option>
-                    <option value="en">English (en)</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>翻译内容</label>
-                <input type="text" name="value" required placeholder="QQ">
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="brutal-btn">保存</button>
-                <button type="button" id="cancelTransBtn" class="brutal-btn-sm">取消</button>
-              </div>
-            </form>
-          </div>
-        </section>
-      </main>
-    </div>
+    </main>
 
     <!-- 消息提示 -->
     <div id="toast" class="toast" style="display:none"></div>
+
+    <!-- 导入文件输入 -->
+    <input type="file" id="importFileInput" accept=".json" style="display:none">
 
     <script src="admin.js"></script>
   </body>
