@@ -4,254 +4,195 @@
   <img src="assets/images/avatar.webp" alt="HuoLin Avatar" width="120" style="border: 4px solid #000; box-shadow: 8px 8px 0 #2a2a2a;">
   <br><br>
 
-  <!-- Tech & License Badges -->
   ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=fff)
   ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=fff)
   ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000)
+  ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=fff)
+  ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=fff)
   [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](#-许可)
 </div>
 
-> **设计理念：** Raw · Heavy · Confrontational — 粗野、厚重、直面观众。用大胆的边框、厚重的阴影、鲜明的撞色（青、粉、黄）传递强烈的视觉个性。
+> **设计理念：**
+> - **前台舞台** — 新粗野主义（Neo-Brutalism）：Raw · Heavy · Confrontational，粗边框、硬阴影、撞色（青/粉/黄）。
+> - **后台工具** — 「橙墨系统」：浅色、克制、表格为王、⌘K 命令面板为签名。后台 ≠ 舞台。
 
 ---
 
 ## 📑 目录
 
 - [项目概述](#-项目概述)
+- [功能一览](#-功能一览)
+- [架构](#-架构)
 - [技术栈](#-技术栈)
-- [设计风格 — 新粗野主义](#-设计风格--新粗野主义)
 - [项目结构](#-项目结构)
-- [快速预览](#-快速预览)
-- [功能详解](#-功能详解)
-  - [主页面](#-主页面-indexhtml)
-  - [耳语子页面](#-耳语子页面-whisperindexhtml)
-- [核心脚本](#-核心脚本)
-- [响应式设计](#-响应式设计)
-- [自定义指南](#-自定义指南)
+- [数据模型](#-数据模型)
+- [管理面板](#-管理面板)
+- [密钥与彩蛋](#-密钥与彩蛋)
 - [部署方式](#-部署方式)
+- [安全注意](#-安全注意)
 - [许可](#-许可)
 
 ---
 
 ## 📋 项目概述
 
-**HuoLin Linktree** 是一个以 **新粗野主义（Neo-Brutalism）** 设计风格打造的个性化个人名片页（Link-in-Bio）。项目包含一个主站页面和一个隐藏的「耳语」子页面，集成了社交链接、二维码弹窗、虚拟宠物互动、彩蛋导航等丰富功能。
+**HuoLin Linktree** 是火林（HUOLIN）的个人名片站（Link-in-Bio）：
+
+- **主站**：头像、名字、社交链接、二维码弹窗、虚拟宠物、相册、分享入口；页脚藏有「彩蛋」入口。
+- **耳语页**（`/whisper/`）：需要密钥（`?k=`）才能进入的隐藏页面，链接/相册/宠物与主站独立管理。
+- **管理面板**（`/admin/`）：功能完整的网页后台，直接增删改站点内容，**无需改代码**。
+
+所有内容由 **PostgreSQL 数据库** 驱动、前端动态渲染；**包括彩蛋、密钥在内的全部配置都能在管理面板里改**。
+
+---
+
+## ✨ 功能一览
+
+- 🖥️ 主站 / 耳语页：头像、名字、链接、二维码弹窗、虚拟宠物、相册、双语（i18n）
+- 🥚 **彩蛋**：点页脚「© 2026 HuoLin」指定次数触发跳转（次数 / 时间窗 / 目标页，后台可配）
+- 🔑 **密钥系统**：耳语页 `?k=` 访问控制，轮换密钥 + 永久密钥（周期 / 盐值后台可配）；永久密钥访问时地址栏自动转为当前有效密钥；主页带密钥访问会弹出「如何用彩蛋进入耳语页」提示
+- ⏳ **加载过渡弹窗**：进入页面时显示加载动画，数据就绪后自动消失
+- 🛠️ **管理面板**：链接 / 相册 / 宠物 / 翻译 / 页面 / 设置 全量管理，显式保存模型
+- 💾 **导出 / 导入**：一键备份全站数据；导入走事务式整库重建（幂等）
+
+---
+
+## 🏗️ 架构
+
+```
+浏览器（静态页：index / whisper / admin）
+      │  fetch
+      ▼
+Vercel Serverless（api/*.js）
+      │  pg
+      ▼
+PostgreSQL（自建）—— 8 张表
+```
+
+- 前端为纯静态 HTML/CSS/JS，无构建步骤，由 Vercel 直接托管。
+- `api/*` 为 Vercel Serverless 函数，负责读写 PostgreSQL。
+- 数据加载：页面加载时 `data-loader.js` 请求 `/api/config?page=main|whisper` 动态渲染；配置接口 `no-store`，改动即时生效。
 
 ---
 
 ## 🛠️ 技术栈
 
-| 技术 | 用途 |
-|------|------|
-| **HTML5** | 页面结构 |
-| **CSS3**（原生） | 样式系统 + 动画 + 响应式布局 |
-| **JavaScript**（ES5 / ES6） | 弹窗、宠物互动、彩蛋、防护逻辑 |
-| **Font Awesome 6** | 社交图标库 |
-| **Neo-Brutalism** | 视觉设计系统 |
-
-> 纯静态站点，零依赖，无需构建工具。
-
----
-
-## 🎨 设计风格 — 新粗野主义
-
-| 要素 | 说明 |
-|------|------|
-| **配色** | 黑色背景 `#0a0a0a` + 白色表面 + 青 `#00f0ff` / 粉 `#ff0066` / 黄 `#ffea00` 三色点缀 |
-| **字体** | 标题：Bebas Neue（粗野无衬线）；正文：DM Sans（现代简洁） |
-| **边框** | 全局 `4px` 粗边框，无圆角，保持尖锐感 |
-| **阴影** | 标志性 `8px × 8px` 右下阴影，hover 时增强 |
-| **纹理** | SVG 噪点颗粒叠加层，增强质感 |
-| **动效** | 链接交错入场 `fadeUp`；hover 时上左位移 + 青影；按压时下沉 |
+- 前端：原生 HTML / CSS / JavaScript（零框架、零构建）
+- 图标：Font Awesome 6（自托管）
+- 字体：Bebas Neue / DM Sans / Noto Sans SC（自托管）
+- 后端：Vercel Serverless Functions（Node.js）
+- 数据库：PostgreSQL（自建）
+- 认证：JWT（`jsonwebtoken`）+ `bcryptjs`
+- 依赖：`pg`、`jsonwebtoken`、`bcryptjs`
 
 ---
 
 ## 🗂️ 项目结构
 
 ```
-linktree/
-├── index.html                       # 主页面
-├── style.css                        # 新粗野主义设计系统
-├── README.md                        # 项目文档
-│
+├── index.html            # 主站
+├── style.css             # 主站样式
+├── data-loader.js        # 数据加载与渲染（两页共用）
+├── whisper/
+│   └── index.html        # 耳语页（密钥访问）
+├── admin/
+│   ├── index.html        # 管理面板登录页
+│   ├── admin.html        # 管理面板
+│   ├── admin.js          # 管理逻辑（显式保存模型）
+│   └── admin.css         # 「橙墨系统」样式
+├── api/
+│   ├── auth.js           # POST /api/auth 登录
+│   ├── config.js         # GET /api/config?page= 公开配置
+│   ├── db.js             # PostgreSQL 连接池
+│   └── admin/            # 后台 CRUD
+│       ├── pages.js  links.js  gallery.js  pet.js
+│       ├── translations.js  site-config.js
+│       ├── change-password.js  import.js
 ├── assets/
-│   ├── fontawesome/                 # Font Awesome 6 图标库
-│   ├── images/
-│   │   ├── avatar.webp               # 头像（WebP 压缩）
-│   │   ├── bg.jpg                   # 主页面背景
-│   │   ├── favicon.svg              # 网站图标
-│   │   └── Puppy_Play_Pride_Flag.svg # 耳语页面背景（彩虹旗）
-│   ├── pets/
-│   │   ├── pet.webm                 # 主页面宠物（老虎/猫，WebM 视频）
-│   │   └── pet1.webp                # 耳语页面宠物（小狗）
-│   ├── qrcodes/                     # 各平台二维码图片
-│   └── scripts/
-│       ├── anti-inspect.js          # 前端防护
-│       ├── easter-egg.js            # 彩蛋模块
-│       ├── gallery.js               # 图片相册（分页 + 灯箱）
-│       └── pet.js                   # 虚拟宠物交互
-│
-└── whisper/
-    └── index.html                   # 隐藏子页面「耳语」
+│   ├── scripts/          # keygen / easter-egg / hint-popup / gallery / pet / i18n / qrcode-popup / anti-inspect
+│   ├── icons/  images/  pets/  qrcodes/  fonts/  fontawesome/
+└── scripts/
+    └── migrate.js        # 建表 + 初始数据
 ```
 
 ---
 
-## 👀 快速预览
+## 🗄️ 数据模型（PostgreSQL）
 
-> 🖼️ 将页面截图放入 `screenshots/` 目录后，在此处展示：
-
-```markdown
-<!-- 示例： -->
-![主页面预览](screenshots/homepage.png)
-![耳语页面预览](screenshots/whisper.png)
-```
-
----
-
-## ✨ 功能详解
-
-### 🏠 主页面 (`index.html`)
-
-| 功能模块 | 说明 |
-|---------|------|
-| 🔗 **社交链接** | QQ / 微信 / Bilibili / 抖音，品牌官方配色图标 |
-| 🖼️ **二维码弹窗** | 点击社交链接触发 Neo-Brutalism 风格弹窗 |
-| 🐯 **虚拟宠物** | 老虎/猫 WebM 视频，点击跳跃 + 随机趣味气泡 |
-| 🥚 **彩蛋导航** | 底部版权连点 5 次 → 跳转 `/whisper` |
-| 🛡️ **前端防护** | 禁右键 / 拦截 F12 / 禁 Ctrl+U 查看源码 |
-
-#### 🔗 社交链接
-
-| 平台 | 图标 | 交互方式 |
-|------|------|----------|
-| **QQ** | `fa-qq` | 点击弹出二维码 + 跳转链接 |
-| **微信** | `fa-weixin` | 点击弹出二维码（仅扫码） |
-| **Bilibili** | `fa-bilibili` | 点击弹出二维码 + 跳转链接 |
-| **抖音** | `fa-tiktok` | 点击弹出二维码 + 跳转链接（渐变图标） |
-
-#### 🖼️ 二维码弹窗
-
-- 弹窗包含：平台名称、二维码、操作按钮（有跳转链接时）、备注提示
-- 支持点击遮罩层 / 关闭按钮 / 按 `ESC` 关闭
-
-#### 🐯 虚拟宠物
-
-- **点击**：宠物执行三段式跳跃动画
-- **气泡**：随机显示趣味台词，2.5 秒后自动消失
-- 宠物包裹在粗野主义风格的白色相框中，底部有黄色强调条
-
-#### 🥚 彩蛋导航
-
-在页面底部版权区域 **`© 2026 HuoLin`** 上**连续点击 5 次**（间隔 < 2 秒），触发跳转到 `/whisper`（耳语子页面）。
+| 表 | 用途 |
+|---|---|
+| `pages` | 页面（slug / 标题 / 背景 / 启用 / 排序） |
+| `site_config` | 站点键值（avatar / username / favicon + egg_* / key_* + 自定义键） |
+| `links` | 链接（所属页面 / 图标 / 跳转 / 二维码 / 备注 / 启停 / i18n 键） |
+| `gallery_images` | 相册图片 |
+| `pet_config` + `pet_messages` | 宠物（每页一只）与多语言语录 |
+| `translations` | 多语言文本 |
+| `admin_users` | 管理员（用户名 / 密码哈希） |
 
 ---
 
-### 🤫 耳语子页面 (`whisper/index.html`)
+## 🛠️ 管理面板
 
-通过主页面彩蛋进入的隐藏页面，采用**彩虹旗**作为背景，呈现更私密的个人空间：
+入口：`/admin/`（默认管理员 `admin`，首次登录后请立即修改密码）。
 
-| 功能 | 说明 |
-|------|------|
-| 🔗 **社交链接** | X (Twitter) / Instagram / Bluesky |
-| 🐶 **宠物** | 小狗，语录风格转为温顺/依赖向 |
-| 🥚 **反向彩蛋** | 同样连点 5 次底部版权，返回主页面 |
-
----
-
-## 🧩 核心脚本
-
-### `anti-inspect.js`
-前端基础防护脚本，增加普通用户通过浏览器开发者工具查看源码的门槛。
-
-### `easter-egg.js`
-通用彩蛋模块，支持通过 `window.__eggConfig` 配置：
-
-| 选项 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `trigger` | `string` | `#hashtag` | 触发元素 CSS 选择器 |
-| `clicks` | `number` | `5` | 所需点击次数 |
-| `timeout` | `number` | `2000` | 点击间隔超时（ms） |
-| `action` | `function` | 跳转首页 | 触发回调函数 |
-
-### `pet.js`
-虚拟宠物模块，自动初始化，支持：
-
-- `window.__petMessages` — 自定义气泡语录数组
-- 点击触发跳跃动画 + 随机气泡展示
-- DOM 未就绪时自动重试（`setTimeout` 回退）
+- **显式保存模型**：所有增 / 删 / 改 / 排序先落在本地工作副本，顶部「保存全部(N)」统一提交；带「未保存」角标、撤销、离开提醒。
+- **标签页**：链接 / 相册 / 宠物 / 翻译 / 页面 / 设置。
+- **设置**：站点配置（头像 / 用户名 / favicon）、自定义配置键值、彩蛋设置、密钥设置、修改用户名 / 密码。
+- **导出 / 导入**：备份为 JSON；导入通过事务接口整库重建（幂等，可重复导入）。
+- **⌘K 命令面板**：`Ctrl/⌘ + K` 快速跳转与操作；`Ctrl/⌘ + S` 保存。
+- **退出登录**：顶栏「退出」。
 
 ---
 
-## 📱 响应式设计
+## 🔑 密钥与彩蛋
 
-| 断点 | 调整内容 |
-|------|----------|
-| **≤ 768px**（平板） | 缩小头像、名称字号、内边距、宠物尺寸、弹窗尺寸 |
-| **≤ 480px**（手机） | 进一步缩小装饰角标、边距、边框粗细 |
-
----
-
-## 🛠️ 自定义指南
-
-### 修改社交链接
-
-编辑 `index.html` 中 `#links` 部分：
-
-```html
-<a class="link img-popup-trigger"
-   data-img="assets/qrcodes/xxx.jpg"    <!-- 二维码图片 -->
-   data-url="https://..."                <!-- 跳转链接（可选） -->
-   data-note="使用 xx 扫码">            <!-- 底部提示文字 -->
-  <span class="link-icon"><i class="fab fa-xxx"></i></span>
-  <span class="link-label">平台名称</span>
-</a>
-```
-
-### 更换宠物
-
-1. 将宠物文件放入 `assets/pets/` 目录（支持 WebM / WebP / GIF）
-2. 修改 `index.html` 中 `#petImage` 的 `src` 属性
-3. 修改 `window.__petMessages` 数组自定义台词
-
-### 修改彩蛋配置
-
-在引用 `easter-egg.js` 之前设置：
-
-```html
-<script>
-window.__eggConfig = {
-  clicks: 10,              // 改为 10 次点击
-  timeout: 3000,           // 间隔延长到 3 秒
-  action: function () {
-    window.location.href = 'https://example.com';
-  }
-};
-</script>
-```
+- **彩蛋**（管理面板 → 设置 → 彩蛋设置）：配置 启用 / 点击次数 / 时间窗口（毫秒）/ 跳转目标；跳转目标是耳语页时，自动带上当前有效密钥，彩蛋永远能进。
+- **密钥**（管理面板 → 设置 → 密钥设置）：配置 启用 / 更换周期（每小时 / 每天 / 每周 / 每月 / 永不更换）/ 盐值 / 永久密钥；当前有效密钥实时显示，可一键复制「耳语页链接」或「主页入口链接（含密钥）」。
+  - 用永久密钥访问时，地址栏**瞬间变为当前轮换密钥**，不暴露永久密钥。
+  - 主页带有效密钥访问，会弹出「如何用彩蛋进入耳语页」的提示弹窗。
 
 ---
 
-## 🚀 部署方式
+## 🚀 部署方式（GitHub + Vercel + 自建 PostgreSQL）
 
-本项目为纯静态站点，无需构建，可直接部署到任何静态托管服务：
+1. 把代码推到 GitHub。
+2. 在 Vercel 导入仓库，自动识别 `api/*` 为 Serverless 函数。
+3. 配置环境变量（Vercel → Project → Settings → Environment Variables）：
 
-| 方式 | 操作 |
-|------|------|
-| **GitHub Pages** | `git push` 后，在仓库 Settings > Pages 中选择 `main` 分支启用 |
-| **Vercel / Netlify** | 直接导入仓库，自动部署，零配置 |
-| **任意 Web 服务器** | 将项目文件放入服务器根目录即可访问 |
+   ```
+   DB_HOST      数据库主机
+   DB_PORT      数据库端口（默认 5432）
+   DB_NAME      数据库名
+   DB_USER      数据库用户
+   DB_PASSWORD  数据库密码
+   JWT_SECRET   登录令牌密钥（生产环境务必自定义）
+   ```
+
+   （也可用 `DATABASE_URL` 完整连接串；`api/db.js` 优先读拆分变量。）
+
+4. 建表并写入初始数据（需能连到数据库，在本地执行）：
+
+   ```bash
+   DB_HOST=... DB_PORT=5432 DB_NAME=... DB_USER=... DB_PASSWORD=... node scripts/migrate.js
+   ```
+
+   migrate 会创建 8 张表、写入初始数据，并创建默认管理员 `admin`（密码可用 `ADMIN_PASSWORD` 环境变量指定，默认 `admin`）。
+
+5. 推送后 Vercel 自动部署。后台入口 `https://你的域名/admin/`。
+
+> ⚠️ 注意：Vercel 免费版函数运行在美东区域，自建数据库必须公网可达，否则 API 会连不上库。
+
+---
+
+## 🔒 安全注意
+
+- **立即修改默认管理员密码**（管理面板 → 设置 → 账号设置）。
+- 生产环境务必设置 `JWT_SECRET`（默认值仅用于本地开发）。
+- 耳语页密钥的目的是「挡住静态爬取」，不是高安全等级认证，请勿存放敏感内容。
+- 数据库凭据只放 Vercel 环境变量，**绝不写入代码 / 提交**。
 
 ---
 
 ## 📄 许可
 
-本项目采用 **MIT License** 开源。您可以自由使用、修改和分发本项目，但请保留原始出处声明。
-
----
-
-<div align="center">
-  <sub>Made with 🔥 by HuoLin · 2026</sub>
-  <br>
-  <sub>Design: Neo-Brutalism · Built with Vanilla HTML/CSS/JS</sub>
-</div>
+MIT
