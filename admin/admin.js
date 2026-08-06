@@ -325,7 +325,7 @@
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>英文名(可选，留空=中英相同)</label><input data-field="label_en" value="' + esc(link.label_en || '') + '"></div>' +
-            '<div class="form-group"><label>图标 URL</label><div class="icon-url-row"><input data-field="icon" value="' + esc(link.icon || '') + '" placeholder="https://cdn.simpleicons.org/github"><button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床"><i class="fas fa-upload"></i></button><button type="button" class="btn btn-primary icon-picker-btn" data-action="open-simple-icons" title="从 Simple Icons 挑选品牌图标">SI</button></div></div>' +
+            '<div class="form-group"><label>图标 URL</label><div class="icon-url-row"><input data-field="icon" value="' + esc(link.icon || '') + '" placeholder="https://cdn.simpleicons.org/github"><button type="button" class="btn btn-primary icon-picker-btn" data-action="open-simple-icons" title="从 Simple Icons 挑选品牌图标">SI</button></div></div>' +
           '</div>' +
           '<div class="sec-hint" style="margin-bottom:8px">翻译键：' + esc(link.i18n_key || '自动生成') + '（保存时自动写入翻译，无需手动填）</div>' +
           '<div class="form-row">' +
