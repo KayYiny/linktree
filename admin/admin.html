@@ -78,7 +78,6 @@
           <div class="panel-toolbar">
             <div class="inline-add">
               <input type="text" id="galleryNewSrc" placeholder="粘贴图片 URL，回车添加">
-              <button type="button" class="btn btn-ghost icon-picker-btn img-picker-btn" title="从图床选择图片"><i class="fas fa-image"></i></button>
               <button class="btn btn-primary" id="galleryAddConfirm"><i class="fas fa-plus"></i> 添加</button>
             </div>
             <span class="filter-hint" id="galleryFilterHint"></span>
@@ -141,10 +140,7 @@
               <div class="form-row">
                 <div class="form-group">
                   <label>头像 URL</label>
-                  <div class="icon-url-row">
-                    <input type="text" name="avatar" placeholder="https://.../avatar.png">
-                    <button type="button" class="btn btn-ghost icon-picker-btn img-picker-btn" title="从图床选择图片"><i class="fas fa-image"></i></button>
-                  </div>
+                  <input type="text" name="avatar" placeholder="https://.../avatar.png">
                 </div>
                 <div class="form-group">
                   <label>用户名</label>
@@ -153,10 +149,7 @@
               </div>
               <div class="form-group">
                 <label>Favicon URL</label>
-                <div class="icon-url-row">
-                  <input type="text" name="favicon" placeholder="https://.../favicon.svg">
-                  <button type="button" class="btn btn-ghost icon-picker-btn img-picker-btn" title="从图床选择图片"><i class="fas fa-image"></i></button>
-                </div>
+                <input type="text" name="favicon" placeholder="https://.../favicon.svg">
               </div>
               <div class="form-group">
                 <label>页脚文字</label>
@@ -322,29 +315,6 @@
             <button type="button" class="btn btn-ghost" id="siOpenBtn"><i class="fas fa-external-link-alt"></i> 在新窗口打开官网</button>
           </div>
           <p class="sec-hint" style="margin-top:6px">官网打不开时，可改用 <code>https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/&lt;名称&gt;.svg</code> 作为图标 URL。</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 图床图片选择弹窗（内嵌路过图床） -->
-    <div class="si-overlay" id="imgOverlay" style="display:none">
-      <div class="si-card">
-        <div class="si-head">
-          <span><i class="fas fa-image"></i> 图床图片 — 从路过图床获取图片直链</span>
-          <button type="button" class="btn-icon" id="imgClose" title="关闭">&times;</button>
-        </div>
-        <iframe class="si-frame" id="imgFrame" src="https://imgchr.com" loading="lazy" allow="clipboard-write" title="路过图床"></iframe>
-        <div class="si-footer">
-          <p>① 在上方内嵌的 <strong>路过图床（imgchr.com）</strong>上传图片（支持匿名上传）；若内嵌页无法正常显示或需登录，点下方「在新窗口打开图床」。</p>
-          <p>② 上传完成后复制图片<strong>直链</strong>（以 <code>.jpg / .png / .webp</code> 等结尾的 URL），粘贴到下方输入框（可直接 <b>Ctrl/⌘ + V</b>，或点「从剪贴板粘贴」），再点「确定提交」自动填入当前字段。</p>
-          <div class="si-fill-row">
-            <input id="imgUrlInput" placeholder="粘贴图片直链，如 https://imgchr.com/i/xxxx.png">
-            <button type="button" class="btn btn-primary" id="imgFillBtn"><i class="fas fa-check"></i> 确定提交</button>
-          </div>
-          <div class="si-fill-row" style="margin-top:8px">
-            <button type="button" class="btn btn-ghost" id="imgPasteBtn"><i class="fas fa-clipboard"></i> 从剪贴板粘贴</button>
-            <button type="button" class="btn btn-ghost" id="imgOpenBtn"><i class="fas fa-external-link-alt"></i> 在新窗口打开图床</button>
-          </div>
         </div>
       </div>
     </div>

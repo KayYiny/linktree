@@ -327,7 +327,7 @@
           '<div class="sec-hint" style="margin-bottom:8px">翻译键：' + esc(link.i18n_key || '自动生成') + '（保存时自动写入翻译，无需手动填）</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>跳转链接(可选)</label><input data-field="url" value="' + esc(link.url || '') + '"></div>' +
-            '<div class="form-group"><label>二维码图片(可选)</label><div class="icon-url-row"><input data-field="qr_code" value="' + esc(link.qr_code || '') + '"><button type="button" class="btn btn-ghost icon-picker-btn img-picker-btn" title="从图床选择图片"><i class="fas fa-image"></i></button></div></div>' +
+            '<div class="form-group"><label>二维码图片(可选)</label><input data-field="qr_code" value="' + esc(link.qr_code || '') + '"></div>' +
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>备注(可选)</label><input data-field="popup_note" value="' + esc(link.popup_note || '') + '"></div>' +
@@ -554,7 +554,7 @@
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>宠物类型</label><input data-field="pet_type" value="' + esc(pet.pet_type || '') + '"></div>' +
-            '<div class="form-group"><label>图片/视频 URL</label><div class="icon-url-row"><input data-field="pet_image" value="' + esc(pet.pet_image || '') + '"><button type="button" class="btn btn-ghost icon-picker-btn img-picker-btn" title="从图床选择图片"><i class="fas fa-image"></i></button></div></div>' +
+            '<div class="form-group"><label>图片/视频 URL</label><input data-field="pet_image" value="' + esc(pet.pet_image || '') + '"></div>' +
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>中文语录（每行一条）</label><textarea data-field="messages_zh" rows="5">' + esc(zh.join('\n')) + '</textarea></div>' +
@@ -690,7 +690,7 @@
           '<div class="form-group"><label>Slug（URL 路径）</label><input data-field="slug" value="' + esc(p.slug) + '"></div>' +
           '<div class="form-group"><label>标题</label><input data-field="title" value="' + esc(p.title || '') + '"></div>' +
         '</div>' +
-        '<div class="form-group"><label>背景图片 URL</label><div class="icon-url-row"><input data-field="background_image" value="' + esc(p.background_image || '') + '"><button type="button" class="btn btn-ghost icon-picker-btn img-picker-btn" title="从图床选择图片"><i class="fas fa-image"></i></button></div></div>';
+        '<div class="form-group"><label>背景图片 URL</label><input data-field="background_image" value="' + esc(p.background_image || '') + '"></div>';
       wrap.appendChild(card);
 
       var badge = card.querySelector('.dirty-badge');
@@ -1232,74 +1232,6 @@
   document.getElementById('siPasteBtn').addEventListener('click', pasteSimpleIconName);
   document.getElementById('siOpenBtn').addEventListener('click', function () {
     window.open('https://simpleicons.org', '_blank', 'noopener');
-  });
-
-  // ==================== 图床图片选择弹窗（内嵌路过图床） ====================
-  // 与 SI 图标弹窗同模式：内嵌 imgchr.com，底部粘贴直链 + 确定提交
-  var imgTarget = null; // { input } 当前等待填图的输入框
-  function openImagePicker(input) {
-    imgTarget = { input: input };
-    var ov = document.getElementById('imgOverlay');
-    if (!ov) return;
-    ov.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    var urlInput = document.getElementById('imgUrlInput');
-    if (urlInput) {
-      urlInput.value = '';
-      setTimeout(function () { urlInput.focus(); }, 60);
-    }
-  }
-  function closeImagePicker() {
-    var ov = document.getElementById('imgOverlay');
-    if (ov) ov.style.display = 'none';
-    document.body.style.overflow = '';
-    imgTarget = null;
-  }
-  // 把粘贴的直链填入目标输入框，并触发 input 事件（由原有绑定自动标脏/写模型）
-  function fillImageUrl() {
-    var urlInput = document.getElementById('imgUrlInput');
-    var url = urlInput ? urlInput.value.trim() : '';
-    if (!url) { showToast('请先粘贴图片直链', true); return; }
-    if (imgTarget && imgTarget.input) {
-      imgTarget.input.value = url;
-      imgTarget.input.dispatchEvent(new Event('input'));
-    }
-    closeImagePicker();
-    showToast('已填入图片 URL');
-  }
-  document.getElementById('imgClose').addEventListener('click', closeImagePicker);
-  document.getElementById('imgFillBtn').addEventListener('click', fillImageUrl);
-  document.getElementById('imgUrlInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); fillImageUrl(); } });
-  document.getElementById('imgOverlay').addEventListener('click', function (e) { if (e.target === this) closeImagePicker(); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeImagePicker(); });
-  // 从剪贴板读取直链（内嵌 iframe 跨域复制受限时的兜底）
-  function pasteImageUrl() {
-    var urlInput = document.getElementById('imgUrlInput');
-    if (!urlInput) return;
-    if (!navigator.clipboard || !navigator.clipboard.readText) {
-      showToast('当前浏览器不支持读取剪贴板，请在新窗口打开图床复制后手动粘贴', true);
-      return;
-    }
-    navigator.clipboard.readText().then(function (text) {
-      text = (text || '').trim();
-      if (!text) { showToast('剪贴板是空的，请先在图床复制图片直链', true); return; }
-      urlInput.value = text;
-      showToast('已从剪贴板读取');
-    }).catch(function () {
-      showToast('无法读取剪贴板，请在新窗口打开图床复制后手动粘贴', true);
-    });
-  }
-  document.getElementById('imgPasteBtn').addEventListener('click', pasteImageUrl);
-  document.getElementById('imgOpenBtn').addEventListener('click', function () {
-    window.open('https://imgchr.com', '_blank', 'noopener');
-  });
-  // 「图床」按钮统一委托：按钮紧贴目标输入框之后（btn.previousElementSibling 即输入框）
-  document.addEventListener('click', function (e) {
-    var btn = e.target && e.target.closest ? e.target.closest('.img-picker-btn') : null;
-    if (!btn) return;
-    var input = btn.previousElementSibling;
-    if (!input || input.tagName !== 'INPUT') { showToast('未找到图片输入框', true); return; }
-    openImagePicker(input);
   });
 
   // ==================== 顶部按钮 ====================
