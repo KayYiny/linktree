@@ -29,7 +29,7 @@
     gallery: [], // {id, page_id, src, sort_order, _new, _deleted, _dirty}
     pets: [],    // {id, page_id, pet_image, pet_type, messages:{'zh-CN':[],'en':[]}, _new, _deleted, _dirty}
     trans: [],   // {key, zh, en, id_zh, id_en, _new, _deleted, _dirty}
-    site: { avatar: '', username: '', favicon: '', footer: '', extra: [] }, // extra: {key, value, _new, _deleted, _dirty}
+    site: { avatar: '', username: '', favicon: '', footer: '', lsky_url: '', lsky_email: '', lsky_password: '', extra: [] }, // extra: {key, value, _new, _deleted, _dirty}
     siteDirty: false,
     egg: { enabled: true, clicks: '5', timeout: '2000', target: '' }, // 彩蛋配置
     eggDirty: false,
@@ -235,12 +235,15 @@
 
     // site
     var cfg = site || {};
-    var managedKeys = ['avatar', 'username', 'favicon', 'footer', 'schema_version', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'];
+    var managedKeys = ['avatar', 'username', 'favicon', 'footer', 'lsky_url', 'lsky_email', 'lsky_password', 'schema_version', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'];
     S.site = {
       avatar: cfg.avatar || '',
       username: cfg.username || '',
       favicon: cfg.favicon || '',
       footer: cfg.footer || '',
+      lsky_url: cfg.lsky_url || '',
+      lsky_email: cfg.lsky_email || '',
+      lsky_password: cfg.lsky_password || '',
       extra: Object.keys(cfg).filter(function (k) { return managedKeys.indexOf(k) === -1; })
         .map(function (k) { return { key: k, value: cfg[k] == null ? '' : String(cfg[k]), _new: false, _deleted: false, _dirty: false }; })
     };
@@ -322,12 +325,12 @@
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>英文名(可选，留空=中英相同)</label><input data-field="label_en" value="' + esc(link.label_en || '') + '"></div>' +
-            '<div class="form-group"><label>图标 URL</label><div class="icon-url-row"><input data-field="icon" value="' + esc(link.icon || '') + '" placeholder="https://cdn.simpleicons.org/github"><button type="button" class="btn btn-primary icon-picker-btn" data-action="open-simple-icons" title="从 Simple Icons 挑选品牌图标">SI</button></div></div>' +
+            '<div class="form-group"><label>图标 URL</label><div class="icon-url-row"><input data-field="icon" value="' + esc(link.icon || '') + '" placeholder="https://cdn.simpleicons.org/github"><button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床"><i class="fas fa-upload"></i></button><button type="button" class="btn btn-primary icon-picker-btn" data-action="open-simple-icons" title="从 Simple Icons 挑选品牌图标">SI</button></div></div>' +
           '</div>' +
           '<div class="sec-hint" style="margin-bottom:8px">翻译键：' + esc(link.i18n_key || '自动生成') + '（保存时自动写入翻译，无需手动填）</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>跳转链接(可选)</label><input data-field="url" value="' + esc(link.url || '') + '"></div>' +
-            '<div class="form-group"><label>二维码图片(可选)</label><input data-field="qr_code" value="' + esc(link.qr_code || '') + '"></div>' +
+            '<div class="form-group"><label>二维码图片(可选)</label><div class="icon-url-row"><input data-field="qr_code" value="' + esc(link.qr_code || '') + '"><button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床"><i class="fas fa-upload"></i></button></div></div>' +
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>备注(可选)</label><input data-field="popup_note" value="' + esc(link.popup_note || '') + '"></div>' +
@@ -434,7 +437,7 @@
             '<label class="switch" title="显示/隐藏"><input type="checkbox" data-field="is_active"' + (img.is_active === false ? '' : ' checked') + '><span class="switch-slider"></span></label>' +
             '<span class="gallery-status">' + (img.is_active === false ? '已隐藏' : '显示中') + '</span>' +
           '</div>' +
-          '<input class="gallery-src" data-field="src" value="' + esc(img.src || '') + '" placeholder="图片 URL">' +
+          '<div class="gallery-src-row"><input class="gallery-src" data-field="src" value="' + esc(img.src || '') + '" placeholder="图片 URL"><button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床"><i class="fas fa-upload"></i></button></div>' +
           '<div class="gallery-actions">' +
             '<button class="btn-icon" data-action="up"' + (edge.first ? ' disabled' : '') + ' title="上移">&#8593;</button>' +
             '<button class="btn-icon" data-action="down"' + (edge.last ? ' disabled' : '') + ' title="下移">&#8595;</button>' +
@@ -554,7 +557,7 @@
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>宠物类型</label><input data-field="pet_type" value="' + esc(pet.pet_type || '') + '"></div>' +
-            '<div class="form-group"><label>图片/视频 URL</label><input data-field="pet_image" value="' + esc(pet.pet_image || '') + '"></div>' +
+            '<div class="form-group"><label>图片/视频 URL</label><div class="icon-url-row"><input data-field="pet_image" value="' + esc(pet.pet_image || '') + '"><button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床"><i class="fas fa-upload"></i></button></div></div>' +
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>中文语录（每行一条）</label><textarea data-field="messages_zh" rows="5">' + esc(zh.join('\n')) + '</textarea></div>' +
@@ -690,7 +693,7 @@
           '<div class="form-group"><label>Slug（URL 路径）</label><input data-field="slug" value="' + esc(p.slug) + '"></div>' +
           '<div class="form-group"><label>标题</label><input data-field="title" value="' + esc(p.title || '') + '"></div>' +
         '</div>' +
-        '<div class="form-group"><label>背景图片 URL</label><input data-field="background_image" value="' + esc(p.background_image || '') + '"></div>';
+        '<div class="form-group"><label>背景图片 URL</label><div class="icon-url-row"><input data-field="background_image" value="' + esc(p.background_image || '') + '"><button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床"><i class="fas fa-upload"></i></button></div></div>';
       wrap.appendChild(card);
 
       var badge = card.querySelector('.dirty-badge');
@@ -767,6 +770,13 @@
     f.favicon.value = S.site.favicon || '';
     f.footer.value = S.site.footer || '';
 
+    var lf = document.getElementById('lskyConfigForm');
+    if (lf) {
+      lf.lsky_url.value = S.site.lsky_url || '';
+      lf.lsky_email.value = S.site.lsky_email || '';
+      lf.lsky_password.value = S.site.lsky_password || '';
+    }
+
     var wrap = document.getElementById('extraKeysList');
     wrap.innerHTML = '';
     S.site.extra.filter(function (e) { return !e._deleted; }).forEach(function (e) {
@@ -803,6 +813,18 @@
         updateDirtyUI();
       });
     });
+    // 图床配置（批量保存的一部分）
+    (function () {
+      var lf = document.getElementById('lskyConfigForm');
+      if (!lf) return;
+      ['lsky_url', 'lsky_email', 'lsky_password'].forEach(function (name) {
+        lf[name].addEventListener('input', function () {
+          S.site[name] = lf[name].value;
+          S.siteDirty = true;
+          updateDirtyUI();
+        });
+      });
+    })();
   })();
 
   function addExtraKey() {
@@ -810,7 +832,7 @@
     var key = input.value.trim();
     if (!key) { showToast('请先输入配置键名', true); return; }
     if (S.site.extra.some(function (e) { return !e._deleted && e.key === key; }) ||
-        ['avatar', 'username', 'favicon', 'footer', 'schema_version', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'].indexOf(key) !== -1) {
+        ['avatar', 'username', 'favicon', 'footer', 'lsky_url', 'lsky_email', 'lsky_password', 'schema_version', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'].indexOf(key) !== -1) {
       showToast('该键已存在', true); return;
     }
     S.site.extra.push({ key: key, value: '', _new: true, _deleted: false, _dirty: true });
@@ -1145,6 +1167,9 @@
         body.username = S.site.username || '';
         body.favicon = S.site.favicon || '';
         body.footer = S.site.footer || '';
+        body.lsky_url = S.site.lsky_url || '';
+        body.lsky_email = S.site.lsky_email || '';
+        body.lsky_password = S.site.lsky_password || '';
       }
       if (S.eggDirty) {
         body.egg_enabled = S.egg.enabled ? '1' : '0';
@@ -1234,6 +1259,47 @@
     window.open('https://simpleicons.org', '_blank', 'noopener');
   });
 
+  // ==================== 图片上传（兰空图床） ====================
+  // 上传按钮统一 class="upload-btn"，紧贴目标输入框之后（btn.previousElementSibling 即输入框）
+  function uploadToLsky(input) {
+    if (!input) return;
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = function () {
+      var file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      showToast('正在上传…');
+      var reader = new FileReader();
+      reader.onload = async function () {
+        var base64 = String(reader.result).split(',')[1];
+        try {
+          var res = await fetch('/api/admin/upload', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ filename: file.name, base64: base64 })
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+          input.value = data.url;
+          input.dispatchEvent(new Event('input')); // 触发脏标记
+          showToast('上传成功');
+        } catch (err) {
+          showToast('上传失败：' + err.message, true);
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+    fileInput.click();
+  }
+  document.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest('.upload-btn') : null;
+    if (!btn) return;
+    var input = btn.previousElementSibling;
+    if (!input || input.tagName !== 'INPUT') { showToast('未找到图片输入框', true); return; }
+    uploadToLsky(input);
+  });
+
   // ==================== 顶部按钮 ====================
   document.getElementById('saveBtn').addEventListener('click', saveAll);
 
@@ -1269,6 +1335,7 @@
     });
     data.siteConfig = {
       avatar: S.site.avatar, username: S.site.username, favicon: S.site.favicon, footer: S.site.footer,
+      lsky_url: S.site.lsky_url, lsky_email: S.site.lsky_email, lsky_password: S.site.lsky_password,
       egg_enabled: S.egg.enabled ? '1' : '0',
       egg_clicks: S.egg.clicks, egg_timeout: S.egg.timeout, egg_target: S.egg.target,
       key_enabled: S.key.enabled ? '1' : '0',
