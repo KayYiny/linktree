@@ -19,11 +19,24 @@ const pool = new Pool({
 });
 
 // 建表 + 幂等补列 + 基础骨架（惰性初始化，进程内只执行一次）
+// schema 版本号：已初始化过的库（site_config 记录了该版本）跳过全部 DDL，
+// 避免每个 Serverless 冷启动实例都跑一遍建表 SQL
+const SCHEMA_VERSION = '2';
 let schemaReady = null;
 
 async function runSchemaInit() {
   const client = await pool.connect();
   try {
+    // 版本短路：表已建且版本一致 → 直接跳过 DDL（每次冷启动只多 1 条轻量查询）
+    try {
+      const { rows: verRows } = await client.query(
+        "SELECT value FROM site_config WHERE key = 'schema_version'"
+      );
+      if (verRows.length && verRows[0].value === SCHEMA_VERSION) return;
+    } catch (e) {
+      // site_config 表尚不存在（全新库）→ 忽略，走完整建表
+    }
+
     await client.query('BEGIN');
 
     // ==================== 建表 ====================
@@ -146,6 +159,13 @@ async function runSchemaInit() {
         [hash]
       );
     }
+
+    // 记录 schema 版本，后续冷启动实例据此短路跳过建表
+    await client.query(
+      `INSERT INTO site_config (key, value) VALUES ('schema_version', $1)
+       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+      [SCHEMA_VERSION]
+    );
 
     await client.query('COMMIT');
   } catch (err) {

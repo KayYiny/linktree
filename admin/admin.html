@@ -295,6 +295,26 @@
       </div>
     </div>
 
+    <!-- Simple Icons 品牌图标选择弹窗 -->
+    <div class="si-overlay" id="siOverlay" style="display:none">
+      <div class="si-card">
+        <div class="si-head">
+          <span><i class="fas fa-icons"></i> Simple Icons — 品牌图标库</span>
+          <button type="button" class="btn-icon" id="siClose" title="关闭">&times;</button>
+        </div>
+        <iframe class="si-frame" id="siFrame" src="https://simpleicons.org" loading="lazy" title="Simple Icons"></iframe>
+        <div class="si-footer">
+          <p>① 在上方网站找到想要的品牌，点击图标即可<strong>复制它的名称</strong>（例如 <code>github</code>）。</p>
+          <p>② 把名称粘贴到下方输入框并点击「填入图标 URL」，会自动生成 <code>https://cdn.simpleicons.org/&lt;名称&gt;</code> 并写入当前链接。</p>
+          <div class="si-fill-row">
+            <input id="siNameInput" placeholder="输入品牌名，如 github（回车快速填入）">
+            <button type="button" class="btn btn-primary" id="siFillBtn"><i class="fas fa-check"></i> 填入图标 URL</button>
+          </div>
+          <p class="sec-hint" style="margin-top:6px">官网打不开时，可改用 <code>https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/&lt;名称&gt;.svg</code>；想本地托管就下载 SVG 到 <code>assets/icons/</code> 后用文件名（如 <code>assets/icons/github.svg</code>）。</p>
+        </div>
+      </div>
+    </div>
+
     <!-- 消息提示 -->
     <div id="toast" class="toast" style="display:none"></div>
 

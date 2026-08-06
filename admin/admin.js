@@ -235,7 +235,7 @@
 
     // site
     var cfg = site || {};
-    var managedKeys = ['avatar', 'username', 'favicon', 'footer', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'];
+    var managedKeys = ['avatar', 'username', 'favicon', 'footer', 'schema_version', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'];
     S.site = {
       avatar: cfg.avatar || '',
       username: cfg.username || '',
@@ -322,7 +322,7 @@
           '</div>' +
           '<div class="form-row">' +
             '<div class="form-group"><label>英文名(可选，留空=中英相同)</label><input data-field="label_en" value="' + esc(link.label_en || '') + '"></div>' +
-            '<div class="form-group"><label>图标 URL</label><input data-field="icon" value="' + esc(link.icon || '') + '"></div>' +
+            '<div class="form-group"><label>图标 URL</label><div class="icon-url-row"><input data-field="icon" value="' + esc(link.icon || '') + '" placeholder="assets/icons/x.svg 或 https://cdn.simpleicons.org/github"><button type="button" class="btn btn-primary icon-picker-btn" data-action="open-simple-icons" title="从 Simple Icons 挑选品牌图标">SI</button></div></div>' +
           '</div>' +
           '<div class="sec-hint" style="margin-bottom:8px">翻译键：' + esc(link.i18n_key || '自动生成') + '（保存时自动写入翻译，无需手动填）</div>' +
           '<div class="form-row">' +
@@ -343,6 +343,8 @@
         var title = card.querySelector('.card-title');
         if (title) title.textContent = zhInput.value || '新链接';
       });
+      var siBtn = card.querySelector('[data-action="open-simple-icons"]');
+      if (siBtn) siBtn.addEventListener('click', function () { openSimpleIcons(link, card); });
     });
   }
 
@@ -808,7 +810,7 @@
     var key = input.value.trim();
     if (!key) { showToast('请先输入配置键名', true); return; }
     if (S.site.extra.some(function (e) { return !e._deleted && e.key === key; }) ||
-        ['avatar', 'username', 'favicon', 'footer', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'].indexOf(key) !== -1) {
+        ['avatar', 'username', 'favicon', 'footer', 'schema_version', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'].indexOf(key) !== -1) {
       showToast('该键已存在', true); return;
     }
     S.site.extra.push({ key: key, value: '', _new: true, _deleted: false, _dirty: true });
@@ -1167,6 +1169,48 @@
       if (Object.keys(body).length) await api('/api/admin/site-config', 'PUT', body);
     } catch (e) { errs.push('站点配置：' + e.message); }
   }
+
+  // ==================== Simple Icons 图标选择弹窗 ====================
+  var siTarget = null; // 当前等待填图标的 { link, card }
+  function openSimpleIcons(link, card) {
+    siTarget = { link: link, card: card };
+    var ov = document.getElementById('siOverlay');
+    if (!ov) return;
+    ov.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSimpleIcons() {
+    var ov = document.getElementById('siOverlay');
+    if (ov) ov.style.display = 'none';
+    document.body.style.overflow = '';
+    siTarget = null;
+  }
+  // 把品牌名转成 Simple Icons CDN URL 并填入当前图标准入框
+  function fillSimpleIcon() {
+    var nameInput = document.getElementById('siNameInput');
+    var name = nameInput ? nameInput.value.trim() : '';
+    if (!name) { showToast('请先输入品牌名', true); return; }
+    var url = 'https://cdn.simpleicons.org/' + encodeURIComponent(name.toLowerCase());
+    if (siTarget && siTarget.card) {
+      var iconInput = siTarget.card.querySelector('[data-field="icon"]');
+      if (iconInput) {
+        iconInput.value = url;
+        siTarget.link.icon = url;
+        siTarget.link._dirty = true;
+        var badge = siTarget.card.querySelector('.dirty-badge');
+        if (badge) badge.style.display = '';
+        siTarget.card.classList.add('dirty');
+        updateDirtyUI();
+      }
+    }
+    closeSimpleIcons();
+    showToast('已填入图标 URL：' + url);
+  }
+  document.getElementById('siClose').addEventListener('click', closeSimpleIcons);
+  document.getElementById('siFillBtn').addEventListener('click', fillSimpleIcon);
+  document.getElementById('siNameInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); fillSimpleIcon(); } });
+  document.getElementById('siOverlay').addEventListener('click', function (e) { if (e.target === this) closeSimpleIcons(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSimpleIcons(); });
 
   // ==================== 顶部按钮 ====================
   document.getElementById('saveBtn').addEventListener('click', saveAll);

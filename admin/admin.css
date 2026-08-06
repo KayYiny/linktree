@@ -1123,3 +1123,79 @@ body {
   opacity: 0.55;
   user-select: none;
 }
+
+/* ========== 图标 URL 行（缩窄 + SI 按钮） ========== */
+.icon-url-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.icon-url-row input {
+  flex: 1;
+  min-width: 0;
+}
+.icon-picker-btn {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* ========== Simple Icons 弹窗 ========== */
+.si-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 20px;
+}
+.si-card {
+  width: min(920px, 94vw);
+  height: min(82vh, 740px);
+  background: #fff;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+.si-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 700;
+}
+.si-frame {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: #fff;
+}
+.si-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  background: #fafafa;
+  font-size: 0.82rem;
+  line-height: 1.7;
+}
+.si-footer p { margin: 4px 0; }
+.si-footer code {
+  background: #f0f0f0;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.8em;
+}
+.si-fill-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.si-fill-row input {
+  flex: 1;
+  min-width: 0;
+}
