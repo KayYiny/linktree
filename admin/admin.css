@@ -1205,12 +1205,3 @@ body {
   flex: 0 0 auto;
   padding: 6px 10px;
 }
-.gallery-src-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-.gallery-src-row .gallery-src {
-  flex: 1;
-  min-width: 0;
-}

@@ -21,7 +21,7 @@ const pool = new Pool({
 // 建表 + 幂等补列 + 基础骨架（惰性初始化，进程内只执行一次）
 // schema 版本号：已初始化过的库（site_config 记录了该版本）跳过全部 DDL，
 // 避免每个 Serverless 冷启动实例都跑一遍建表 SQL
-const SCHEMA_VERSION = '2';
+const SCHEMA_VERSION = '3';
 let schemaReady = null;
 
 async function runSchemaInit() {
@@ -94,9 +94,13 @@ async function runSchemaInit() {
         src TEXT NOT NULL,
         sort_order INT DEFAULT 0,
         is_active BOOLEAN DEFAULT true,
+        image_key VARCHAR(200),
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
+
+    // 兼容已存在的旧库：幂等补列（新库由上方建表直接包含）
+    await client.query('ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS image_key VARCHAR(200);');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS pet_config (

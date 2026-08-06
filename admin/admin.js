@@ -435,9 +435,9 @@
         '<div class="gallery-body">' +
           '<div class="gallery-head-row">' +
             '<label class="switch" title="显示/隐藏"><input type="checkbox" data-field="is_active"' + (img.is_active === false ? '' : ' checked') + '><span class="switch-slider"></span></label>' +
-            '<span class="gallery-status">' + (img.is_active === false ? '已隐藏' : '显示中') + '</span>' +
+            '<span class="gallery-status">' + (img.is_active === false ? '已隐藏' : '显示中') + (img.image_key ? '<span title="删除此图会同时删除图床文件"> · 图床</span>' : '') + '</span>' +
           '</div>' +
-          '<div class="gallery-src-row"><input class="gallery-src" data-field="src" value="' + esc(img.src || '') + '" placeholder="图片 URL"><button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床"><i class="fas fa-upload"></i></button></div>' +
+          '<div class="gallery-src-row"><input class="gallery-src" data-field="src" value="' + esc(img.src || '') + '" placeholder="图片 URL"></div>' +
           '<div class="gallery-actions">' +
             '<button class="btn-icon" data-action="up"' + (edge.first ? ' disabled' : '') + ' title="上移">&#8593;</button>' +
             '<button class="btn-icon" data-action="down"' + (edge.last ? ' disabled' : '') + ' title="下移">&#8595;</button>' +
@@ -519,12 +519,18 @@
     var input = document.getElementById('galleryNewSrc');
     var src = input.value.trim();
     if (!src) { showToast('请先输入图片 URL', true); return; }
-    S.gallery.push({ id: nextNewId(), page_id: pid, src: src, sort_order: 0, is_active: true, _new: true, _deleted: false, _dirty: true });
+    var imageKey = input.dataset.imageKey || '';
+    S.gallery.push({ id: nextNewId(), page_id: pid, src: src, sort_order: 0, is_active: true, image_key: imageKey, _new: true, _deleted: false, _dirty: true });
     input.value = '';
+    input.dataset.imageKey = '';
     updateDirtyUI(); renderGallery();
   }
   document.getElementById('galleryAddConfirm').addEventListener('click', addGallery);
   document.getElementById('galleryNewSrc').addEventListener('keydown', function (e) { if (e.key === 'Enter') addGallery(); });
+  // 手动编辑 URL 时清掉残留的图床 key，避免与后续粘贴的地址错配
+  document.getElementById('galleryNewSrc').addEventListener('input', function () {
+    if (this.dataset.imageKey) this.dataset.imageKey = '';
+  });
 
   // ==================== 宠物管理（每页一只） ====================
   function renderPet() {
@@ -1069,10 +1075,10 @@
       assignSort(arr, function (g) { return g.page_id; });
       for (var it of arr) if (it._new && !it._deleted) {
         if (!it.src || !it.src.trim()) { errs.push('相册：存在空图片地址，已跳过'); continue; }
-        await api('/api/admin/gallery', 'POST', { page_id: it.page_id, src: it.src, sort_order: it.sort_order, is_active: it.is_active !== false });
+        await api('/api/admin/gallery', 'POST', { page_id: it.page_id, src: it.src, sort_order: it.sort_order, is_active: it.is_active !== false, image_key: it.image_key || '' });
       }
       for (var it of arr) if (!it._new && !it._deleted && it._dirty) {
-        await api('/api/admin/gallery?id=' + it.id, 'PUT', { page_id: it.page_id, src: it.src, sort_order: it.sort_order, is_active: it.is_active !== false });
+        await api('/api/admin/gallery?id=' + it.id, 'PUT', { page_id: it.page_id, src: it.src, sort_order: it.sort_order, is_active: it.is_active !== false, image_key: it.image_key || '' });
       }
     } catch (e) { errs.push('相册：' + e.message); }
   }
@@ -1282,7 +1288,8 @@
           var data = await res.json().catch(function () { return {}; });
           if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
           input.value = data.url;
-          input.dispatchEvent(new Event('input')); // 触发脏标记
+          input.dispatchEvent(new Event('input')); // 触发脏标记（同时清掉旧 key）
+          if (data.key) input.dataset.imageKey = data.key; // 记录图床 key，供删除时联动
           showToast('上传成功');
         } catch (err) {
           showToast('上传失败：' + err.message, true);
@@ -1321,7 +1328,7 @@
         return { page_id: l.page_id, label: l.label, url: l.url, icon: l.icon, qr_code: l.qr_code, popup_note: l.popup_note, i18n_key: l.i18n_key, note_i18n_key: l.note_i18n_key, is_active: l.is_active, sort_order: l.sort_order };
       }),
       gallery: S.gallery.filter(function (g) { return !g._deleted; }).map(function (g) {
-        return { page_id: g.page_id, src: g.src, sort_order: g.sort_order, is_active: g.is_active !== false };
+        return { page_id: g.page_id, src: g.src, sort_order: g.sort_order, is_active: g.is_active !== false, image_key: g.image_key || '' };
       }),
       pet: S.pets.filter(function (p) { return !p._deleted; }).map(function (p) {
         return { page_id: p.page_id, pet_image: p.pet_image, pet_type: p.pet_type, is_active: p.is_active !== false, messages: p.messages || {} };
