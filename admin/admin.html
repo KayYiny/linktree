@@ -302,7 +302,14 @@
           <span><i class="fas fa-icons"></i> Simple Icons — 品牌图标库</span>
           <button type="button" class="btn-icon" id="siClose" title="关闭">&times;</button>
         </div>
-        <iframe class="si-frame" id="siFrame" src="https://simpleicons.org" loading="lazy" allow="clipboard-write" title="Simple Icons"></iframe>
+        <div class="si-frame-wrap">
+          <div class="si-loading" id="siLoading">
+            <div class="si-loading-spinner"></div>
+            <p class="si-loading-text">正在加载 Simple Icons 图标库…</p>
+            <p class="si-loading-error">加载超时或失败。<br>请点下方「在新窗口打开官网」，复制品牌名后粘贴到输入框，即可继续使用。</p>
+          </div>
+          <iframe class="si-frame" id="siFrame" src="https://simpleicons.org" loading="lazy" allow="clipboard-write" title="Simple Icons"></iframe>
+        </div>
         <div class="si-footer">
           <p>① 在上方内嵌网站找到品牌；若内嵌页的<strong>复制按钮无法使用</strong>（跨域剪贴板受限），点下方「在新窗口打开官网」复制名称。</p>
           <p>② 把名称填入下方输入框（可直接 <b>Ctrl/⌘ + V</b> 粘贴，或点「从剪贴板粘贴」），再点「填入图标 URL」自动生成 <code>https://cdn.simpleicons.org/&lt;名称&gt;</code>。</p>

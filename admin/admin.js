@@ -1172,13 +1172,41 @@
 
   // ==================== Simple Icons 图标选择弹窗 ====================
   var siTarget = null; // 当前等待填图标的 { link, card }
+  var siLoaded = false; // 内嵌页是否已加载完成
+  var siLoadTimer = null;
+  // 打开时重置加载指示：网络慢时先显示加载动画，加载完自动隐藏
+  function resetSiLoading() {
+    siLoaded = false;
+    var load = document.getElementById('siLoading');
+    if (load) {
+      load.className = 'si-loading';
+      load.style.display = 'flex';
+    }
+    clearTimeout(siLoadTimer);
+    siLoadTimer = setTimeout(function () {
+      if (!siLoaded) {
+        var l = document.getElementById('siLoading');
+        if (l) l.classList.add('error'); // 超时 → 提示可用「在新窗口打开」兜底
+      }
+    }, 15000);
+  }
+  function markSiLoaded() {
+    siLoaded = true;
+    clearTimeout(siLoadTimer);
+    var load = document.getElementById('siLoading');
+    if (load) load.style.display = 'none';
+  }
   function openSimpleIcons(link, card) {
     siTarget = { link: link, card: card };
     var ov = document.getElementById('siOverlay');
     if (!ov) return;
     ov.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    resetSiLoading();
   }
+  // 内嵌页加载完成 → 隐藏加载提示
+  var siFrameEl = document.getElementById('siFrame');
+  if (siFrameEl) siFrameEl.addEventListener('load', markSiLoaded);
   function closeSimpleIcons() {
     var ov = document.getElementById('siOverlay');
     if (ov) ov.style.display = 'none';
