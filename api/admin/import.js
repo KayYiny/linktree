@@ -80,8 +80,8 @@ module.exports = async function handler(req, res) {
     if (Array.isArray(data.gallery)) {
       for (const g of data.gallery) {
         await client.query(
-          'INSERT INTO gallery_images (page_id, src, sort_order, is_active, image_key) VALUES ($1,$2,$3,$4,$5)',
-          [mapPage(g.page_id), g.src, g.sort_order ?? 0, g.is_active ?? true, g.image_key || null]
+          'INSERT INTO gallery_images (page_id, src, sort_order, is_active) VALUES ($1,$2,$3,$4)',
+          [mapPage(g.page_id), g.src, g.sort_order ?? 0, g.is_active ?? true]
         );
         counts.gallery++;
       }

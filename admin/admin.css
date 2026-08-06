@@ -1199,9 +1199,3 @@ body {
   flex: 1;
   min-width: 0;
 }
-
-/* ========== 图片上传按钮 ========== */
-.upload-btn {
-  flex: 0 0 auto;
-  padding: 6px 10px;
-}

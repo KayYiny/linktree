@@ -78,7 +78,6 @@
           <div class="panel-toolbar">
             <div class="inline-add">
               <input type="text" id="galleryNewSrc" placeholder="粘贴图片 URL，回车添加">
-              <button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床并自动填入 URL"><i class="fas fa-upload"></i></button>
               <button class="btn btn-primary" id="galleryAddConfirm"><i class="fas fa-plus"></i> 添加</button>
             </div>
             <span class="filter-hint" id="galleryFilterHint"></span>
@@ -141,10 +140,7 @@
               <div class="form-row">
                 <div class="form-group">
                   <label>头像 URL</label>
-                  <div class="icon-url-row">
-                    <input type="text" name="avatar" placeholder="https://.../avatar.png">
-                    <button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床"><i class="fas fa-upload"></i></button>
-                  </div>
+                  <input type="text" name="avatar" placeholder="https://.../avatar.png">
                 </div>
                 <div class="form-group">
                   <label>用户名</label>
@@ -153,10 +149,7 @@
               </div>
               <div class="form-group">
                 <label>Favicon URL</label>
-                <div class="icon-url-row">
-                  <input type="text" name="favicon" placeholder="https://.../favicon.svg">
-                  <button type="button" class="btn btn-ghost upload-btn" title="上传图片到图床"><i class="fas fa-upload"></i></button>
-                </div>
+                <input type="text" name="favicon" placeholder="https://.../favicon.svg">
               </div>
               <div class="form-group">
                 <label>页脚文字</label>
@@ -170,28 +163,6 @@
               <input type="text" id="extraKeyNew" placeholder="配置键名，回车添加">
               <button class="btn btn-primary" id="extraKeyAddConfirm"><i class="fas fa-plus"></i> 添加</button>
             </div>
-          </div>
-
-          <!-- 图床设置 -->
-          <div class="settings-section">
-            <h3><i class="fas fa-cloud-upload-alt"></i> 图床设置 <span class="sec-hint">（图片上传用，属于批量保存的一部分）</span></h3>
-            <form id="lskyConfigForm">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Lsky 图床地址</label>
-                  <input type="text" name="lsky_url" placeholder="https://your-lsky-domain.com">
-                </div>
-                <div class="form-group">
-                  <label>Lsky 邮箱</label>
-                  <input type="text" name="lsky_email" placeholder="图床账号邮箱">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Lsky 密码</label>
-                <input type="password" name="lsky_password" placeholder="图床账号密码">
-              </div>
-              <p class="sec-hint">各「上传」按钮会把图片传到该图床并自动填入 URL。也可改用环境变量 LSKY_URL / LSKY_EMAIL / LSKY_PASSWORD（更安全）；此处密码会明文存入数据库。</p>
-            </form>
           </div>
 
           <!-- 彩蛋设置 -->
