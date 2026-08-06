@@ -1,6 +1,6 @@
 /* ============================================
    NEO-BRUTALISM — 新粗野主义
-   HuoLin Linktree
+   Linktree
    Raw · Heavy · Confrontational
    ============================================ */
 
@@ -622,6 +622,19 @@ body::after {
   font-size: 1.2rem;
   letter-spacing: 0;
   opacity: 0.7;
+}
+
+/* Powered by 署名行 */
+#poweredBy {
+  width: 100%;
+  padding: 4px 0 18px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  text-align: center;
+  opacity: 0.55;
+  user-select: none;
 }
 
 /* ========== Image Popup (QR Code) — Brutalist ========== */

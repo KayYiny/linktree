@@ -4,7 +4,7 @@
  * 配置由 data-loader 从 /api/config 的 site.egg_* 注入到 window.__eggConfig：
  *   { enabled: boolean, clicks: number, timeout: ms, target: string }
  *
- * 触发规则：在触发器（默认 #hashtag，即页脚 © 2026 HuoLin）上
+ * 触发规则：在触发器（默认 #hashtag，即页脚版权文字）上
  * 连续点击 clicks 次，相邻点击间隔不超过 timeout 毫秒，即触发。
  * 触发后跳转到 target；若当前已在该目标页则回首页，避免原地刷新。
  *

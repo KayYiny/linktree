@@ -4,7 +4,7 @@
  * 管理面板「设置 → 密钥设置」可配置：
  *   key_enabled    '1'/'0'    是否启用密钥（默认启用）
  *   key_rotation   hourly|daily|weekly|monthly|never   轮换周期
- *   key_salt       盐值（改了密钥就变；留空用默认 hul_ref_2024）
+ *   key_salt       盐值（改了密钥就变；留空用默认 HuoLin）
  *   key_permanent  永久密钥（任意字符串，永远有效）
  *
  * 暴露 window.__keygen：
@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  var DEFAULT_SALT = 'hul_ref_2024';
+  var DEFAULT_SALT = 'HuoLin';
 
   function hash(s) {
     var h = 0;

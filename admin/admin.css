@@ -1112,3 +1112,14 @@ body {
     animation: none !important;
   }
 }
+
+/* ========== Powered by 署名行 ========== */
+.admin-powered {
+  text-align: center;
+  padding: 14px 0 18px;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  opacity: 0.55;
+  user-select: none;
+}

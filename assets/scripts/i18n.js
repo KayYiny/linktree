@@ -14,15 +14,6 @@
      ========================================================== */
   var dict = {
 
-    /* ── 页面标题 ── */
-    'page.title.main':
-      { 'zh-CN': '火林 · 这是我的名片',
-        'en':     'HuoLin · My Card' },
-
-    'page.title.whisper':
-      { 'zh-CN': '火林 · 这是我的秘密 ✦',
-        'en':     'HuoLin · My Secret ✦' },
-
     /* ── Album 按钮标签 ── */
     'album.label':
       { 'zh-CN': '相册',
@@ -98,84 +89,16 @@
       'zh-CN': [
         '揪一下~ 🐾',
         '今天心情不错！',
-        '咕噜咕噜~',
-        '戳我干嘛呀？',
         '好想吃小鱼干 🐟',
-        '看我跳一跳！',
-        '晚安世界 🌙',
         '要抱抱！🤗',
-        '嘿嘿，又被你抓到了',
-        '喜欢你的主页 ✨',
-        '我是小跟屁虫~',
-        '好闲呀… zzz',
-        '你今天真好看 💕',
-        '再戳就生气了！哼！',
         '飞一个~ 🦋',
-        '发现野生大佬！',
-        '摇尾巴 ing 🌀',
-        '待机中，请稍候 ⏳',
       ],
       'en': [
         'Poke~ 🐾',
         'Feeling good today!',
-        'Purr purr~',
-        "Why're you poking me?",
         'Want some dried fish 🐟',
-        'Watch me jump!',
-        'Good night world 🌙',
         'Need hugs! 🤗',
-        'Hehe, you caught me',
-        'Love your page ✨',
-        "I'm your little shadow~",
-        'So bored… zzz',
-        'You look great today 💕',
-        'One more poke and I will be mad! Hmph!',
         'Fly~ 🦋',
-        'Spotted a wild big shot!',
-        'Wagging tail ing 🌀',
-        'Standing by, please wait ⏳',
-      ],
-    },
-
-    /* ── 宠物：猫猫页面（index.html） ── */
-    'pet.cat': {
-      'zh-CN': [
-        '嗷呜～ 你吵醒本王午睡了…',
-        '看什么看，没见过帅老虎吗？🐯',
-        '别戳了！再戳我咬你哦… 呜…',
-        '摸我脑袋？好吧，允许你摸三下，不能再多！',
-        '我的条纹是不是特别好看？嘻嘻~',
-        '今天阳光不错，趴在这儿不想动… zzz',
-        '想吃鱼… 最好是烤的那种 🐟',
-        '吼——（其实是打哈欠）',
-        '你手机里是不是藏了小鱼干？',
-        '尾巴给你玩一下，但别扯疼我！',
-        '我是大猫猫，不是大狗狗！哼～',
-        '蹭蹭你～ 嗯… 你身上有我的味道了～',
-        '这座小站是我的领地！你也是我的！',
-        '发现一只野生大佬！嗷~',
-        '本王飞一个～ 🦋（其实根本飞不起来）',
-        '饿了… 快投喂本王！不然我生气了！',
-        '你喜欢我吗？喜欢的话… 允许你当我的铲屎官…',
-      ],
-      'en': [
-        'Ow~ You woke me from my nap…',
-        "What are you looking at? Never seen a cool tiger before? 🐯",
-        'Stop poking! I will bite you… hmph…',
-        'Pet my head? Fine, three pets. No more!',
-        'Are my stripes gorgeous? Hehe~',
-        'Nice sunshine. Gonna lie here… zzz',
-        'Want fish… grilled would be nice 🐟',
-        'Roar—— (actually just yawning)',
-        'Are you hiding dried fish in your phone?',
-        'You can play with my tail, but do not pull it!',
-        "I'm a big cat, not a big dog! Hmph~",
-        'Nuzzling you~ You smell like me now~',
-        'This site is MY territory! And you are mine too!',
-        'Spotted a wild boss! Ow~',
-        "I can fly~ 🦋 (OK I can't actually fly)",
-        "Hungry… Feed me NOW! Or I'll get mad!",
-        'Do you like me? If so… I will let you be my servant…',
       ],
     },
 
@@ -185,12 +108,12 @@
         'en':     '🔍 Secret Passage Found' },
 
     'hint.body':
-      { 'zh-CN': '猛戳底部「© 2026 HuoLin」五次！',
-        'en':     'Rapidly tap 「© 2026 HuoLin」at the bottom 5 times!' },
+      { 'zh-CN': '猛戳底部页脚文字五次！',
+        'en':     'Rapidly tap the footer text at the bottom 5 times!' },
 
     'hint.detail':
-      { 'zh-CN': '以非常快的速度在版权文字上连续点击 5 次（比双击还要快），就能瞬间解锁隐藏空间 ✦',
-        'en':     'Click the copyright text 5 times extremely fast — even faster than a double-click. Do it right and the hidden space will unlock instantly ✦' },
+      { 'zh-CN': '以非常快的速度在页脚版权文字上连续点击 5 次（比双击还要快），就能瞬间解锁隐藏空间 ✦',
+        'en':     'Click the footer copyright text 5 times extremely fast — even faster than a double-click. Do it right and the hidden space will unlock instantly ✦' },
 
     'hint.close':
       { 'zh-CN': '我试试！',
@@ -201,45 +124,7 @@
       { 'zh-CN': '分享入口',
         'en':     'Share' },
 
-    /* ── 宠物：狗狗页面（whisper/index.html） ── */
-    'pet.dog': {
-      'zh-CN': [
-        '主人… 你终于来啦🥺 ',
-        '汪！今天主人有没有想我？',
-        '摸摸头～ 再多摸摸嘛～ 我会乖乖的…',
-        '主人累了吗？我可以给你暖脚哦 🐾',
-        '请尽情使唤吧… 我是可爱小狗…',
-        '嘿嘿，又被你抓到啦～ 好幸福…',
-        '你的手指好温暖… 再摸摸我好不好…',
-        '想一直被主人拴着，哪里都不去…',
-        '主人～ 看看我嘛，我比电视好看一万倍！✨',
-        '呜… 请多戳戳我… 你的触碰让我开心到尾巴都摇断了…',
-        '只属于你的乖狗狗，每天都会摇尾巴等你回来…',
-        '请让我钻进你怀里… 那里是最安全的小窝…',
-        '主人身上有我的味道，你是不是同意永远不离开我？',
-        '我愿意被主人揉乱毛毛，然后说"好乖"… 呜…',
-        '想变成主人口袋里的小狗，24小时都能被你偷摸…',
-        '主人，今夜请好好抱着我睡觉… 我会用肚子贴着你…',
-      ],
-      'en': [
-        'Master… you are finally here🥺',
-        'Woof! Did you miss me today?',
-        'Pat my head~ A little more~ I will be good…',
-        'Are you tired? I can warm your feet 🐾',
-        'Order me around… I am your good little dog…',
-        'Hehe, you caught me again~ So happy…',
-        'Your fingers are so warm… pet me more…',
-        'I want to stay with you forever, never leave…',
-        'Master~ Look at me! I am way better than TV! ✨',
-        'Woo… poke me more… your touch makes my tail wag nonstop…',
-        'Your one and only good dog, wagging my tail waiting for you…',
-        'Let me curl up in your arms… that is the safest nest…',
-        'I smell like you now… does that mean you will never leave me?',
-        "I would let you mess up my fur and say 'good boy'… woo…",
-        'I wanna be a pocket dog, sneaked pets 24/7…',
-        'Master, hold me tight tonight… I will press my belly against you…',
-      ],
-    },
+    /* ── 宠物默认文案（通用，无个性化）：数据库 pet.messages 未配置时作为兜底 ── */
   };
 
   /* ======================== 内部状态 ======================== */
@@ -327,13 +212,15 @@
     updatePetMessages();
   }
 
-  /** 更新 window.__petMessages 为当前语言的版本 */
+  /** 更新 window.__petMessages 为当前语言的版本
+   *  优先取数据库宠物语录（__petMessagesByLang），否则回落通用 pet.default */
   function updatePetMessages() {
-    var key = window.__petMessagesKey || 'pet.default';
-    var msgs = __(key);
-    if (Array.isArray(msgs)) {
-      window.__petMessages = msgs;
+    var byLang = window.__petMessagesByLang;
+    if (byLang && typeof byLang === 'object') {
+      window.__petMessages = byLang[currentLang] || byLang[fallbackLang] || [];
+      return;
     }
+    window.__petMessages = __('pet.default');
   }
 
   /** 检测初始语言 */

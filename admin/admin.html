@@ -12,7 +12,7 @@
     <!-- 顶栏 -->
     <header class="topbar">
       <div class="brand">
-        HUOLIN
+        管理面板
         <span class="sub" id="loginUser"></span>
       </div>
       <div class="topbar-actions">
@@ -144,12 +144,16 @@
                 </div>
                 <div class="form-group">
                   <label>用户名</label>
-                  <input type="text" name="username" placeholder="HUOLIN">
+                  <input type="text" name="username" placeholder="admin">
                 </div>
               </div>
               <div class="form-group">
                 <label>Favicon URL</label>
                 <input type="text" name="favicon" placeholder="assets/images/favicon.svg">
+              </div>
+              <div class="form-group">
+                <label>页脚文字</label>
+                <input type="text" name="footer" placeholder="© 2026 Your Name">
               </div>
             </form>
 
@@ -163,7 +167,7 @@
 
           <!-- 彩蛋设置 -->
           <div class="settings-section">
-            <h3><i class="fas fa-egg"></i> 彩蛋设置 <span class="sec-hint">（点击页脚 © 2026 HuoLin 触发，属于批量保存的一部分）</span></h3>
+            <h3><i class="fas fa-egg"></i> 彩蛋设置 <span class="sec-hint">（点击页脚版权文字触发，属于批量保存的一部分）</span></h3>
             <form id="eggConfigForm">
               <div class="form-row">
                 <div class="form-group" style="display:flex;align-items:center;gap:10px">
@@ -277,6 +281,8 @@
 
       </main>
     </div>
+
+    <div class="admin-powered">Powered by HuoLin</div>
 
     <!-- ⌘K 命令面板 -->
     <div class="cmd-overlay" id="cmdPalette">

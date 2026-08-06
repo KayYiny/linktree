@@ -3,7 +3,7 @@
  * 事务式整库导入（与导出格式对称，幂等可重复执行）
  * Body: { pages?, links?, gallery?, pet?, translations?, siteConfig? }
  */
-const { pool } = require('../db');
+const { pool, ensureSchema } = require('../db');
 const { verifyToken } = require('../auth');
 
 module.exports = async function handler(req, res) {
@@ -21,6 +21,9 @@ module.exports = async function handler(req, res) {
   if (typeof data !== 'object' || Array.isArray(data)) {
     return res.status(400).json({ error: 'Invalid backup data' });
   }
+
+  // 直接使用 pool 的路径也要先确保表结构已建（其他接口经 query 已自动触发）
+  await ensureSchema();
 
   const client = await pool.connect();
   try {

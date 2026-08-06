@@ -1,7 +1,7 @@
-# 🔥 HuoLin Linktree — 火林名片站
+# 🔥 Linktree — 个人名片站
 
 <div align="center">
-  <img src="assets/images/avatar.webp" alt="HuoLin Avatar" width="120" style="border: 4px solid #000; box-shadow: 8px 8px 0 #2a2a2a;">
+  <img src="assets/images/avatar.webp" alt="Avatar" width="120" style="border: 4px solid #000; box-shadow: 8px 8px 0 #2a2a2a;">
   <br><br>
 
   ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=fff)
@@ -37,10 +37,10 @@
 
 ## 📋 项目概述
 
-**HuoLin Linktree** 是火林（HUOLIN）的个人名片站（Link-in-Bio）：
+**Linktree** 是一个通用的、数据库驱动的个人名片站（Link-in-Bio）：
 
 - **主站**：头像、名字、社交链接、二维码弹窗、虚拟宠物、相册、分享入口；页脚藏有「彩蛋」入口。
-- **耳语页**（`/whisper/`）：需要密钥（`?k=`）才能进入的隐藏页面，链接/相册/宠物与主站独立管理。
+- **任意页面**（`/whisper/`、`/test/`…）：由同一个模板 `index.html` 按 URL slug 渲染，页面内容（标题/背景/链接/相册/宠物）在后台「页面」新建、全库驱动。
 - **管理面板**（`/admin/`）：功能完整的网页后台，直接增删改站点内容，**无需改代码**。
 
 所有内容由 **PostgreSQL 数据库** 驱动、前端动态渲染；**包括彩蛋、密钥在内的全部配置都能在管理面板里改**。
@@ -49,8 +49,8 @@
 
 ## ✨ 功能一览
 
-- 🖥️ 主站 / 耳语页：头像、名字、链接、二维码弹窗、虚拟宠物、相册、双语（i18n）
-- 🥚 **彩蛋**：点页脚「© 2026 HuoLin」指定次数触发跳转（次数 / 时间窗 / 目标页，后台可配）
+- 🖥️ 多页面：主站 / 耳语页 / 任意新建页面共用同一模板，头像、名字、链接、二维码弹窗、虚拟宠物、相册、双语（i18n）
+- 🥚 **彩蛋**：点页脚版权文字指定次数触发跳转（次数 / 时间窗 / 目标页，后台可配）
 - 🔑 **密钥系统**：耳语页 `?k=` 访问控制，轮换密钥 + 永久密钥（周期 / 盐值后台可配）；永久密钥访问时地址栏自动转为当前有效密钥；主页带密钥访问会弹出「如何用彩蛋进入耳语页」提示
 - ⏳ **加载过渡弹窗**：进入页面时显示加载动画，数据就绪后自动消失
 - 🛠️ **管理面板**：链接 / 相册 / 宠物 / 翻译 / 页面 / 设置 全量管理，显式保存模型
@@ -61,7 +61,7 @@
 ## 🏗️ 架构
 
 ```
-浏览器（静态页：index / whisper / admin）
+浏览器（单一模板 index.html，按 URL slug 渲染任意页面 / admin）
       │  fetch
       ▼
 Vercel Serverless（api/*.js）
@@ -72,7 +72,7 @@ PostgreSQL（自建）—— 8 张表
 
 - 前端为纯静态 HTML/CSS/JS，无构建步骤，由 Vercel 直接托管。
 - `api/*` 为 Vercel Serverless 函数，负责读写 PostgreSQL。
-- 数据加载：页面加载时 `data-loader.js` 请求 `/api/config?page=main|whisper` 动态渲染；配置接口 `no-store`，改动即时生效。
+- 数据加载：页面加载时 `data-loader.js` 请求 `/api/config?page=<slug>` 动态渲染（URL 首段即 slug：`/` → main、`/whisper` → whisper、`/test` → test）；配置接口 `no-store`，改动即时生效。
 
 ---
 
@@ -91,11 +91,9 @@ PostgreSQL（自建）—— 8 张表
 ## 🗂️ 项目结构
 
 ```
-├── index.html            # 主站
-├── style.css             # 主站样式
-├── data-loader.js        # 数据加载与渲染（两页共用）
-├── whisper/
-│   └── index.html        # 耳语页（密钥访问）
+├── index.html            # 唯一页面模板（按 URL slug 渲染所有页面）
+├── style.css             # 通用样式
+├── data-loader.js        # 数据加载与渲染（按 URL 识别页面 slug）
 ├── admin/
 │   ├── index.html        # 管理面板登录页
 │   ├── admin.html        # 管理面板
@@ -113,7 +111,7 @@ PostgreSQL（自建）—— 8 张表
 │   ├── scripts/          # keygen / easter-egg / hint-popup / gallery / pet / i18n / qrcode-popup / anti-inspect
 │   ├── icons/  images/  pets/  qrcodes/  fonts/  fontawesome/
 └── scripts/
-    └── migrate.js        # 建表 + 初始数据
+    └── migrate.js        # 可选：显式初始化（API 首次访问已自动建表）
 ```
 
 ---
@@ -199,15 +197,14 @@ PostgreSQL（自建）—— 8 张表
 
    （也可用 `DATABASE_URL` 完整连接串；`api/db.js` 优先读拆分变量。）
 
-4. 建表并写入初始数据（需能连到数据库，在本地执行）：
+4. 推送后 Vercel 自动部署。后台入口 `https://你的域名/admin/`。
 
-   ```bash
-   DB_HOST=... DB_PORT=5432 DB_NAME=... DB_USER=... DB_PASSWORD=... node scripts/migrate.js
-   ```
+   **无需手动建表**：任意 API 首次被调用时自动建表（`api/db.js` 的惰性 `ensureSchema`）——首次打开首页或后台登录页即完成初始化：创建 8 张表、一个空白基础页 `main`，并在无管理员账号时创建默认管理员 `admin`（密码可用 `ADMIN_PASSWORD` 环境变量指定，默认 `admin`，登录后请立即修改）。
 
-   migrate 会创建 8 张表、写入初始数据，并创建默认管理员 `admin`（密码可用 `ADMIN_PASSWORD` 环境变量指定，默认 `admin`）。
+   > 可选：想在部署前本地显式初始化，仍可执行
+   > `DB_HOST=... DB_NAME=... DB_USER=... DB_PASSWORD=... node scripts/migrate.js`（幂等，可重复跑）。
 
-5. 推送后 Vercel 自动部署。后台入口 `https://你的域名/admin/`。
+5. 站点内容（链接 / 相册 / 宠物 / 翻译 / 设置）登录后台添加即可，或直接用「导入」功能从备份 JSON 恢复。
 
 > ⚠️ 注意：Vercel 免费版函数运行在美东区域，自建数据库必须公网可达，否则 API 会连不上库。
 

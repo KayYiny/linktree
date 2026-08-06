@@ -15,9 +15,10 @@
   var k = params.get('k');
   if (!k) return;
 
-  // 仅主页触发（耳语页 / 管理页不弹）
+  // 仅主页（根路径）触发，其他页面不弹
   var path = window.location.pathname || '/';
-  if (path.indexOf('/whisper') !== -1 || path.indexOf('/admin') !== -1) return;
+  var slug = path.replace(/^\/+|\/+$/g, '').split('/')[0] || 'main';
+  if (slug !== 'main') return;
 
   var overlay = null;
   var type = null; // 'hint' | 'invalid'

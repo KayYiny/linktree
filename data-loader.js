@@ -8,20 +8,21 @@
   var cachedConfig = null;
 
   function getPageSlug() {
-    var path = window.location.pathname;
-    if (path.indexOf('/whisper') !== -1) return 'whisper';
-    return 'main';
+    var path = window.location.pathname || '/';
+    if (path === '/' || path === '') return 'main';
+    var seg = path.replace(/^\/+|\/+$/g, '').split('/')[0];
+    return seg || 'main';
   }
 
   // 相对资源路径解析：数据库里存的是相对根目录的路径（如 assets/images/avatar.webp），
-  // 在耳语页等子目录页面需补 '../'，否则会解析成 /whisper/assets/... 404。
+  // 主站（/）原样返回；子目录页面（如 /whisper、/test）需补 '../'，否则会解析成 /whisper/assets/... 404。
   function resolvePath(p) {
     if (!p) return p;
     if (p.indexOf('//') === 0 || /^[a-z][a-z0-9+.-]*:/i.test(p)) return p; // // 或 https: 等协议
     if (p.indexOf('data:') === 0) return p;
     if (p.indexOf('/') === 0) return p; // 绝对路径
-    if (getPageSlug() === 'whisper') return '../' + p;
-    return p;
+    if (getPageSlug() === 'main') return p;
+    return '../' + p;
   }
 
   function hideLoading() {
@@ -51,8 +52,8 @@
       cachedConfig = await res.json();
     } catch (e) {
       console.error('[data-loader] Failed to load config:', e);
-      if (slug === 'whisper') { location.replace('../'); return; } // 无法校验密钥则回首页
-      hideLoading(); // 失败也收起，避免卡在加载弹窗
+      if (slug !== 'main') { window.location.replace('/'); return; } // 未知/无效页面回首页
+      hideLoading(); // 主站失败也收起，避免卡在加载弹窗
       return;
     }
     if (!gateWhisper(cachedConfig.site)) {
@@ -78,6 +79,7 @@
   }
 
   function renderAll(config) {
+    if (config.page && config.page.title) document.title = config.page.title;
     renderSiteConfig(config.site);
     if (config.page && config.page.background_image) {
       var bg = resolvePath(config.page.background_image);
@@ -103,12 +105,16 @@
     if (nameEl && site.username) {
       nameEl.textContent = site.username;
     }
+    var footEl = document.getElementById('hashtag');
+    if (footEl && site.footer) footEl.textContent = site.footer;
+    var pwEl = document.getElementById('poweredBy');
+    if (pwEl && site.powered) pwEl.textContent = site.powered;
   }
 
   // 彩蛋配置：从 site.egg_* 注入 window.__eggConfig（easter-egg.js 读取）
   function applyEggConfig(site) {
     if (!site) return;
-    var target = site.egg_target || 'whisper/';
+    var target = site.egg_target || '';
     // 若跳转目标是耳语页且密钥开启，自动带上当前有效密钥（彩蛋永远能进）
     if (target.indexOf('whisper') !== -1 && site.key_enabled !== '0' && window.__keygen) {
       var k = window.__keygen.currentKey(site.key_rotation || 'daily', site.key_salt || '');
@@ -197,17 +203,9 @@
       petEl.appendChild(img);
     }
 
-    if (pet.type) window.__petMessagesKey = 'pet.' + pet.type;
-
-    if (pet.messages) {
-      window.__petMessages = null;
-      for (var lang in pet.messages) {
-        if (pet.messages.hasOwnProperty(lang)) {
-          window.__petMessages = pet.messages[lang];
-          break;
-        }
-      }
-    }
+    // 宠物语录：数据库 messages 优先（按语言存 __petMessagesByLang，i18n 语言切换时读取）；
+    // 无数据库语录时回落通用 pet.default。pet.type 仅是自由填写的元数据，不参与文案选择
+    window.__petMessagesByLang = pet.messages && typeof pet.messages === 'object' ? pet.messages : null;
   }
 
   function renderGallery(gallery) {

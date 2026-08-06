@@ -29,7 +29,7 @@
     gallery: [], // {id, page_id, src, sort_order, _new, _deleted, _dirty}
     pets: [],    // {id, page_id, pet_image, pet_type, messages:{'zh-CN':[],'en':[]}, _new, _deleted, _dirty}
     trans: [],   // {key, zh, en, id_zh, id_en, _new, _deleted, _dirty}
-    site: { avatar: '', username: '', favicon: '', extra: [] }, // extra: {key, value, _new, _deleted, _dirty}
+    site: { avatar: '', username: '', favicon: '', footer: '', extra: [] }, // extra: {key, value, _new, _deleted, _dirty}
     siteDirty: false,
     egg: { enabled: true, clicks: '5', timeout: '2000', target: '' }, // 彩蛋配置
     eggDirty: false,
@@ -235,11 +235,12 @@
 
     // site
     var cfg = site || {};
-    var managedKeys = ['avatar', 'username', 'favicon', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'];
+    var managedKeys = ['avatar', 'username', 'favicon', 'footer', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'];
     S.site = {
       avatar: cfg.avatar || '',
       username: cfg.username || '',
       favicon: cfg.favicon || '',
+      footer: cfg.footer || '',
       extra: Object.keys(cfg).filter(function (k) { return managedKeys.indexOf(k) === -1; })
         .map(function (k) { return { key: k, value: cfg[k] == null ? '' : String(cfg[k]), _new: false, _deleted: false, _dirty: false }; })
     };
@@ -594,7 +595,7 @@
         section.appendChild(empty);
         empty.querySelector('[data-addpet]').addEventListener('click', function () {
           S.pets.push({
-            id: nextNewId(), page_id: pg.id, pet_image: 'assets/pets/pet.webm', pet_type: 'cat', is_active: true,
+            id: nextNewId(), page_id: pg.id, pet_image: 'assets/pets/pet.webm', pet_type: '', is_active: true,
             messages: { 'zh-CN': ['你好！'], 'en': ['Hello!'] },
             _new: true, _deleted: false, _dirty: true
           });
@@ -762,6 +763,7 @@
     f.avatar.value = S.site.avatar || '';
     f.username.value = S.site.username || '';
     f.favicon.value = S.site.favicon || '';
+    f.footer.value = S.site.footer || '';
 
     var wrap = document.getElementById('extraKeysList');
     wrap.innerHTML = '';
@@ -792,7 +794,7 @@
   // 站点基础字段（批量保存的一部分）
   (function () {
     var f = document.getElementById('siteConfigForm');
-    ['avatar', 'username', 'favicon'].forEach(function (name) {
+    ['avatar', 'username', 'favicon', 'footer'].forEach(function (name) {
       f[name].addEventListener('input', function () {
         S.site[name] = f[name].value;
         S.siteDirty = true;
@@ -806,7 +808,7 @@
     var key = input.value.trim();
     if (!key) { showToast('请先输入配置键名', true); return; }
     if (S.site.extra.some(function (e) { return !e._deleted && e.key === key; }) ||
-        ['avatar', 'username', 'favicon', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'].indexOf(key) !== -1) {
+        ['avatar', 'username', 'favicon', 'footer', 'egg_enabled', 'egg_clicks', 'egg_timeout', 'egg_target', 'key_enabled', 'key_rotation', 'key_salt', 'key_permanent'].indexOf(key) !== -1) {
       showToast('该键已存在', true); return;
     }
     S.site.extra.push({ key: key, value: '', _new: true, _deleted: false, _dirty: true });
@@ -1140,6 +1142,7 @@
         body.avatar = S.site.avatar || '';
         body.username = S.site.username || '';
         body.favicon = S.site.favicon || '';
+        body.footer = S.site.footer || '';
       }
       if (S.eggDirty) {
         body.egg_enabled = S.egg.enabled ? '1' : '0';
@@ -1199,7 +1202,7 @@
       if (t.en) data.translations.push({ key: t.key, language: 'en', value: t.en });
     });
     data.siteConfig = {
-      avatar: S.site.avatar, username: S.site.username, favicon: S.site.favicon,
+      avatar: S.site.avatar, username: S.site.username, favicon: S.site.favicon, footer: S.site.footer,
       egg_enabled: S.egg.enabled ? '1' : '0',
       egg_clicks: S.egg.clicks, egg_timeout: S.egg.timeout, egg_target: S.egg.target,
       key_enabled: S.key.enabled ? '1' : '0',

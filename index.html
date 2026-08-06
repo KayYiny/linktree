@@ -4,34 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noarchive, nofollow">
-    <title>火林 · 这是我的名片</title>
+    <title>Loading…</title>
     <!-- Favicon -->
-    <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml" />
     <!-- Font Awesome icons -->
-    <link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
     <!-- Core theme CSS -->
-    <link rel="stylesheet" href="style.css">
-    <!-- 页面背景（data-loader 会覆盖） -->
+    <link rel="stylesheet" href="/style.css">
+    <!-- 页面背景：data-loader 会从数据库按页面覆盖 --bg-image -->
     <style>
       body {
-        --bg-image: url('assets/images/bg.jpg');
-        background: var(--bg) var(--bg-image) center/cover fixed no-repeat;
+        background: var(--bg) center/cover fixed no-repeat;
       }
     </style>
-    <!-- 资源提示 -->
-    <link rel="preconnect" href="https://pan.puppyis.cool">
     <!-- 非关键脚本（defer，并行下载不阻塞渲染） -->
-    <script defer src="assets/scripts/i18n.js"></script>
-    <script defer src="assets/scripts/gallery.js"></script>
-    <script defer src="assets/scripts/pet.js"></script>
-    <script defer src="assets/scripts/easter-egg.js"></script>
-    <script defer src="assets/scripts/qrcode-popup.js"></script>
+    <script defer src="/assets/scripts/i18n.js"></script>
+    <script defer src="/assets/scripts/gallery.js"></script>
+    <script defer src="/assets/scripts/pet.js"></script>
+    <script defer src="/assets/scripts/easter-egg.js"></script>
+    <script defer src="/assets/scripts/qrcode-popup.js"></script>
     <!-- 密钥生成（耳语页访问控制） -->
-    <script defer src="assets/scripts/keygen.js"></script>
-    <!-- 数据加载器：从数据库 API 获取配置并渲染 -->
-    <script defer src="data-loader.js"></script>
-    <!-- 主页面密钥入口提示弹窗 -->
-    <script defer src="assets/scripts/hint-popup.js"></script>
+    <script defer src="/assets/scripts/keygen.js"></script>
+    <!-- 数据加载器：从数据库 API 获取配置并渲染（单一模板，按 URL 识别页面 slug） -->
+    <script defer src="/data-loader.js"></script>
+    <!-- 主页密钥入口提示弹窗（仅主页生效） -->
+    <script defer src="/assets/scripts/hint-popup.js"></script>
   </head>
 
   <body>
@@ -67,8 +64,8 @@
           <i class="fas fa-images"></i>
           <span data-i18n="album.label">Album</span>
         </a>
-        <button class="album-btn" id="shareMainBtn">
-          <i class="fas fa-link"></i>
+        <button class="album-btn" id="shareBtn">
+          <i class="fas fa-share-alt"></i>
           <span data-i18n="share.button">分享入口</span>
         </button>
       </div>
@@ -84,38 +81,44 @@
       </div>
 
       <div id="hashtag">
-        &copy; 2026 HuoLin
+        &copy;
       </div>
+
+      <div id="poweredBy">Powered by HuoLin</div>
 
     </main>
 
     <!-- Anti-Inspect 防护（需尽早生效） -->
-    <script src="assets/scripts/anti-inspect.js"></script>
+    <script src="/assets/scripts/anti-inspect.js"></script>
 
-    <!-- 合并配置与交互逻辑 -->
+    <!-- 合并配置与交互逻辑（不含个性化数据；data-loader 会从数据库覆盖） -->
     <script>
     (function() {
       'use strict';
-
-      // ---- Easter Egg 配置（点击 © 2026 HuoLin 触发；data-loader 会从管理面板配置覆盖） ----
-      window.__eggConfig = {
-        enabled: true,
-        clicks: 5,
-        timeout: 2000,
-        target: 'whisper/'
-      };
 
       // ---- 相册图片（data-loader 会覆盖） ----
       window.__galleryImages = window.__galleryImages || [];
 
     })();
 
-    // ---- 分享主页链接 ----
+    // ---- 分享当前页面链接（耳语页自动带当前有效密钥 ?k=，其他页分享首页） ----
     (function() {
-      var btn = document.getElementById('shareMainBtn');
+      var btn = document.getElementById('shareBtn');
       if (!btn) return;
       btn.addEventListener('click', function () {
-        var url = window.location.origin + '/';
+        var path = window.location.pathname || '/';
+        var slug = path.replace(/^\/+|\/+$/g, '').split('/')[0] || 'main';
+        var url;
+        if (slug === 'whisper') {
+          var cfg = (window.__dbConfig && window.__dbConfig.site) || null;
+          var k = '';
+          if (cfg && cfg.key_enabled !== '0' && window.__keygen) {
+            k = window.__keygen.currentKey(cfg.key_rotation || 'daily', cfg.key_salt || '');
+          }
+          url = window.location.origin + window.location.pathname + (k ? '?k=' + k : '');
+        } else {
+          url = window.location.origin + '/';
+        }
         if (navigator.clipboard) navigator.clipboard.writeText(url);
         var check = (window.getLang && window.getLang() === 'en') ? 'Copied!' : '已复制';
         var orig = btn.innerHTML;
