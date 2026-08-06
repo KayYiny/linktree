@@ -10,49 +10,49 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('../assets/fonts/BebasNeue-Regular.ttf') format('truetype');
+  src: url('../assets/fonts/BebasNeue-Regular.woff2') format('woff2');
 }
 @font-face {
   font-family: 'DM Sans';
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url('../assets/fonts/DMSans-Light.ttf') format('truetype');
+  src: url('../assets/fonts/DMSans-Light.woff2') format('woff2');
 }
 @font-face {
   font-family: 'DM Sans';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('../assets/fonts/DMSans-Regular.ttf') format('truetype');
+  src: url('../assets/fonts/DMSans-Regular.woff2') format('woff2');
 }
 @font-face {
   font-family: 'DM Sans';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('../assets/fonts/DMSans-Medium.ttf') format('truetype');
+  src: url('../assets/fonts/DMSans-Medium.woff2') format('woff2');
 }
 @font-face {
   font-family: 'DM Sans';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('../assets/fonts/DMSans-Bold.ttf') format('truetype');
+  src: url('../assets/fonts/DMSans-Bold.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Noto Sans SC';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('../assets/fonts/NotoSansSC-Regular.ttf') format('truetype');
+  src: url('../assets/fonts/NotoSansSC-Regular.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Noto Sans SC';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('../assets/fonts/NotoSansSC-Bold.ttf') format('truetype');
+  src: url('../assets/fonts/NotoSansSC-Bold.woff2') format('woff2');
 }
 
 /* ========== 设计令牌 ========== */
