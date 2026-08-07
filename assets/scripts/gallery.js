@@ -13,7 +13,7 @@
  *   3. 每个页面可配置完全不同的图片集
  *
  *   window.__galleryImages = [
- *     { src: 'assets/images/photo.jpg',  label: '照片 1' },
+ *     { src: 'https://example.com/photo.jpg', label: '照片 1' },
  *     { src: 'https://example.com/img.jpg', label: '网络图片' },
  *   ];
  *

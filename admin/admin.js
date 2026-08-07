@@ -597,7 +597,7 @@
         section.appendChild(empty);
         empty.querySelector('[data-addpet]').addEventListener('click', function () {
           S.pets.push({
-            id: nextNewId(), page_id: pg.id, pet_image: 'assets/pets/pet.webm', pet_type: '', is_active: true,
+            id: nextNewId(), page_id: pg.id, pet_image: '', pet_type: '', is_active: true,
             messages: { 'zh-CN': ['你好！'], 'en': ['Hello!'] },
             _new: true, _deleted: false, _dirty: true
           });

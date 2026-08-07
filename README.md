@@ -1,8 +1,6 @@
 # 🔥 Linktree — 个人名片站
 
 <div align="center">
-  <img src="assets/images/avatar.webp" alt="Avatar" width="120" style="border: 4px solid #000; box-shadow: 8px 8px 0 #2a2a2a;">
-  <br><br>
 
   ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=fff)
   ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=fff)

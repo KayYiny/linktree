@@ -9,7 +9,7 @@
  *
  * HTML 用法：
  *   <a class="link img-popup-trigger"
- *      data-img="assets/qrcodes/qq.jpg"
+ *      data-img="https://example.com/qq.jpg"
  *      data-url="https://example.com"
  *      data-note="点击上方按钮直接访问">
  *     <span class="link-icon"><img src="https://cdn.simpleicons.org/qq" class="brand-icon" alt="QQ"></span>

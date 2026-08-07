@@ -14,7 +14,7 @@
     return seg || 'main';
   }
 
-  // 相对资源路径解析：数据库里存的是相对根目录的路径（如 assets/images/avatar.webp），
+  // 相对资源路径解析：兼容数据库里存的相对根目录路径（如 assets/xxx.png），
   // 主站（/）原样返回；子目录页面（如 /whisper、/test）需补 '../'，否则会解析成 /whisper/assets/... 404。
   function resolvePath(p) {
     if (!p) return p;
@@ -115,6 +115,17 @@
     if (footEl && site.footer) footEl.textContent = site.footer;
     var pwEl = document.getElementById('poweredBy');
     if (pwEl && site.powered) pwEl.textContent = site.powered;
+    // Favicon：由数据库 site.favicon（URL）驱动；未配置则无图标
+    if (site.favicon) {
+      var favEl = document.querySelector('link[rel="icon"]');
+      if (favEl) favEl.href = resolvePath(site.favicon);
+      else {
+        var linkEl = document.createElement('link');
+        linkEl.rel = 'icon';
+        linkEl.href = resolvePath(site.favicon);
+        document.head.appendChild(linkEl);
+      }
+    }
   }
 
   // 彩蛋配置：从 site.egg_* 注入 window.__eggConfig（easter-egg.js 读取）
