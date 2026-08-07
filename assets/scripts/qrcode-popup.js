@@ -135,8 +135,9 @@
     initPopup();
   });
 
-  // data-loader 在语言切换时会重渲 #links，旧触发器被销毁 → 需要重新绑定
-  document.addEventListener('languagechange', function () {
+  // data-loader 在语言切换时重渲 #links 并派发 linksreloaded → 此时重新绑定触发器
+  // （不能听 languagechange：qrcode-popup 加载早于 data-loader，触发时旧链接还没被重渲）
+  document.addEventListener('linksreloaded', function () {
     initPopup();
   });
 
