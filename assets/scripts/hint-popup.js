@@ -70,9 +70,8 @@
 
   document.addEventListener('configloaded', function () {
     var site = (window.__dbConfig && window.__dbConfig.site) || {};
-    if (!window.__keygen) return;
-    var ok = window.__keygen.isValid(k, site.key_rotation || 'daily', site.key_salt || '', site.key_permanent || '');
-    type = ok ? 'hint' : 'invalid';
+    // 密钥有效性由服务端判定（key_valid，基于请求时的原始 ?k=），客户端不接触永久密钥
+    type = site.key_valid === true ? 'hint' : 'invalid';
     if (overlay || !window.__) return;
 
     overlay = document.createElement('div');

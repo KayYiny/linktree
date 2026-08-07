@@ -107,7 +107,7 @@ PostgreSQL（自建）—— 8 张表
 │       ├── translations.js  site-config.js
 │       ├── change-password.js  import.js
 ├── assets/
-│   ├── scripts/          # keygen / easter-egg / hint-popup / gallery / pet / i18n / qrcode-popup / anti-inspect
+│   ├── scripts/          # keygen / easter-egg / hint-popup / gallery / pet / i18n / qrcode-popup
 │   ├── images/  pets/  qrcodes/  fonts/  fontawesome/
 └── scripts/
     └── migrate.js        # 可选：显式初始化（API 首次访问已自动建表）

@@ -1061,7 +1061,8 @@
   }
   function syncLinkTrans() {
     S.links.forEach(function (l) {
-      if (l._deleted) return;
+      // ponytail: 只处理本次要保存的链接，避免每次保存给全部无键链接批量铸键 → 翻译表膨胀
+      if (l._deleted || (!l._new && !l._dirty)) return;
       if (!l.i18n_key) { l.i18n_key = genAutoKey(); l._autoKey = true; }
       if (l.label_zh == null && l.label_en == null) return;
       var t = S.trans.find(function (x) { return !x._deleted && x.key === l.i18n_key; });

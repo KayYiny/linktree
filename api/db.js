@@ -21,7 +21,7 @@ const pool = new Pool({
 // 建表 + 幂等补列 + 基础骨架（惰性初始化，进程内只执行一次）
 // schema 版本号：已初始化过的库（site_config 记录了该版本）跳过全部 DDL，
 // 避免每个 Serverless 冷启动实例都跑一遍建表 SQL
-const SCHEMA_VERSION = '2';
+const SCHEMA_VERSION = '3';
 let schemaReady = null;
 
 async function runSchemaInit() {
@@ -86,6 +86,8 @@ async function runSchemaInit() {
     await client.query('ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
     await client.query('ALTER TABLE pet_config ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
     await client.query('ALTER TABLE pages ADD COLUMN IF NOT EXISTS gallery_enabled BOOLEAN DEFAULT true;');
+    await client.query('ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS login_failed INT DEFAULT 0;');
+    await client.query('ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS lockout_until TIMESTAMPTZ;');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS gallery_images (

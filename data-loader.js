@@ -36,24 +36,14 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // 耳语页密钥校验：?k= 需命中当前轮换密钥或永久密钥，否则跳回首页
-  function gateWhisper(site) {
-    if (getPageSlug() !== 'whisper') return true;
-    if (!site || site.key_enabled === '0') return true; // 未启用密钥则放行
-    var k = new URLSearchParams(window.location.search).get('k') || '';
-    if (!window.__keygen) return true; // 兜底：keygen 未加载则放行
-    return window.__keygen.isValid(
-      k,
-      site.key_rotation || 'daily',
-      site.key_salt || '',
-      site.key_permanent || ''
-    );
-  }
+  // 耳语页密钥门禁已在服务端完成（/api/config 对无效密钥返回 404 → 下方 catch 跳回首页），
+  // 前端不再自行校验，也无需接触永久密钥。
 
   async function loadAndRender() {
     var slug = getPageSlug();
+    var k = new URLSearchParams(window.location.search).get('k') || '';
     try {
-      var res = await fetch(API_BASE + '?page=' + slug);
+      var res = await fetch(API_BASE + '?page=' + slug + (k ? '&k=' + encodeURIComponent(k) : ''));
       if (!res.ok) throw new Error('API error ' + res.status);
       cachedConfig = await res.json();
     } catch (e) {
@@ -62,25 +52,20 @@
       hideLoading(); // 主站失败也收起，避免卡在加载弹窗
       return;
     }
-    if (!gateWhisper(cachedConfig.site)) {
-      location.replace('../'); // 密钥无效 → 跳回首页
-      return;
-    }
     normalizeKeyUrl(cachedConfig.site);
     renderAll(cachedConfig);
     hideLoading();
   }
 
   // 用永久密钥（或非当前轮换密钥）访问时，地址栏瞬间换成当前有效轮换密钥，不暴露永久密钥
-  // 仅在密钥有效（命中永久密钥）时转换；无效密钥保留原样
+  // 是否有效由服务端判定（site.key_valid，基于请求时的原始 ?k=）；无效密钥不重写地址栏
   function normalizeKeyUrl(site) {
-    if (!site || !window.__keygen) return;
+    if (!site || site.key_valid !== true) return;
     var k = new URLSearchParams(window.location.search).get('k');
     if (!k) return;
+    if (!window.__keygen) return;
     var rot = window.__keygen.currentKey(site.key_rotation || 'daily', site.key_salt || '');
     if (k === rot) return;
-    var ok = window.__keygen.isValid(k, site.key_rotation || 'daily', site.key_salt || '', site.key_permanent || '');
-    if (!ok) return;
     window.history.replaceState(null, '', window.location.pathname + '?k=' + rot + window.location.hash);
   }
 
@@ -88,7 +73,8 @@
     if (config.page && config.page.title) document.title = config.page.title;
     renderSiteConfig(config.site);
     if (config.page && config.page.background_image) {
-      var bg = resolvePath(config.page.background_image);
+      // ponytail: 值来自 admin 可控的 DB，剥掉引号/反斜杠防 CSS url() 注入
+      var bg = resolvePath(config.page.background_image).replace(/['\\]/g, '');
       document.body.style.setProperty('--bg-image', "url('" + bg + "')");
       document.body.style.background = 'var(--bg) var(--bg-image) center/cover fixed no-repeat';
     }
@@ -105,7 +91,7 @@
     if (!site) return;
     var profileEl = document.getElementById('profilePicture');
     if (profileEl && site.avatar) {
-      profileEl.innerHTML = '<img src="' + resolvePath(site.avatar) + '" alt="头像">';
+      profileEl.innerHTML = '<img src="' + esc(resolvePath(site.avatar)) + '" alt="头像">';
     }
     var nameEl = document.getElementById('userName');
     if (nameEl && site.username) {
