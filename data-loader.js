@@ -30,6 +30,12 @@
     if (el) el.style.display = 'none';
   }
 
+  // HTML 转义（与 admin.js esc 一致；渲染 DB 内容进 innerHTML 前必须转义）
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   // 耳语页密钥校验：?k= 需命中当前轮换密钥或永久密钥，否则跳回首页
   function gateWhisper(site) {
     if (getPageSlug() !== 'whisper') return true;
@@ -167,8 +173,8 @@
       }
 
       a.innerHTML =
-        '<span class="link-icon"><img src="' + resolvePath(link.icon) + '" class="brand-icon" alt="' + label + '"></span>' +
-        '<span class="link-label">' + label + '</span>';
+        '<span class="link-icon"><img src="' + esc(resolvePath(link.icon)) + '" class="brand-icon" alt="' + esc(label) + '"></span>' +
+        '<span class="link-label">' + esc(label) + '</span>';
 
       linksEl.appendChild(a);
     }

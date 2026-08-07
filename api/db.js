@@ -208,4 +208,4 @@ async function query(text, params) {
   }
 }
 
-module.exports = { pool, query, ensureSchema };
+module.exports = { pool, query, ensureSchema, SCHEMA_VERSION };

@@ -135,4 +135,9 @@
     initPopup();
   });
 
+  // data-loader 在语言切换时会重渲 #links，旧触发器被销毁 → 需要重新绑定
+  document.addEventListener('languagechange', function () {
+    initPopup();
+  });
+
 })();

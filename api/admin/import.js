@@ -3,7 +3,7 @@
  * 事务式整库导入（与导出格式对称，幂等可重复执行）
  * Body: { pages?, links?, gallery?, pet?, translations?, siteConfig? }
  */
-const { pool, ensureSchema } = require('../db');
+const { pool, ensureSchema, SCHEMA_VERSION } = require('../db');
 const { verifyToken } = require('../auth');
 
 module.exports = async function handler(req, res) {
@@ -146,6 +146,13 @@ module.exports = async function handler(req, res) {
       );
       counts.siteConfig++;
     }
+
+    // 清空 site_config 时 schema_version 被连带删掉，需补回，否则下次冷启动重跑整轮 DDL
+    await client.query(
+      `INSERT INTO site_config (key, value) VALUES ('schema_version', $1)
+       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+      [SCHEMA_VERSION]
+    );
 
     await client.query('COMMIT');
     return res.status(200).json({ success: true, counts });

@@ -37,20 +37,13 @@ module.exports = async function handler(req, res) {
       }
       case 'PUT': {
         const { id } = req.query;
-        const data = req.body;
-        // 动态构建 UPDATE 语句
-        const fields = [];
-        const values = [];
-        let idx = 1;
-        for (const [key, val] of Object.entries(data)) {
-          fields.push(`${key}=$${idx}`);
-          values.push(val);
-          idx++;
-        }
-        values.push(id);
+        const { page_id, label, url, icon, qr_code, popup_note, sort_order, is_active, i18n_key, note_i18n_key } = req.body;
+        // 固定列名，与其它 admin PUT 一致（列名来自请求体是注入风险）
         const { rows } = await query(
-          `UPDATE links SET ${fields.join(', ')} WHERE id=$${idx} RETURNING *`,
-          values
+          `UPDATE links SET page_id=$1, label=$2, url=$3, icon=$4, qr_code=$5, popup_note=$6,
+           sort_order=$7, is_active=$8, i18n_key=$9, note_i18n_key=$10
+           WHERE id=$11 RETURNING *`,
+          [page_id, label, url, icon, qr_code, popup_note, sort_order ?? 0, is_active ?? true, i18n_key, note_i18n_key, id]
         );
         return res.status(200).json(rows[0]);
       }
