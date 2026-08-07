@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+  <!-- 示例占位背景（浅色渐变 + 柔和圆形，避免干扰前景内容） -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7f7f5"/>
+      <stop offset="1" stop-color="#e2e4e0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="900" fill="url(#bgGrad)"/>
+  <circle cx="1180" cy="140" r="240" fill="#ffffff" opacity="0.55"/>
+  <circle cx="200" cy="780" r="280" fill="#ffffff" opacity="0.38"/>
+  <circle cx="900" cy="820" r="180" fill="#ffffff" opacity="0.25"/>
+</svg>

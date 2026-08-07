@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Neo-Brutalism 占位 logo：奶油白底粗黑边 + 橙色几何树 + 黄色圆点缀 -->
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="#fff7ef" stroke="#111111" stroke-width="5"/>
+  <!-- 树冠：整体橙色三角形 -->
+  <path d="M32 14 L50 40 L14 40 Z" fill="#ff6b35" stroke="#111111" stroke-width="4" stroke-linejoin="round"/>
+  <!-- 树干 -->
+  <path d="M32 42 V50" stroke="#111111" stroke-width="6" stroke-linecap="round"/>
+  <!-- 黄色小圆点缀（太阳/浆果，新粗野撞色） -->
+  <circle cx="20" cy="19" r="4" fill="#ffc93c" stroke="#111111" stroke-width="2.5"/>
+</svg>

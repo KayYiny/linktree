@@ -152,6 +152,21 @@ async function runSchemaInit() {
       ON CONFLICT (slug) DO NOTHING;
     `);
 
+    // 示例占位资源（assets/demo/ 下的 SVG，纯占位，非个性化内容）：
+    // 仅当对应字段为空时填入，保证全新部署的首页不至于全空白；
+    // 用户配置后不会被覆盖（键存在则跳过、背景非空则跳过）
+    await client.query(`
+      UPDATE pages SET background_image = 'assets/demo/background.svg'
+      WHERE slug = 'main' AND (background_image IS NULL OR background_image = '');
+    `);
+    await client.query(`
+      INSERT INTO site_config (key, value) VALUES
+        ('avatar',   'assets/demo/avatar.svg'),
+        ('favicon',  'assets/demo/favicon.svg'),
+        ('username', 'Linktree')
+      ON CONFLICT (key) DO NOTHING;
+    `);
+
     // 默认管理员：仅在完全没有管理员账号时创建，避免覆盖已有密码
     const { rows } = await client.query('SELECT COUNT(*)::int AS n FROM admin_users');
     if (rows[0].n === 0) {
