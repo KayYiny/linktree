@@ -190,9 +190,10 @@
       api('/api/admin/gallery', 'GET'),
       api('/api/admin/pet', 'GET'),
       api('/api/admin/translations', 'GET'),
-      api('/api/admin/site-config', 'GET')
+      api('/api/admin/site-config', 'GET'),
+      api('/api/admin/admin-users', 'GET')
     ]);
-    var pages = results[0], links = results[1], gallery = results[2], pets = results[3], trans = results[4], site = results[5];
+    var pages = results[0], links = results[1], gallery = results[2], pets = results[3], trans = results[4], site = results[5], adminUsers = results[6];
 
     S.pages = (pages || []).map(function (p) { return Object.assign({ _new: false, _deleted: false, _dirty: false }, p); });
     S.links = (links || []).map(function (l) { return Object.assign({ _new: false, _deleted: false, _dirty: false }, l); });
@@ -259,6 +260,9 @@
       permanent: cfg.key_permanent || ''
     };
     S.keyDirty = false;
+
+    // 管理员账号（仅用于导出备份，不在 UI 中编辑）
+    S.adminUsers = (adminUsers || []).map(function (u) { return Object.assign({}, u); });
 
     fillPageFilters();
     renderAll();
@@ -1287,7 +1291,7 @@
         return { page_id: g.page_id, src: g.src, sort_order: g.sort_order, is_active: g.is_active !== false };
       }),
       pet: S.pets.filter(function (p) { return !p._deleted; }).map(function (p) {
-        return { page_id: p.page_id, pet_image: p.pet_image, pet_type: p.pet_type, is_active: p.is_active !== false, messages: p.messages || {} };
+        return { id: p.id, page_id: p.page_id, pet_image: p.pet_image, pet_type: p.pet_type, is_active: p.is_active !== false, messages: p.messages || {} };
       }),
       translations: [],
       siteConfig: {}
@@ -1304,6 +1308,11 @@
       key_rotation: S.key.rotation, key_salt: S.key.salt, key_permanent: S.key.permanent
     };
     S.site.extra.filter(function (e) { return !e._deleted; }).forEach(function (e) { data.siteConfig[e.key] = e.value; });
+
+    // 管理员账号（含密码哈希，供完整备份/恢复）
+    data.adminUsers = (S.adminUsers || []).map(function (u) {
+      return { id: u.id, username: u.username, password_hash: u.password_hash, login_failed: u.login_failed || 0, lockout_until: u.lockout_until || null };
+    });
 
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);

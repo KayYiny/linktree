@@ -1,7 +1,7 @@
 /**
  * POST /api/admin/import
  * 事务式整库导入（与导出格式对称，幂等可重复执行）
- * Body: { pages?, links?, gallery?, pet?, translations?, siteConfig? }
+ * Body: { pages?, links?, gallery?, pet?, translations?, siteConfig?, adminUsers? }
  */
 const { pool, ensureSchema, SCHEMA_VERSION } = require('../db');
 const { verifyToken } = require('../auth');
@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     await client.query('DELETE FROM translations');
     await client.query('DELETE FROM site_config');
 
-    const counts = { pages: 0, links: 0, gallery: 0, pet: 0, translations: 0, siteConfig: 0 };
+    const counts = { pages: 0, links: 0, gallery: 0, pet: 0, translations: 0, siteConfig: 0, adminUsers: 0 };
 
     // 2. 页面（记录 old id -> new id 映射）
     const pageIdMap = {};
@@ -88,20 +88,25 @@ module.exports = async function handler(req, res) {
     }
 
     // 5. 宠物（兼容 JOIN 展开行 与 归一化 messages 对象两种格式）
+    //    兼容旧导出（无 id）：用数组索引做去重 key，避免所有宠物被同一个 undefined key 覆盖
     const petItems = [];
+    const petIdMap = {}; // old pet id -> 索引（用于关联 messages）
     if (Array.isArray(data.pet)) {
-      const byId = {};
-      for (const row of data.pet) {
-        if (!byId[row.id]) {
-          byId[row.id] = { id: row.id, page_id: row.page_id, pet_image: row.pet_image, pet_type: row.pet_type, is_active: row.is_active !== false, messages: {} };
+      const byKey = {};
+      for (let idx = 0; idx < data.pet.length; idx++) {
+        const row = data.pet[idx];
+        const key = row.id != null ? String(row.id) : '__idx_' + idx;
+        if (row.id != null) petIdMap[row.id] = idx;
+        if (!byKey[key]) {
+          byKey[key] = { page_id: row.page_id, pet_image: row.pet_image, pet_type: row.pet_type, is_active: row.is_active !== false, messages: {} };
         }
         if (row.language && row.messages !== undefined && row.messages !== null) {
-          byId[row.id].messages[row.language] = typeof row.messages === 'string' ? JSON.parse(row.messages) : row.messages;
+          byKey[key].messages[row.language] = typeof row.messages === 'string' ? JSON.parse(row.messages) : row.messages;
         } else if (row.messages && typeof row.messages === 'object' && !row.language) {
-          byId[row.id].messages = row.messages;
+          byKey[key].messages = row.messages;
         }
       }
-      for (const id of Object.keys(byId)) petItems.push(byId[id]);
+      for (const k of Object.keys(byKey)) petItems.push(byKey[k]);
     }
     for (const pet of petItems) {
       const { rows } = await client.query(
@@ -133,7 +138,22 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // 7. 站点配置（兼容对象 {key:value} 与数组行两种格式）
+    // 7. 管理员账号（整库覆盖：先清空再导入，保留原始 id / 密码哈希 / 锁定状态）
+    if (Array.isArray(data.adminUsers) && data.adminUsers.length) {
+      await client.query('DELETE FROM admin_users');
+      for (const u of data.adminUsers) {
+        await client.query(
+          `INSERT INTO admin_users (id, username, password_hash, login_failed, lockout_until)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [u.id, u.username, u.password_hash, u.login_failed ?? 0, u.lockout_until ?? null]
+        );
+      }
+      // 重置序列，避免后续新建管理员与显式插入的 id 冲突
+      await client.query(`SELECT setval(pg_get_serial_sequence('admin_users', 'id'), COALESCE((SELECT MAX(id) FROM admin_users), 0) + 1, false)`);
+      counts.adminUsers = data.adminUsers.length;
+    }
+
+    // 8. 站点配置（兼容对象 {key:value} 与数组行两种格式）
     const siteEntries = Array.isArray(data.siteConfig)
       ? data.siteConfig.map((s) => [s.key, s.value])
       : Object.entries(data.siteConfig || {});
