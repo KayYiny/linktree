@@ -66,11 +66,12 @@
 Vercel Serverless（api/*.js）
       │  pg
       ▼
-PostgreSQL（自建）—— 8 张表
+PostgreSQL（Supabase 云 / 自建）—— 8 张表
 ```
 
 - 前端为纯静态 HTML/CSS/JS，无构建步骤，由 Vercel 直接托管。
 - `api/*` 为 Vercel Serverless 函数，负责读写 PostgreSQL。
+- 数据库支持两种方式（二选一）：**Supabase 云 PostgreSQL**（推荐，免费 500MB、自动备份）或自建 PostgreSQL。
 - 数据加载：页面加载时 `data-loader.js` 请求 `/api/config?page=<slug>` 动态渲染（URL 首段即 slug：`/` → main、`/whisper` → whisper、`/test` → test）；配置接口 `no-store`，改动即时生效。
 
 ---
@@ -81,7 +82,7 @@ PostgreSQL（自建）—— 8 张表
 - 图标：Font Awesome 6（自托管）+ Simple Icons 品牌图标（CDN，后台弹窗选取）
 - 字体：Bebas Neue / DM Sans / Noto Sans SC（自托管）
 - 后端：Vercel Serverless Functions（Node.js）
-- 数据库：PostgreSQL（自建）
+- 数据库：PostgreSQL（Supabase 云 或 自建）
 - 认证：JWT（`jsonwebtoken`）+ `bcryptjs`
 - 依赖：`pg`、`jsonwebtoken`、`bcryptjs`
 
@@ -93,6 +94,7 @@ PostgreSQL（自建）—— 8 张表
 ├── index.html            # 唯一页面模板（按 URL slug 渲染所有页面）
 ├── style.css             # 通用样式
 ├── data-loader.js        # 数据加载与渲染（按 URL 识别页面 slug）
+├── .env.example          # 环境变量模板
 ├── admin/
 │   ├── index.html        # 管理面板登录页
 │   ├── admin.html        # 管理面板
@@ -180,11 +182,27 @@ PostgreSQL（自建）—— 8 张表
 
 ---
 
-## 🚀 部署方式（GitHub + Vercel + 自建 PostgreSQL）
+## 🚀 部署方式（GitHub + Vercel + 云数据库）
 
-1. 把代码推到 GitHub。
-2. 在 Vercel 导入仓库，自动识别 `api/*` 为 Serverless 函数。
-3. 配置环境变量（Vercel → Project → Settings → Environment Variables）：
+### 方式一：Supabase 云 PostgreSQL（推荐，免费）
+
+1. 在 [supabase.com](https://supabase.com) 创建项目，获取 PostgreSQL 连接串。
+2. 把代码推到 GitHub。
+3. 在 Vercel 导入仓库，自动识别 `api/*` 为 Serverless 函数。
+4. 配置环境变量（Vercel → Project → Settings → Environment Variables）：
+
+   ```
+   SUPABASE_URL  PostgreSQL 连接串（如 postgresql://postgres.xxxxx:password@host:6543/postgres）
+   JWT_SECRET    登录令牌密钥（生产环境务必自定义）
+   ADMIN_PASSWORD  管理员密码（可选，默认 admin）
+   ```
+
+5. 推送后 Vercel 自动部署。后台入口 `https://你的域名/admin/`。
+
+### 方式二：自建 PostgreSQL
+
+1. 准备好 PostgreSQL 数据库（确保 Vercel 可公网访问）。
+2. 在 Vercel 配置环境变量：
 
    ```
    DB_HOST      数据库主机
@@ -195,19 +213,18 @@ PostgreSQL（自建）—— 8 张表
    JWT_SECRET   登录令牌密钥（生产环境务必自定义）
    ```
 
-   （也可用 `DATABASE_URL` 完整连接串；`api/db.js` 优先读拆分变量。）
+### 自动初始化
 
-4. 推送后 Vercel 自动部署。后台入口 `https://你的域名/admin/`。
+**无需手动建表**：任意 API 首次被调用时自动建表（`api/db.js` 的惰性 `ensureSchema`）——首次打开首页或后台登录页即完成初始化：创建 8 张表、一个空白基础页 `main`，并在无管理员账号时创建默认管理员 `admin`（密码可用 `ADMIN_PASSWORD` 环境变量指定，默认 `admin`，登录后请立即修改）。
 
-   **无需手动建表**：任意 API 首次被调用时自动建表（`api/db.js` 的惰性 `ensureSchema`）——首次打开首页或后台登录页即完成初始化：创建 8 张表、一个空白基础页 `main`，并在无管理员账号时创建默认管理员 `admin`（密码可用 `ADMIN_PASSWORD` 环境变量指定，默认 `admin`，登录后请立即修改）。
+> 可选：想在部署前本地显式初始化，仍可执行
+> `SUPABASE_URL=... node scripts/migrate.js`（幂等，可重复跑）。
 
-   > 可选：想在部署前本地显式初始化，仍可执行
-   > `DB_HOST=... DB_NAME=... DB_USER=... DB_PASSWORD=... node scripts/migrate.js`（幂等，可重复跑）。
+站点内容（链接 / 相册 / 宠物 / 翻译 / 设置）登录后台添加即可，或直接用「导入」功能从备份 JSON 恢复。
 
-5. 站点内容（链接 / 相册 / 宠物 / 翻译 / 设置）登录后台添加即可，或直接用「导入」功能从备份 JSON 恢复。
-6. 静态资源缓存：`vercel.json` 已配置——CSS/JS 每次请求重新校验（改动样式后立即生效，手机等端不会用到旧缓存），字体走长期缓存。
+静态资源缓存：`vercel.json` 已配置——CSS/JS 每次请求重新校验（改动样式后立即生效，手机等端不会用到旧缓存），字体走长期缓存。
 
-> ⚠️ 注意：Vercel 免费版函数运行在美东区域，自建数据库必须公网可达，否则 API 会连不上库。
+> ⚠️ 注意：使用自建数据库时，Vercel 免费版函数运行在美东区域，数据库必须公网可达，否则 API 会连不上库。推荐使用 Supabase 等云数据库避免此问题。
 
 ---
 
