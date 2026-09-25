@@ -1,22 +1,37 @@
 /**
  * db.js — PostgreSQL 连接池 + 惰性自动建表
- * 使用环境变量配置，Vercel 部署时在控制台设置。
+ *
+ * 支持两种配置方式（二选一）：
+ *   1. SUPABASE_URL：完整连接串（推荐，直接用 Supabase 或其他云 PG）
+ *   2. DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWORD：分项配置（自建 PG）
+ *
+ * 优先使用 SUPABASE_URL；未设置时回退到分项配置。
  * 任意 API 首次被调用时会自动执行 ensureSchema() 建表（幂等），
  * 因此部署后无需手动运行迁移脚本。
  */
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  max: 5,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-});
+// ==================== 连接池 ====================
+const supabaseUrl = process.env.SUPABASE_URL || '';
+
+const pool = supabaseUrl
+  ? new Pool({
+      connectionString: supabaseUrl,
+      max: 5,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 8000,
+    })
+  : new Pool({
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    });
 
 // 建表 + 幂等补列 + 基础骨架（惰性初始化，进程内只执行一次）
 // schema 版本号：已初始化过的库（site_config 记录了该版本）跳过全部 DDL，
@@ -80,15 +95,6 @@ async function runSchemaInit() {
       );
     `);
 
-    // 兼容已存在的旧库：幂等补列（新库由上方建表直接包含）
-    await client.query('ALTER TABLE links ADD COLUMN IF NOT EXISTS i18n_key VARCHAR(200);');
-    await client.query('ALTER TABLE links ADD COLUMN IF NOT EXISTS note_i18n_key VARCHAR(200);');
-    await client.query('ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
-    await client.query('ALTER TABLE pet_config ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
-    await client.query('ALTER TABLE pages ADD COLUMN IF NOT EXISTS gallery_enabled BOOLEAN DEFAULT true;');
-    await client.query('ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS login_failed INT DEFAULT 0;');
-    await client.query('ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS lockout_until TIMESTAMPTZ;');
-
     await client.query(`
       CREATE TABLE IF NOT EXISTS gallery_images (
         id SERIAL PRIMARY KEY,
@@ -99,9 +105,6 @@ async function runSchemaInit() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
-
-    // 回退清理：移除已废弃的 image_key 列（幂等，仅清理一次）
-    await client.query('ALTER TABLE gallery_images DROP COLUMN IF EXISTS image_key;');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS pet_config (
@@ -144,6 +147,18 @@ async function runSchemaInit() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
+
+    // 兼容已存在的旧库：幂等补列（新库由上方建表直接包含，ALTER 无副作用）
+    await client.query('ALTER TABLE links ADD COLUMN IF NOT EXISTS i18n_key VARCHAR(200);');
+    await client.query('ALTER TABLE links ADD COLUMN IF NOT EXISTS note_i18n_key VARCHAR(200);');
+    await client.query('ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
+    await client.query('ALTER TABLE pet_config ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;');
+    await client.query('ALTER TABLE pages ADD COLUMN IF NOT EXISTS gallery_enabled BOOLEAN DEFAULT true;');
+    await client.query('ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS login_failed INT DEFAULT 0;');
+    await client.query('ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS lockout_until TIMESTAMPTZ;');
+
+    // 回退清理：移除已废弃的 image_key 列（幂等，仅清理一次）
+    await client.query('ALTER TABLE gallery_images DROP COLUMN IF EXISTS image_key;');
 
     // ==================== 基础骨架（无个性化数据） ====================
 
