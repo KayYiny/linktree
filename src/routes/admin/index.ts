@@ -10,6 +10,7 @@ import gallery from './gallery';
 import pet from './pet';
 import siteConfig from './site-config';
 import changePassword from './change-password';
+import files from './files';
 
 const routes = new Hono<AppEnv>();
 
@@ -20,5 +21,6 @@ routes.route('/gallery', gallery);
 routes.route('/pet', pet);
 routes.route('/site-config', siteConfig);
 routes.route('/change-password', changePassword);
+routes.route('/files', files);
 
 export default routes;

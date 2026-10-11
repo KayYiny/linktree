@@ -30,6 +30,7 @@
         <button class="tab" data-tab="gallery" title="相册管理"><i class="fas fa-images"></i><span>相册管理</span></button>
         <button class="tab" data-tab="pet" title="宠物管理"><i class="fas fa-paw"></i><span>宠物管理</span></button>
         <button class="tab" data-tab="pages" title="页面管理"><i class="fas fa-file"></i><span>页面管理</span></button>
+        <button class="tab" data-tab="files" title="文件库"><i class="fas fa-folder-open"></i><span>文件库</span></button>
         <button class="tab" data-tab="settings" title="设置"><i class="fas fa-cog"></i><span>设置</span></button>
       </nav>
 
@@ -77,6 +78,7 @@
             <div class="inline-add">
               <input type="text" id="galleryNewSrc" placeholder="粘贴图片 URL，回车添加">
               <button class="btn btn-primary" id="galleryAddConfirm"><i class="fas fa-plus"></i> 添加</button>
+              <button type="button" class="btn btn-ghost" data-upload title="上传图片后自动填入"><i class="fas fa-upload"></i> 上传</button>
             </div>
             <span class="filter-hint" id="galleryFilterHint"></span>
           </div>
@@ -111,6 +113,28 @@
           <div id="pagesList"></div>
         </div>
 
+        <!-- ========== 文件库 ========== -->
+        <div id="panel-files" class="tab-panel">
+          <div class="panel-header">
+            <h2>文件库</h2>
+            <span class="sec-hint">R2 免费额度 10GB（账号级），超过 95% 将拒绝上传</span>
+          </div>
+          <div class="quota-bar">
+            <div class="quota-fill" id="quotaFill"></div>
+          </div>
+          <div class="sec-hint" id="quotaText" style="margin:0.4rem 0 0.8rem">—</div>
+          <div class="panel-toolbar">
+            <button class="btn btn-primary" id="filesUploadBtn"><i class="fas fa-upload"></i> 上传文件</button>
+            <select id="filesFilter" class="page-filter">
+              <option value="all">全部</option>
+              <option value="used">使用中</option>
+              <option value="unused">未使用</option>
+            </select>
+            <span class="filter-hint" id="filesHint"></span>
+          </div>
+          <div id="filesList" class="files-grid"></div>
+        </div>
+
         <!-- ========== 设置 ========== -->
         <div id="panel-settings" class="tab-panel">
           <h2>设置</h2>
@@ -122,7 +146,7 @@
               <div class="form-row">
                 <div class="form-group">
                   <label>头像 URL</label>
-                  <input type="text" name="avatar" placeholder="https://.../avatar.png">
+                  <div class="icon-url-row"><input type="text" name="avatar" placeholder="https://.../avatar.png"><button type="button" class="btn btn-ghost" data-upload title="上传图片后自动填入"><i class="fas fa-upload"></i> 上传</button></div>
                 </div>
                 <div class="form-group">
                   <label>用户名</label>
@@ -131,7 +155,7 @@
               </div>
               <div class="form-group">
                 <label>Favicon URL</label>
-                <input type="text" name="favicon" placeholder="https://.../favicon.svg">
+                <div class="icon-url-row"><input type="text" name="favicon" placeholder="https://.../favicon.svg"><button type="button" class="btn btn-ghost" data-upload title="上传图片后自动填入"><i class="fas fa-upload"></i> 上传</button></div>
               </div>
               <div class="form-group">
                 <label>页脚文字</label>
@@ -293,6 +317,9 @@
 
     <!-- 消息提示 -->
     <div id="toast" class="toast" style="display:none"></div>
+
+    <!-- 上传文件选择（配合各处「上传」按钮 / 文件库使用） -->
+    <input type="file" id="uploadFileInput" style="display:none">
 
     <!-- 密钥生成（耳语页访问控制，供「密钥设置」实时显示当前密钥） -->
     <script src="/assets/scripts/keygen.js"></script>

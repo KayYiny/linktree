@@ -12,6 +12,11 @@ binding = "DB"
 database_name = "linktree"
 database_id = "cca07e81-9caf-4b1a-9088-9780cd525ebe"
 
+# R2 图片/视频存储（免费 10GB·月，账号级共享）
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "linktree-assets"
+
 # 自定义域名（也可在 Cloudflare Dashboard → Workers → Custom Domains 绑定）
 # routes = [
 #   { pattern = "example.com", custom_domain = true }

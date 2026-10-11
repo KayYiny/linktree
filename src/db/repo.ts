@@ -453,3 +453,100 @@ export async function updateAdminPassword(db: DB, passwordHash: string): Promise
 export async function updateAdminUsername(db: DB, username: string): Promise<void> {
   await db.prepare('UPDATE admin SET username = ? WHERE id = 1').bind(username).run();
 }
+
+// ==================== files（R2 对象元数据） ====================
+
+export interface FileRow {
+  key: string;
+  name: string;
+  size: number;
+  mime: string;
+  created_at: string | null;
+}
+
+function mapFile(r: Record<string, unknown>): FileRow {
+  return {
+    key: String(r.key),
+    name: String(r.name),
+    size: Number(r.size ?? 0),
+    mime: String(r.mime),
+    created_at: (r.created_at as string) ?? null,
+  };
+}
+
+export async function listFiles(db: DB): Promise<FileRow[]> {
+  const { results } = await db.prepare('SELECT * FROM files ORDER BY created_at DESC').all();
+  return results.map((r) => mapFile(r as Record<string, unknown>));
+}
+
+export async function createFile(
+  db: DB,
+  input: { key: string; name: string; size: number; mime: string }
+): Promise<void> {
+  await db
+    .prepare('INSERT INTO files (key, name, size, mime, created_at) VALUES (?, ?, ?, ?, ?)')
+    .bind(input.key, input.name, input.size, input.mime, new Date().toISOString())
+    .run();
+}
+
+export async function getFile(db: DB, key: string): Promise<FileRow | null> {
+  const r = await db.prepare('SELECT * FROM files WHERE key = ?').bind(key).first();
+  return r ? mapFile(r as Record<string, unknown>) : null;
+}
+
+export async function deleteFile(db: DB, key: string): Promise<void> {
+  await db.prepare('DELETE FROM files WHERE key = ?').bind(key).run();
+}
+
+export async function sumFileBytes(db: DB): Promise<number> {
+  const r = await db.prepare('SELECT COALESCE(SUM(size), 0) AS total FROM files').first();
+  return Number((r as { total: unknown } | null)?.total ?? 0);
+}
+
+/**
+ * 扫描全部图片字段，返回 对象key → 使用位置描述 列表。
+ * 字段存 /files/<key> 路径；引用即"使用中"，实时计算，不加冗余关联表。
+ */
+export async function scanFileReferences(db: DB): Promise<Map<string, string[]>> {
+  const usage = new Map<string, string[]>();
+  const add = (value: unknown, where: string) => {
+    if (typeof value !== 'string' || !value.startsWith('/files/')) return;
+    const key = value.slice('/files/'.length);
+    if (!key) return;
+    const arr = usage.get(key) || [];
+    arr.push(where);
+    usage.set(key, arr);
+  };
+
+  const [configs, pages, links, gallery, pets] = await Promise.all([
+    db.prepare("SELECT key, value FROM site_config WHERE key IN ('avatar', 'favicon')").all(),
+    db.prepare('SELECT id, slug, background_image FROM pages').all(),
+    db.prepare('SELECT label, icon, qr_code FROM links').all(),
+    db.prepare('SELECT page_id, src FROM gallery_images').all(),
+    db.prepare('SELECT page_id, pet_image FROM pet_config').all(),
+  ]);
+
+  for (const r of configs.results) {
+    const label = r.key === 'avatar' ? '头像' : 'Favicon';
+    add(r.value, label);
+  }
+  const pageSlug = new Map<number, string>();
+  for (const r of pages.results) {
+    const id = Number(r.id ?? (r as Record<string, unknown>).rowid);
+    pageSlug.set(id, String(r.slug));
+    add(r.background_image, `页面「${r.slug}」背景`);
+  }
+  for (const r of links.results) {
+    add(r.icon, `链接「${r.label}」图标`);
+    add(r.qr_code, `链接「${r.label}」二维码`);
+  }
+  for (const r of gallery.results) {
+    const slug = pageSlug.get(Number(r.page_id)) || String(r.page_id);
+    add(r.src, `相册（页面「${slug}」）`);
+  }
+  for (const r of pets.results) {
+    const slug = pageSlug.get(Number(r.page_id)) || String(r.page_id);
+    add(r.pet_image, `宠物（页面「${slug}」）`);
+  }
+  return usage;
+}

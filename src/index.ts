@@ -28,6 +28,20 @@ app.route('/api/admin', adminRoutes);
 // API 未匹配路径 → JSON 404
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
 
+// 上传文件公开访问：/files/<key> → R2（长缓存；SVG 加 sandbox 头防脚本执行）
+app.get('/files/*', async (c) => {
+  const key = c.req.path.replace(/^\/files\//, '');
+  if (!key) return c.json({ error: 'Not found' }, 404);
+  const obj = await c.env.FILES.get(key);
+  if (!obj) return c.json({ error: 'Not found' }, 404);
+  const headers = new Headers();
+  headers.set('Content-Type', obj.httpMetadata?.contentType || 'application/octet-stream');
+  headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  headers.set('X-Content-Type-Options', 'nosniff');
+  if (key.endsWith('.svg')) headers.set('Content-Security-Policy', 'sandbox');
+  return new Response(obj.body, { headers });
+});
+
 // 页面 slug（/whisper、/test 等）→ index.html（与旧版 rewrite 等价）
 app.all('*', async (c) => {
   const res = await c.env.ASSETS.fetch(new Request(new URL('/index.html', c.req.url)));

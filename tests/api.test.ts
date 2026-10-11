@@ -8,7 +8,9 @@
 import { env, SELF } from 'cloudflare:test';
 import { beforeAll, describe, expect, test } from 'vitest';
 import keygen from '../src/lib/keygen';
-import migrationSql from '../migrations/0001_init.sql?raw';
+import { MAX_IMAGE_BYTES } from '../src/lib/uploads';
+import migration0001 from '../migrations/0001_init.sql?raw';
+import migration0002 from '../migrations/0002_files.sql?raw';
 const ADMIN_PW = (env as { ADMIN_PASSWORD?: string }).ADMIN_PASSWORD || 'admin';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
@@ -34,15 +36,17 @@ async function authedToken(): Promise<string> {
 }
 
 beforeAll(async () => {
-  // 应用初始迁移（去掉注释行后按 ; 切分执行）
-  const stmts = migrationSql
-    .split('\n')
-    .filter((line) => !line.trim().startsWith('--'))
-    .join('\n')
-    .split(';')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  for (const stmt of stmts) await env.DB.prepare(stmt).run();
+  // 应用全部迁移（去掉注释行后按 ; 切分执行）
+  for (const sql of [migration0001, migration0002]) {
+    const stmts = sql
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('--'))
+      .join('\n')
+      .split(';')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const stmt of stmts) await env.DB.prepare(stmt).run();
+  }
   // 预热：触发 ensureAdmin 惰性创建管理员（此后登录用例直接可用）
   await SELF.fetch('http://localhost/api/config?page=main');
 });
@@ -245,5 +249,85 @@ describe('管理 CRUD 与校验', () => {
     const img = (await create.json()) as { id: number };
     const del = await api('/api/admin/gallery?id=' + img.id, { method: 'DELETE', headers });
     expect(del.status).toBe(204);
+  });
+});
+
+describe('文件上传与文件库', () => {
+  const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
+
+  async function upload(bytes: Uint8Array, name: string, type: string) {
+    const token = await authedToken();
+    const fd = new FormData();
+    fd.append('file', new File([bytes], name, { type }));
+    return api('/api/admin/files', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+      body: fd,
+    });
+  }
+
+  test('上传合法图片 → 201，返回 /files/ 地址', async () => {
+    const res = await upload(pngBytes, 'test.png', 'image/png');
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { key: string; url: string };
+    expect(body.url).toBe('/files/' + body.key);
+  });
+
+  test('/files/ 公开访问：内容与缓存头正确', async () => {
+    const token = await authedToken();
+    const list = (await (await api('/api/admin/files', { headers: { Authorization: 'Bearer ' + token } })).json()) as {
+      files: { key: string; mime: string }[];
+    };
+    const key = list.files[0].key;
+    const res = await api('/files/' + key);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toContain('max-age=31536000');
+    expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
+  });
+
+  test('SVG 响应带 CSP sandbox 安全头', async () => {
+    const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+    const res = await upload(svg, 'test.svg', 'image/svg+xml');
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { key: string };
+    const pub = await api('/files/' + body.key);
+    expect(pub.headers.get('Content-Security-Policy')).toBe('sandbox');
+  });
+
+  test('类型白名单与大小限制在后端生效', async () => {
+    const bad = await upload(new Uint8Array([1, 2, 3]), 'evil.txt', 'text/plain');
+    expect(bad.status).toBe(415);
+    const big = await upload(new Uint8Array(MAX_IMAGE_BYTES + 1), 'big.png', 'image/png');
+    expect(big.status).toBe(413);
+  });
+
+  test('文件库：使用判定（被头像引用 → 使用中）', async () => {
+    const token = await authedToken();
+    const headers = { ...jsonHeaders, Authorization: 'Bearer ' + token };
+    const up = (await (await upload(pngBytes, 'avatar.png', 'image/png')).json()) as { key: string; url: string };
+
+    // 初始应为未使用
+    let list = (await (await api('/api/admin/files', { headers })).json()) as {
+      files: { key: string; used_by: string[] }[];
+      total_bytes: number;
+      quota_bytes: number;
+    };
+    expect(list.files.find((f) => f.key === up.key)!.used_by).toEqual([]);
+    expect(list.total_bytes).toBeGreaterThan(0);
+    expect(list.quota_bytes).toBeGreaterThan(list.total_bytes);
+
+    // 设为头像后 → 使用中标注「头像」
+    await api('/api/admin/site-config', { method: 'PUT', headers, body: JSON.stringify({ avatar: up.url }) });
+    list = (await (await api('/api/admin/files', { headers })).json()) as typeof list;
+    expect(list.files.find((f) => f.key === up.key)!.used_by).toContain('头像');
+
+    // 删除文件（被引用也允许，仅前端二次确认）
+    const del = await api('/api/admin/files?key=' + encodeURIComponent(up.key), { method: 'DELETE', headers });
+    expect(del.status).toBe(204);
+    const gone = await api('/files/' + up.key);
+    expect(gone.status).toBe(404);
+
+    // 还原头像配置
+    await api('/api/admin/site-config', { method: 'PUT', headers, body: JSON.stringify({ avatar: '' }) });
   });
 });

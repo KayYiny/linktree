@@ -54,6 +54,8 @@
 - 🔑 **密钥系统**：耳语页 `?k=` 访问控制，轮换密钥 + 永久密钥（周期 / 盐值后台可配）；永久密钥访问时地址栏自动转为当前有效密钥，且永久密钥永不下发客户端
 - ⏳ **加载过渡弹窗**：进入页面时显示加载动画，数据就绪后自动消失
 - 🎨 **品牌图标库**：链接图标可在内嵌的 Simple Icons 图标库弹窗中按品牌名一键选取
+- 🖼️ **图片上传**：全部图片字段支持直接上传（头像/favicon/背景/图标/二维码/相册/宠物），存 Cloudflare R2，经 `/files/` 同域访问；保留填 URL 的旧方式
+- 📁 **文件库**：区分「使用中（标注被哪处在用）/ 未使用」，可筛选删除；内置 10GB 免费额度用量条与配额守卫
 - 🛠️ **管理面板**：链接 / 相册 / 宠物 / 页面 / 设置 全量管理，显式保存模型，⌘K 命令面板
 - 💾 **备份**：`wrangler d1 export` 一键导出全库 SQL；GitHub Actions 每月自动备份；Cloudflare Time Travel 7 天内任意时间点回滚
 
@@ -128,6 +130,7 @@ Cloudflare D1（SQLite）── 6 张表
 | `links` | 链接（所属页面 / 图标 / 跳转 / 二维码 / 备注 / 启停 / 排序） |
 | `gallery_images` | 相册图片 |
 | `pet_config` | 宠物（每页一只）+ 单语语录数组（JSON 文本） |
+| `files` | 上传文件元数据（R2 对象 key / 原名 / 大小 / 类型），配额统计与文件库列表 |
 | `admin` | 管理员（单行：用户名 / 密码哈希 / 登录锁定） |
 
 外键 `ON DELETE CASCADE`：删页面自动清掉其链接 / 相册 / 宠物。种子数据仅含空白 `main` 页与功能开关默认值，**新站从完全空白开始**。
@@ -156,7 +159,13 @@ Cloudflare D1（SQLite）── 6 张表
 | GET / POST / PUT / DELETE | `/api/admin/gallery` | 相册 CRUD（GET 可 `?page_id=` 过滤） |
 | GET / POST / PUT / DELETE | `/api/admin/pet` | 宠物 CRUD（语录随宠物整体读写） |
 | GET / PUT | `/api/admin/site-config` | 站点配置（仅固定键，PUT 批量 upsert） |
+| POST / GET / DELETE | `/api/admin/files` | 上传 / 列表（含使用标注与用量）/ 删除文件（multipart 字段名 `file`；图片 ≤5MB、视频 ≤20MB） |
 | POST | `/api/admin/change-password` | 修改密码 / 用户名 |
+
+### 公开文件访问
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/files/<key>` | 上传文件公开访问（长缓存；SVG 带 `CSP: sandbox` 安全头） |
 
 ---
 
@@ -165,7 +174,8 @@ Cloudflare D1（SQLite）── 6 张表
 入口：`/admin/`（默认管理员 `admin`，首次登录后请立即修改密码）。
 
 - **显式保存模型**：所有增 / 删 / 改 / 排序先落在本地工作副本，顶部「保存全部(N)」统一提交；带「未保存」角标、撤销、离开提醒。
-- **标签页**：链接 / 相册 / 宠物 / 页面 / 设置。
+- **标签页**：链接 / 相册 / 宠物 / 页面 / 文件库 / 设置。
+- **文件库**：上传时间倒序展示全部文件（预览/大小），标注「使用中：头像、链接「XX」图标…」或「未使用」；筛选与删除配合清理空间。
 - **链接图标**：内嵌 Simple Icons 图标库弹窗，搜索品牌一键填入图标 URL。
 - **设置**：站点配置（头像 / 用户名 / favicon / 页脚）、彩蛋设置、密钥设置、修改用户名 / 密码。
 - **⌘K 命令面板**：`Ctrl/⌘ + K` 快速跳转与操作；`Ctrl/⌘ + S` 保存。
@@ -196,13 +206,19 @@ Cloudflare D1（SQLite）── 6 张表
    npx wrangler d1 create linktree
    ```
 
-3. 建表（含空白种子）：
+3. 创建图片存储桶（`wrangler.toml` 已含绑定配置）：
+
+   ```bash
+   npx wrangler r2 bucket create linktree-assets
+   ```
+
+4. 建表（含空白种子）：
 
    ```bash
    npm run db:migrate:remote
    ```
 
-4. 配置生产密钥：
+5. 配置生产密钥：
 
    ```bash
    npx wrangler secret put JWT_SECRET
@@ -210,13 +226,13 @@ Cloudflare D1（SQLite）── 6 张表
    npx wrangler secret put ADMIN_PASSWORD
    ```
 
-5. 部署：
+6. 部署：
 
    ```bash
    npm run deploy
    ```
 
-6. **绑定自定义域名**（国内访问必需，`workers.dev` 域名被墙）：
+7. **绑定自定义域名**（国内访问必需，`workers.dev` 域名被墙）：
    Cloudflare Dashboard → Workers → Custom Domains 绑定你的域名（域名 DNS 需托管在 Cloudflare）。
 
 ### 本地开发
