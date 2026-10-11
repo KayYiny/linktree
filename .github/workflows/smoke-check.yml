@@ -1,0 +1,21 @@
+# 手动触发的线上冒烟检查（GitHub 运行器在境外，可验证 workers.dev 被墙后的服务健康）
+name: smoke-check
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: '要检查的地址'
+        required: false
+        default: 'https://linktree.kayyiny.workers.dev/api/config?page=main'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 请求接口
+        run: |
+          echo "检查 ${{ inputs.url }}"
+          curl -sf --max-time 20 "${{ inputs.url }}" | head -c 600
+          echo
+          echo "✅ 冒烟通过"
