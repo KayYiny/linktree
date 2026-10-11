@@ -20,8 +20,8 @@ export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
 export const MAX_VIDEO_BYTES = 20 * 1024 * 1024; // 20 MB
 
 // 应用层存储配额：R2 免费额度 10 GB·月为账号级共享，
-// 本站只用 2 GB，给其他 R2 项目留足空间；95% 起拒绝上传（约 1.9GB）
-export const QUOTA_BYTES = 2_000_000_000;
+// 本站只用 1 GB，给其他 R2 项目留足空间；95% 起拒绝上传（约 0.95GB）
+export const QUOTA_BYTES = 1_000_000_000;
 export const QUOTA_GUARD_BYTES = Math.floor(QUOTA_BYTES * 0.95);
 
 export function maxBytesFor(mime: string): number {
