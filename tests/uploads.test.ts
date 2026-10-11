@@ -36,7 +36,7 @@ describe('checkUpload', () => {
     expect(checkUpload('image/png', 0, 0).ok).toBe(false);
   });
 
-  test('配额守卫：接近 10GB 拒绝上传（保证零扣费）', () => {
+  test('配额守卫：接近上限拒绝上传（保证零扣费）', () => {
     expect(checkUpload('image/png', 1024, QUOTA_BYTES - 10_000_000).status).toBe(507);
     expect(checkUpload('image/png', 1024, QUOTA_GUARD_BYTES - 100_000).ok).toBe(true);
     expect(checkUpload('image/png', 1024, QUOTA_GUARD_BYTES).status).toBe(507);

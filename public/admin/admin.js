@@ -1101,7 +1101,8 @@
   function fmtSize(n) {
     if (n < 1024) return n + ' B';
     if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
-    return (n / 1024 / 1024).toFixed(1) + ' MB';
+    if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB';
+    return (n / 1024 / 1024 / 1024).toFixed(2) + ' GB';
   }
 
   async function loadFiles() {
@@ -1123,7 +1124,8 @@
     var bar = document.getElementById('quotaFill');
     bar.style.width = Math.max(pct, 0.5) + '%';
     bar.className = 'quota-fill' + (d.total_bytes >= d.quota_bytes * 0.85 ? ' warn' : '');
-    document.getElementById('quotaText').textContent = '已用 ' + fmtSize(d.total_bytes) + ' / 10 GB（' + pct + '%）';
+    document.getElementById('quotaText').textContent =
+      '已用 ' + fmtSize(d.total_bytes) + ' / ' + fmtSize(d.quota_bytes) + '（' + pct + '%）';
 
     var usedCount = d.files.filter(function (f) { return f.used_by.length > 0; }).length;
     var filter = filesState.filter;
