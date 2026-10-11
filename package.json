@@ -1,15 +1,28 @@
 {
   "name": "linktree",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Linktree - database driven personal page",
+  "description": "Linktree - database driven personal page (Hono + Cloudflare D1)",
   "scripts": {
-    "migrate": "node scripts/migrate.js",
-    "dev": "vercel dev"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply linktree --local",
+    "db:migrate:remote": "wrangler d1 migrations apply linktree --remote"
   },
   "dependencies": {
-    "pg": "^8.13.0",
-    "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "hono": "^4.6.0",
+    "jose": "^5.9.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.0",
+    "@cloudflare/workers-types": "^4.20250906.0",
+    "@types/bcryptjs": "^2.4.6",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "wrangler": "~4.35.0"
   }
 }

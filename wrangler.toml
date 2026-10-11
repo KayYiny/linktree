@@ -1,0 +1,18 @@
+name = "linktree"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+
+# 静态资源（public/）优先命中；未命中的路径（/api/*、页面 slug 如 /whisper）落到 Worker
+[assets]
+directory = "public"
+
+# D1 数据库（`wrangler d1 create linktree` 后把返回的 database_id 填入下方）
+[[d1_databases]]
+binding = "DB"
+database_name = "linktree"
+database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+
+# 自定义域名（也可在 Cloudflare Dashboard → Workers → Custom Domains 绑定）
+# routes = [
+#   { pattern = "example.com", custom_domain = true }
+# ]
