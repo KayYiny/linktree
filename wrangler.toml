@@ -10,7 +10,7 @@ directory = "public"
 [[d1_databases]]
 binding = "DB"
 database_name = "linktree"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id = "cca07e81-9caf-4b1a-9088-9780cd525ebe"
 
 # 自定义域名（也可在 Cloudflare Dashboard → Workers → Custom Domains 绑定）
 # routes = [
