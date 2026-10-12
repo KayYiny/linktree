@@ -33,8 +33,11 @@ routes.post('/', async (c) => {
   try {
     return c.json(await repo.createPage(c.env.DB, parsed.data), 201);
   } catch (err) {
+    const msg = String(err);
     console.error('Pages API error:', err);
-    return c.json({ error: 'slug 已存在' }, 409);
+    // 仅唯一约束冲突报 409，其余真实错误如实返回 500（避免误导排查）
+    if (msg.includes('UNIQUE')) return c.json({ error: 'slug 已存在' }, 409);
+    return c.json({ error: 'Internal server error' }, 500);
   }
 });
 
@@ -54,8 +57,10 @@ routes.put('/', async (c) => {
     if (!row) return c.json({ error: 'Not found' }, 404);
     return c.json(row);
   } catch (err) {
+    const msg = String(err);
     console.error('Pages API error:', err);
-    return c.json({ error: 'slug 已存在' }, 409);
+    if (msg.includes('UNIQUE')) return c.json({ error: 'slug 已存在' }, 409);
+    return c.json({ error: 'Internal server error' }, 500);
   }
 });
 

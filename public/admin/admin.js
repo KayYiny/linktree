@@ -304,7 +304,7 @@
     }
     card.querySelectorAll('[data-field]').forEach(function (input) {
       if (input.type === 'checkbox') {
-        input.addEventListener('change', function () { item.is_active = input.checked; mark(); });
+        input.addEventListener('change', function () { item[input.dataset.field] = input.checked; mark(); });
       } else {
         input.addEventListener('input', function () { item[input.dataset.field] = input.value; mark(); });
       }
@@ -589,7 +589,7 @@
       }
       card.querySelectorAll('[data-field]').forEach(function (input) {
         if (input.type === 'checkbox') {
-          input.addEventListener('change', function () { p.is_active = input.checked; mark(); });
+          input.addEventListener('change', function () { p[input.dataset.field] = input.checked; mark(); });
         } else {
           input.addEventListener('input', function () { p[input.dataset.field] = input.value; mark(); });
         }
@@ -806,7 +806,13 @@
       (byPage[k] = byPage[k] || []).push(it);
     });
     Object.keys(byPage).forEach(function (k) {
-      byPage[k].forEach(function (it, i) { it.sort_order = i; });
+      byPage[k].forEach(function (it, i) {
+        if (it.sort_order !== i) {
+          it.sort_order = i;
+          // 排序变化的已有条目标脏，确保新顺序被提交（否则只存部分条目会打乱顺序）
+          if (!it._new) it._dirty = true;
+        }
+      });
     });
   }
 
