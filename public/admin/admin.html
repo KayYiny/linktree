@@ -93,7 +93,7 @@
           </div>
           <div class="panel-toolbar">
             <button class="btn btn-primary" id="addPetBtn"><i class="fas fa-plus"></i> 新增宠物</button>
-            <span class="filter-hint">每页最多一只宠物，先选好「页面过滤」再新增</span>
+            <span class="filter-hint">每页最多一只宠物</span>
           </div>
           <div id="petList"></div>
         </div>
@@ -117,7 +117,6 @@
         <div id="panel-files" class="tab-panel">
           <div class="panel-header">
             <h2>文件库</h2>
-            <span class="sec-hint">本站配额 1GB（R2 免费 10GB 为账号级共享，预留空间给其他项目），超过 95% 将拒绝上传</span>
           </div>
           <div class="quota-bar">
             <div class="quota-fill" id="quotaFill"></div>
@@ -141,7 +140,7 @@
 
           <!-- 站点配置 -->
           <div class="settings-section">
-            <h3><i class="fas fa-globe"></i> 站点配置 <span class="sec-hint">（属于批量保存的一部分）</span></h3>
+            <h3><i class="fas fa-globe"></i> 站点配置</h3>
             <form id="siteConfigForm">
               <div class="form-row">
                 <div class="form-group">
@@ -166,7 +165,7 @@
 
           <!-- 彩蛋设置 -->
           <div class="settings-section">
-            <h3><i class="fas fa-egg"></i> 彩蛋设置 <span class="sec-hint">（点击页脚版权文字触发，属于批量保存的一部分）</span></h3>
+            <h3><i class="fas fa-egg"></i> 彩蛋设置</h3>
             <form id="eggConfigForm">
               <div class="form-row">
                 <div class="form-group" style="display:flex;align-items:center;gap:10px">
@@ -177,15 +176,9 @@
                   <label>点击次数</label>
                   <input type="number" id="eggClicks" min="1" value="5">
                 </div>
-              </div>
-              <div class="form-row">
                 <div class="form-group">
                   <label>时间窗口（毫秒）</label>
                   <input type="number" id="eggTimeout" min="50" value="2000">
-                </div>
-                <div class="form-group">
-                  <label>跳转目标</label>
-                  <input type="text" id="eggTarget" placeholder="/whisper/ 或任意 URL">
                 </div>
               </div>
             </form>
@@ -193,7 +186,7 @@
 
           <!-- 密钥设置 -->
           <div class="settings-section">
-            <h3><i class="fas fa-key"></i> 密钥设置 <span class="sec-hint">（总开关与密钥参数；在「页面管理」里为单个页面开启「访问需密钥」，属于批量保存的一部分）</span></h3>
+            <h3><i class="fas fa-key"></i> 密钥设置</h3>
             <form id="keyConfigForm">
               <div class="form-row">
                 <div class="form-group" style="display:flex;align-items:center;gap:10px">
@@ -232,7 +225,7 @@
 
           <!-- 账号设置（即时生效） -->
           <div class="settings-section">
-            <h3><i class="fas fa-user-cog"></i> 账号设置 <span class="sec-hint">（修改即时生效）</span></h3>
+            <h3><i class="fas fa-user-cog"></i> 账号设置</h3>
 
             <form id="changeUsernameForm">
               <div class="form-row">

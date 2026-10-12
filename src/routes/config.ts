@@ -42,14 +42,14 @@ routes.get('/', async (c) => {
     // 永久密钥只用于服务端校验，不下发到客户端
     delete siteOut.key_permanent;
 
-    // 5. 彩蛋目标若是需密钥的页面，服务端直接带上当前有效密钥（彩蛋永远能进）
-    const eggTarget = siteOut.egg_target;
-    if (masterOn && typeof eggTarget === 'string' && eggTarget.startsWith('/')) {
+    // 5. 本页彩蛋跳转目标（pages.egg_target，留空 = 该页彩蛋不生效）
+    //    目标若是需密钥的页面，服务端带上当前有效密钥（彩蛋永远能进）
+    let eggTarget = page.egg_target || '';
+    if (masterOn && eggTarget.startsWith('/')) {
       const targetSlug = eggTarget.replace(/^\/+|\/+$/g, '').split('/')[0];
       const targetPage = targetSlug ? await repo.getPageBySlug(c.env.DB, targetSlug) : null;
       if (targetPage && targetPage.key_required) {
-        const kk = keygen.currentKey(rotation, salt);
-        siteOut.egg_target = eggTarget + (eggTarget.indexOf('?') === -1 ? '?' : '&') + 'k=' + kk;
+        eggTarget += (eggTarget.indexOf('?') === -1 ? '?' : '&') + 'k=' + keygen.currentKey(rotation, salt);
       }
     }
 
@@ -77,6 +77,7 @@ routes.get('/', async (c) => {
         background_image: page.background_image,
         gallery_enabled: page.gallery_enabled,
         key_required: page.key_required,
+        egg_target: eggTarget,
       },
       site: siteOut,
       links: links

@@ -30,7 +30,7 @@
     pets: [],    // {id, page_id, pet_image, pet_type, messages:[], _new, _deleted, _dirty}
     site: { avatar: '', username: '', favicon: '', footer: '' },
     siteDirty: false,
-    egg: { enabled: true, clicks: '5', timeout: '2000', target: '' }, // 彩蛋配置
+    egg: { enabled: true, clicks: '5', timeout: '2000' }, // 彩蛋配置（总开关 + 参数，跳转目标在页面卡片）
     eggDirty: false,
     key: { enabled: true, rotation: 'daily', salt: '', permanent: '' }, // 密钥设置
     keyDirty: false
@@ -213,8 +213,7 @@
     S.egg = {
       enabled: cfg.egg_enabled !== '0',
       clicks: cfg.egg_clicks != null ? String(cfg.egg_clicks) : '5',
-      timeout: cfg.egg_timeout != null ? String(cfg.egg_timeout) : '2000',
-      target: cfg.egg_target || ''
+      timeout: cfg.egg_timeout != null ? String(cfg.egg_timeout) : '2000'
     };
     S.eggDirty = false;
     S.key = {
@@ -575,7 +574,10 @@
           '<div class="form-group"><label>标题</label><input data-field="title" value="' + esc(p.title || '') + '"></div>' +
         '</div>' +
         '<div class="form-group"><label>背景图片 URL</label><div class="icon-url-row"><input data-field="background_image" value="' + esc(p.background_image || '') + '"><button type="button" class="btn btn-ghost" data-upload title="上传图片后自动填入"><i class="fas fa-upload"></i></button></div></div>' +
-        '<div class="form-group"><label>访问需密钥（配合设置里的密钥总开关使用）</label><label class="switch"><input type="checkbox" data-field="key_required"' + (p.key_required ? ' checked' : '') + '><span class="switch-slider"></span></label></div>';
+        '<div class="form-row">' +
+          '<div class="form-group"><label>访问需密钥</label><label class="switch"><input type="checkbox" data-field="key_required"' + (p.key_required ? ' checked' : '') + '><span class="switch-slider"></span></label></div>' +
+          '<div class="form-group"><label>彩蛋跳转目标</label><input data-field="egg_target" value="' + esc(p.egg_target || '') + '" placeholder="如 /whisper 或任意 URL，留空则本页彩蛋不生效"></div>' +
+        '</div>';
       wrap.appendChild(card);
 
       var badge = card.querySelector('.dirty-badge');
@@ -634,7 +636,7 @@
       showToast('该 slug 已存在', true); return;
     }
     S.pages.push({
-      id: nextNewId(), slug: slug, title: slug, background_image: '', key_required: false,
+      id: nextNewId(), slug: slug, title: slug, background_image: '', key_required: false, egg_target: '',
       is_active: true, sort_order: S.pages.length,
       _new: true, _deleted: false, _dirty: true
     });
@@ -672,7 +674,6 @@
     f.eggEnabled.checked = !!S.egg.enabled;
     f.eggClicks.value = S.egg.clicks;
     f.eggTimeout.value = S.egg.timeout;
-    f.eggTarget.value = S.egg.target;
   }
   (function () {
     var f = document.getElementById('eggConfigForm');
@@ -684,7 +685,6 @@
     f.eggEnabled.addEventListener('change', function () { S.egg.enabled = f.eggEnabled.checked; mark(); });
     f.eggClicks.addEventListener('input', function () { S.egg.clicks = f.eggClicks.value; mark(); });
     f.eggTimeout.addEventListener('input', function () { S.egg.timeout = f.eggTimeout.value; mark(); });
-    f.eggTarget.addEventListener('input', function () { S.egg.target = f.eggTarget.value; mark(); });
   })();
 
   // ==================== 设置：密钥（隐藏页 ?k= 访问控制） ====================
@@ -824,7 +824,7 @@
           }
           var res = await api('/api/admin/pages', 'POST', {
             slug: it.slug, title: it.title || '', background_image: it.background_image || null,
-            is_active: it.is_active, sort_order: it.sort_order, gallery_enabled: it.gallery_enabled !== false, key_required: it.key_required === true
+            is_active: it.is_active, sort_order: it.sort_order, gallery_enabled: it.gallery_enabled !== false, key_required: it.key_required === true, egg_target: it.egg_target || ''
           });
           if (res && res.id != null) {
             var oldId = String(it.id);
@@ -842,7 +842,7 @@
         if (!it2._new && !it2._deleted && it2._dirty) {
           await api('/api/admin/pages?id=' + it2.id, 'PUT', {
             slug: it2.slug, title: it2.title || '', background_image: it2.background_image || null,
-            is_active: it2.is_active, sort_order: it2.sort_order, gallery_enabled: it2.gallery_enabled !== false, key_required: it2.key_required === true
+            is_active: it2.is_active, sort_order: it2.sort_order, gallery_enabled: it2.gallery_enabled !== false, key_required: it2.key_required === true, egg_target: it2.egg_target || ''
           });
           it2._dirty = false;
         }
@@ -934,7 +934,6 @@
         body.egg_enabled = S.egg.enabled ? '1' : '0';
         body.egg_clicks = String(S.egg.clicks || '5');
         body.egg_timeout = String(S.egg.timeout || '2000');
-        body.egg_target = S.egg.target || '';
       }
       if (S.keyDirty) {
         body.key_enabled = S.key.enabled ? '1' : '0';

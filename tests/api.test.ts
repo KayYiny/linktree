@@ -12,6 +12,7 @@ import { MAX_IMAGE_BYTES } from '../src/lib/uploads';
 import migration0001 from '../migrations/0001_init.sql?raw';
 import migration0002 from '../migrations/0002_files.sql?raw';
 import migration0003 from '../migrations/0003_pages_key_required.sql?raw';
+import migration0004 from '../migrations/0004_egg_per_page.sql?raw';
 const ADMIN_PW = (env as { ADMIN_PASSWORD?: string }).ADMIN_PASSWORD || 'admin';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
@@ -38,7 +39,7 @@ async function authedToken(): Promise<string> {
 
 beforeAll(async () => {
   // 应用全部迁移（去掉注释行后按 ; 切分执行）
-  for (const sql of [migration0001, migration0002, migration0003]) {
+  for (const sql of [migration0001, migration0002, migration0003, migration0004]) {
     const stmts = sql
       .split('\n')
       .filter((line) => !line.trim().startsWith('--'))
@@ -124,17 +125,28 @@ describe('密钥门禁（页面开关 + 设置总开关）', () => {
     await api('/api/admin/pages?id=' + ((await res.json()) as { id: number }).id, { method: 'DELETE', headers });
   });
 
-  test('彩蛋目标为需密钥页面时，egg_target 自动带当前密钥', async () => {
+  test('彩蛋跳转目标为需密钥页面时，egg_target 自动带当前密钥', async () => {
     const token = await authedToken();
     const headers = { ...jsonHeaders, Authorization: 'Bearer ' + token };
-    await api('/api/admin/site-config', {
+    // 给 main 页设置彩蛋跳转目标（页面级）
+    const pages = (await (await api('/api/admin/pages', { headers })).json()) as { id: number; slug: string }[];
+    const main = pages.find((p) => p.slug === 'main')!;
+    await api('/api/admin/pages?id=' + main.id, {
       method: 'PUT',
       headers,
-      body: JSON.stringify({ egg_target: '/whisper' }),
+      body: JSON.stringify({ slug: 'main', title: 'My Links', egg_target: '/whisper' }),
     });
-    const body = (await (await api('/api/config?page=main')).json()) as { site: Record<string, string> };
+    const body = (await (await api('/api/config?page=main')).json()) as {
+      page: Record<string, unknown>;
+    };
     const expected = '/whisper?k=' + keygen.currentKey('daily', SALT);
-    expect(body.site.egg_target).toBe(expected);
+    expect(body.page.egg_target).toBe(expected);
+    // 还原
+    await api('/api/admin/pages?id=' + main.id, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ slug: 'main', title: 'My Links', egg_target: '' }),
+    });
   });
 
   test('关闭总开关后无需密钥即可访问', async () => {

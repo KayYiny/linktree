@@ -16,7 +16,6 @@ const FIXED_KEYS = [
   'egg_enabled',
   'egg_clicks',
   'egg_timeout',
-  'egg_target',
   'key_enabled',
   'key_rotation',
   'key_salt',

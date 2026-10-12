@@ -81,7 +81,7 @@
     renderLinks(config.links);
     renderPet(config.pet);
     renderGallery(config.gallery);
-    applyEggConfig(config.site);
+    applyEggConfig(config);
     window.__dbConfig = config; // 供 hint-popup 等读取密钥配置
     document.dispatchEvent(new Event('configloaded'));
   }
@@ -113,15 +113,16 @@
     }
   }
 
-  // 彩蛋配置：从 site.egg_* 注入 window.__eggConfig（easter-egg.js 读取）
+  // 彩蛋配置：site.egg_*（总开关/参数）+ page.egg_target（本页跳转目标）→ window.__eggConfig（easter-egg.js 读取）
   // 目标页面若需密钥，服务端已在 egg_target 里带上当前有效密钥（彩蛋永远能进）
-  function applyEggConfig(site) {
-    if (!site) return;
+  function applyEggConfig(config) {
+    if (!config) return;
+    var site = config.site || {};
     window.__eggConfig = {
       enabled: site.egg_enabled === '0' ? false : true,
       clicks: parseInt(site.egg_clicks, 10) || 5,
       timeout: parseInt(site.egg_timeout, 10) || 2000,
-      target: site.egg_target || ''
+      target: (config.page && config.page.egg_target) || ''
     };
   }
 
