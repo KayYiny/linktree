@@ -52,8 +52,9 @@ routes.post('/', async (c) => {
 
     return c.json({ success: true, username: resultUsername });
   } catch (err) {
-    // 用户名唯一约束冲突等
     console.error('Change password error:', err);
+    // 用户名唯一约束冲突
+    if (String(err).includes('UNIQUE')) return c.json({ error: '用户名已被占用' }, 409);
     return c.json({ error: 'Internal server error' }, 500);
   }
 });

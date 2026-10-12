@@ -18,16 +18,16 @@
   var count = 0;
   var timer = null;
 
-  // 根据目标生成跳转动作；已在目标页 → 回首页
+  // 根据目标生成跳转动作；空目标 = 本页彩蛋不生效（不跳转）
   function buildAction(target) {
     var t = target ? String(target) : '';
-    if (!t) return function () { window.location.href = '/'; };
+    if (!t) return function () {};
     return function () {
       var isRemote = t.indexOf('://') !== -1;
       if (!isRemote) {
         var tPath = t.split('?')[0].replace(/^\//, '').replace(/\/+$/, '');
         var cur = (window.location.pathname || '/').replace(/^\//, '').replace(/\/+$/, '');
-        if (tPath && cur && cur.indexOf(tPath) !== -1) {
+        if (tPath && cur === tPath) {
           window.location.href = '/';
           return;
         }

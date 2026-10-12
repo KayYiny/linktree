@@ -316,6 +316,17 @@
 
     <!-- 密钥生成（隐藏页访问控制，供「密钥设置」实时显示当前密钥） -->
     <script src="/assets/scripts/keygen.js"></script>
-    <script src="/admin/admin.js"></script>
+    <!-- 管理面板模块（加载顺序即依赖顺序：core → save → 视图 → 部件 → boot） -->
+    <script src="/admin/core.js"></script>
+    <script src="/admin/save.js"></script>
+    <script src="/admin/view-links.js"></script>
+    <script src="/admin/view-gallery.js"></script>
+    <script src="/admin/view-pet.js"></script>
+    <script src="/admin/view-pages.js"></script>
+    <script src="/admin/view-settings.js"></script>
+    <script src="/admin/view-files.js"></script>
+    <script src="/admin/widgets-simpleicons.js"></script>
+    <script src="/admin/widgets-cmdk.js"></script>
+    <script src="/admin/boot.js"></script>
   </body>
 </html>
