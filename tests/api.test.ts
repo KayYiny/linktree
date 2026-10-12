@@ -11,6 +11,7 @@ import keygen from '../src/lib/keygen';
 import { MAX_IMAGE_BYTES } from '../src/lib/uploads';
 import migration0001 from '../migrations/0001_init.sql?raw';
 import migration0002 from '../migrations/0002_files.sql?raw';
+import migration0003 from '../migrations/0003_pages_key_required.sql?raw';
 const ADMIN_PW = (env as { ADMIN_PASSWORD?: string }).ADMIN_PASSWORD || 'admin';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
@@ -37,7 +38,7 @@ async function authedToken(): Promise<string> {
 
 beforeAll(async () => {
   // 应用全部迁移（去掉注释行后按 ; 切分执行）
-  for (const sql of [migration0001, migration0002]) {
+  for (const sql of [migration0001, migration0002, migration0003]) {
     const stmts = sql
       .split('\n')
       .filter((line) => !line.trim().startsWith('--'))
@@ -70,19 +71,18 @@ describe('GET /api/config', () => {
   });
 });
 
-describe('whisper 密钥门禁', () => {
-  let whisperId = 0;
+describe('密钥门禁（页面开关 + 设置总开关）', () => {
+  const SALT = 'gate-test-salt';
 
   beforeAll(async () => {
     const token = await authedToken();
-    // 建 whisper 页 + 开启密钥（盐值固定便于计算预期密钥）
+    // 建需密钥的 whisper 页 + 开启总开关（盐值固定便于计算预期密钥）
     const res = await api('/api/admin/pages', {
       method: 'POST',
       headers: { ...jsonHeaders, Authorization: 'Bearer ' + token },
-      body: JSON.stringify({ slug: 'whisper', title: '耳语页' }),
+      body: JSON.stringify({ slug: 'whisper', title: '耳语页', key_required: true }),
     });
     expect(res.status).toBe(201);
-    whisperId = ((await res.json()) as { id: number }).id;
     await api('/api/admin/site-config', {
       method: 'PUT',
       headers: { ...jsonHeaders, Authorization: 'Bearer ' + token },
@@ -90,9 +90,7 @@ describe('whisper 密钥门禁', () => {
     });
   });
 
-  const SALT = 'gate-test-salt';
-
-  test('无密钥 / 错误密钥 → 404（伪装成页面不存在）', async () => {
+  test('需密钥页面：无密钥 / 错误密钥 → 404（伪装成页面不存在）', async () => {
     expect((await api('/api/config?page=whisper')).status).toBe(404);
     expect((await api('/api/config?page=whisper&k=xxxxxx')).status).toBe(404);
   });
@@ -113,7 +111,33 @@ describe('whisper 密钥门禁', () => {
     expect(body.site.key_permanent).toBeUndefined();
   });
 
-  test('关闭密钥后无需密钥即可访问', async () => {
+  test('未开「访问需密钥」的页面不受总开关影响', async () => {
+    const token = await authedToken();
+    const headers = { ...jsonHeaders, Authorization: 'Bearer ' + token };
+    const res = await api('/api/admin/pages', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ slug: 'open-page', title: '公开页', key_required: false }),
+    });
+    expect(res.status).toBe(201);
+    expect((await api('/api/config?page=open-page')).status).toBe(200);
+    await api('/api/admin/pages?id=' + ((await res.json()) as { id: number }).id, { method: 'DELETE', headers });
+  });
+
+  test('彩蛋目标为需密钥页面时，egg_target 自动带当前密钥', async () => {
+    const token = await authedToken();
+    const headers = { ...jsonHeaders, Authorization: 'Bearer ' + token };
+    await api('/api/admin/site-config', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ egg_target: '/whisper' }),
+    });
+    const body = (await (await api('/api/config?page=main')).json()) as { site: Record<string, string> };
+    const expected = '/whisper?k=' + keygen.currentKey('daily', SALT);
+    expect(body.site.egg_target).toBe(expected);
+  });
+
+  test('关闭总开关后无需密钥即可访问', async () => {
     const token = await authedToken();
     await api('/api/admin/site-config', {
       method: 'PUT',

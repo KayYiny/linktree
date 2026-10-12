@@ -574,7 +574,8 @@
           '<div class="form-group"><label>Slug（URL 路径）</label><input data-field="slug" value="' + esc(p.slug) + '"></div>' +
           '<div class="form-group"><label>标题</label><input data-field="title" value="' + esc(p.title || '') + '"></div>' +
         '</div>' +
-        '<div class="form-group"><label>背景图片 URL</label><div class="icon-url-row"><input data-field="background_image" value="' + esc(p.background_image || '') + '"><button type="button" class="btn btn-ghost" data-upload title="上传图片后自动填入"><i class="fas fa-upload"></i></button></div></div>';
+        '<div class="form-group"><label>背景图片 URL</label><div class="icon-url-row"><input data-field="background_image" value="' + esc(p.background_image || '') + '"><button type="button" class="btn btn-ghost" data-upload title="上传图片后自动填入"><i class="fas fa-upload"></i></button></div></div>' +
+        '<div class="form-group"><label>访问需密钥（配合设置里的密钥总开关使用）</label><label class="switch"><input type="checkbox" data-field="key_required"' + (p.key_required ? ' checked' : '') + '><span class="switch-slider"></span></label></div>';
       wrap.appendChild(card);
 
       var badge = card.querySelector('.dirty-badge');
@@ -633,7 +634,7 @@
       showToast('该 slug 已存在', true); return;
     }
     S.pages.push({
-      id: nextNewId(), slug: slug, title: slug, background_image: '',
+      id: nextNewId(), slug: slug, title: slug, background_image: '', key_required: false,
       is_active: true, sort_order: S.pages.length,
       _new: true, _deleted: false, _dirty: true
     });
@@ -686,7 +687,7 @@
     f.eggTarget.addEventListener('input', function () { S.egg.target = f.eggTarget.value; mark(); });
   })();
 
-  // ==================== 设置：密钥（耳语页 ?k= 访问控制） ====================
+  // ==================== 设置：密钥（隐藏页 ?k= 访问控制） ====================
   function renderKey() {
     var f = document.getElementById('keyConfigForm');
     if (!f) return;
@@ -716,16 +717,15 @@
     document.getElementById('keyCopyBtn').addEventListener('click', function () {
       if (!window.__keygen) { showToast('密钥模块未加载', true); return; }
       var k = window.__keygen.currentKey(S.key.rotation || 'daily', S.key.salt || '');
-      var link = window.location.origin + '/whisper/?k=' + k;
-      if (navigator.clipboard) navigator.clipboard.writeText(link);
-      showToast('已复制耳语页链接（含当前密钥）');
+      if (navigator.clipboard) navigator.clipboard.writeText(k);
+      showToast('已复制当前有效密钥：' + k);
     });
     document.getElementById('keyCopyMainBtn').addEventListener('click', function () {
       if (!window.__keygen) { showToast('密钥模块未加载', true); return; }
       var k = window.__keygen.currentKey(S.key.rotation || 'daily', S.key.salt || '');
       var link = window.location.origin + '/?k=' + k;
       if (navigator.clipboard) navigator.clipboard.writeText(link);
-      showToast('已复制主页入口链接（含密钥），打开后提示如何用彩蛋进入耳语页');
+      showToast('已复制主页入口链接（含密钥），打开后提示如何用彩蛋进入隐藏页');
     });
   })();
 
@@ -824,7 +824,7 @@
           }
           var res = await api('/api/admin/pages', 'POST', {
             slug: it.slug, title: it.title || '', background_image: it.background_image || null,
-            is_active: it.is_active, sort_order: it.sort_order, gallery_enabled: it.gallery_enabled !== false
+            is_active: it.is_active, sort_order: it.sort_order, gallery_enabled: it.gallery_enabled !== false, key_required: it.key_required === true
           });
           if (res && res.id != null) {
             var oldId = String(it.id);
@@ -842,7 +842,7 @@
         if (!it2._new && !it2._deleted && it2._dirty) {
           await api('/api/admin/pages?id=' + it2.id, 'PUT', {
             slug: it2.slug, title: it2.title || '', background_image: it2.background_image || null,
-            is_active: it2.is_active, sort_order: it2.sort_order, gallery_enabled: it2.gallery_enabled !== false
+            is_active: it2.is_active, sort_order: it2.sort_order, gallery_enabled: it2.gallery_enabled !== false, key_required: it2.key_required === true
           });
           it2._dirty = false;
         }

@@ -12,6 +12,7 @@ const pageSchema = z.object({
   background_image: z.string().nullable().optional(),
   is_active: z.boolean().optional(),
   gallery_enabled: z.boolean().optional(),
+  key_required: z.boolean().optional(),
   sort_order: z.coerce.number().optional(),
 });
 

@@ -13,6 +13,8 @@ export interface PageRow {
   background_image: string | null;
   is_active: boolean;
   gallery_enabled: boolean;
+  /** 访问需密钥（配合设置里的密钥总开关） */
+  key_required: boolean;
   sort_order: number;
   created_at: string | null;
 }
@@ -89,6 +91,7 @@ function mapPage(r: Record<string, unknown>): PageRow {
     background_image: (r.background_image as string) ?? null,
     is_active: toBool(r.is_active),
     gallery_enabled: toBool(r.gallery_enabled),
+    key_required: toBool(r.key_required),
     sort_order: Number(r.sort_order ?? 0),
     created_at: (r.created_at as string) ?? null,
   };
@@ -117,13 +120,14 @@ export async function createPage(
     background_image?: string | null;
     is_active?: boolean;
     gallery_enabled?: boolean;
+    key_required?: boolean;
     sort_order?: number;
   }
 ): Promise<PageRow> {
   const r = await db
     .prepare(
-      `INSERT INTO pages (slug, title, background_image, is_active, gallery_enabled, sort_order, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *`
+      `INSERT INTO pages (slug, title, background_image, is_active, gallery_enabled, key_required, sort_order, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`
     )
     .bind(
       input.slug,
@@ -131,6 +135,7 @@ export async function createPage(
       input.background_image ?? null,
       fromBool(input.is_active ?? true),
       fromBool(input.gallery_enabled ?? true),
+      fromBool(input.key_required ?? false),
       input.sort_order ?? 0,
       now()
     )
@@ -147,12 +152,13 @@ export async function updatePage(
     background_image?: string | null;
     is_active?: boolean;
     gallery_enabled?: boolean;
+    key_required?: boolean;
     sort_order?: number;
   }
 ): Promise<PageRow | null> {
   const r = await db
     .prepare(
-      `UPDATE pages SET slug=?, title=?, background_image=?, is_active=?, gallery_enabled=?, sort_order=?
+      `UPDATE pages SET slug=?, title=?, background_image=?, is_active=?, gallery_enabled=?, key_required=?, sort_order=?
        WHERE id=? RETURNING *`
     )
     .bind(
@@ -161,6 +167,7 @@ export async function updatePage(
       input.background_image ?? null,
       fromBool(input.is_active ?? true),
       fromBool(input.gallery_enabled ?? true),
+      fromBool(input.key_required ?? false),
       input.sort_order ?? 0,
       id
     )

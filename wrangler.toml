@@ -3,8 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2025-09-01"
 
 # 静态资源（public/）优先命中；未命中的路径（/api/*、页面 slug 如 /whisper）落到 Worker
+# binding 必须配置：兜底路由要用 env.ASSETS 取 index.html 渲染页面 slug
 [assets]
 directory = "public"
+binding = "ASSETS"
 
 # D1 数据库（`wrangler d1 create linktree` 后把返回的 database_id 填入下方）
 [[d1_databases]]

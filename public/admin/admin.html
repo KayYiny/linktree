@@ -193,7 +193,7 @@
 
           <!-- 密钥设置 -->
           <div class="settings-section">
-            <h3><i class="fas fa-key"></i> 密钥设置 <span class="sec-hint">（耳语页 ?k= 访问控制，属于批量保存的一部分）</span></h3>
+            <h3><i class="fas fa-key"></i> 密钥设置 <span class="sec-hint">（总开关与密钥参数；在「页面管理」里为单个页面开启「访问需密钥」，属于批量保存的一部分）</span></h3>
             <form id="keyConfigForm">
               <div class="form-row">
                 <div class="form-group" style="display:flex;align-items:center;gap:10px">
@@ -224,7 +224,7 @@
               <div class="key-current" id="keyCurrentBox">
                 <span class="sec-hint">当前有效密钥</span>
                 <code id="keyCurrent">——</code>
-                <button type="button" class="btn btn-primary" id="keyCopyBtn"><i class="fas fa-link"></i> 复制耳语页链接（含密钥）</button>
+                <button type="button" class="btn btn-primary" id="keyCopyBtn"><i class="fas fa-copy"></i> 复制当前密钥</button>
                 <button type="button" class="btn btn-ghost" id="keyCopyMainBtn"><i class="fas fa-house"></i> 复制主页入口链接（含密钥）</button>
               </div>
             </form>
@@ -321,7 +321,7 @@
     <!-- 上传文件选择（配合各处「上传」按钮 / 文件库使用） -->
     <input type="file" id="uploadFileInput" style="display:none">
 
-    <!-- 密钥生成（耳语页访问控制，供「密钥设置」实时显示当前密钥） -->
+    <!-- 密钥生成（隐藏页访问控制，供「密钥设置」实时显示当前密钥） -->
     <script src="/assets/scripts/keygen.js"></script>
     <script src="/admin/admin.js"></script>
   </body>

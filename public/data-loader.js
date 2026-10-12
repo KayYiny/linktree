@@ -35,7 +35,7 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // 耳语页密钥门禁已在服务端完成（/api/config 对无效密钥返回 404 → 下方 catch 跳回首页），
+  // 隐藏页密钥门禁已在服务端完成（/api/config 对无效密钥返回 404 → 下方 catch 跳回首页），
   // 前端不再自行校验，也无需接触永久密钥。
 
   async function loadAndRender() {
@@ -114,19 +114,14 @@
   }
 
   // 彩蛋配置：从 site.egg_* 注入 window.__eggConfig（easter-egg.js 读取）
+  // 目标页面若需密钥，服务端已在 egg_target 里带上当前有效密钥（彩蛋永远能进）
   function applyEggConfig(site) {
     if (!site) return;
-    var target = site.egg_target || '';
-    // 若跳转目标是耳语页且密钥开启，自动带上当前有效密钥（彩蛋永远能进）
-    if (target.indexOf('whisper') !== -1 && site.key_enabled !== '0' && window.__keygen) {
-      var k = window.__keygen.currentKey(site.key_rotation || 'daily', site.key_salt || '');
-      target += (target.indexOf('?') === -1 ? '?' : '&') + 'k=' + k;
-    }
     window.__eggConfig = {
       enabled: site.egg_enabled === '0' ? false : true,
       clicks: parseInt(site.egg_clicks, 10) || 5,
       timeout: parseInt(site.egg_timeout, 10) || 2000,
-      target: target
+      target: site.egg_target || ''
     };
   }
 
